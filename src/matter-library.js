@@ -6,6 +6,9 @@ const serverUrl = 'http://localhost:4000';
 const fbUrl = 'https://pruvit.firebaseio.com';
 const tokenName = 'matter';
 
+let user;
+let token;
+
 if (typeof Firebase == 'undefined') {
 	console.error('Firebase is required to use Matter');
 }
@@ -26,8 +29,6 @@ if (typeof axios == 'undefined') {
 		return Promise.reject(error);
 	});
 }
-let user;
-let token;
 
 let Matter = {
 	signup(signupData) {
@@ -43,7 +44,7 @@ let Matter = {
 
 	login(loginData) {
 		if (!loginData || !loginData.password || !loginData.username) {
-			throw new Error('Username/Email and Password are required to login');
+			console.error('Username/Email and Password are required to login');
 		}
 		return axios.put(serverUrl + '/login', loginData)
 		.then(function(response) {
@@ -57,7 +58,7 @@ let Matter = {
 			return response.data;
 		})['catch'](function(errRes) {
 			console.error('[login()] Error logging in: ', errRes);
-			return errRes
+			return errRes;
 		});
 	},
 
@@ -94,7 +95,7 @@ let Matter = {
 		if (typeof window == 'undefined' || typeof window.localStorage.getItem(tokenName) == 'undefined') {
 			return null;
 		}
-		return localStorage.getItem(tokenName);
+		return window.localStorage.getItem(tokenName);
 	},
 
 	getApps() {

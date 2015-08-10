@@ -4,13 +4,17 @@ describe('Matter', () => {
   describe('Login method', () => {
     beforeEach(() => {
       spy(Matter, 'login');
-      Matter.login({username: 'test', password: 'test'});
+      spy(console, 'error');
     });
 
     it('should have been run once', () => {
+      Matter.login({username: 'test', password: 'test'});
       expect(Matter.login).to.have.been.calledOnce;
     });
-
+    it('handle no input', () => {
+      Matter.login();
+      expect(Matter.login).to.have.been.calledOnce;
+    });
   });
   describe('Signup method', () => {
     beforeEach(() => {
@@ -47,10 +51,18 @@ describe('Matter', () => {
   describe('getAuthToken method', () => {
     beforeEach(() => {
       spy(Matter, 'getAuthToken');
-      Matter.getAuthToken();
     });
 
     it('should have been run once', () => {
+      Matter.getAuthToken();
+      expect(Matter.getAuthToken).to.have.been.calledOnce;
+    });
+    it('get auth token', () => {
+      window = {localStorage: {}};
+      window.localStorage.getItem = () => {
+        return '';
+      };
+      Matter.getAuthToken();
       expect(Matter.getAuthToken).to.have.been.calledOnce;
     });
   });
