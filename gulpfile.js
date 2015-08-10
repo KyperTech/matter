@@ -118,7 +118,9 @@ function getBundler() {
 
   // Set up Babelify so that ES6 works in the tests
   bundler.transform(babelify.configure({
-    sourceMapRelative: __dirname + '/src'
+    sourceMapRelative: __dirname + '/src',
+    optional: ["es7.asyncFunctions"],
+    stage:2
   }));
 
   return bundler;

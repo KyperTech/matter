@@ -1,5 +1,8 @@
 {
   "preset": "google",
   "maximumLineLength": null,
-  "esnext": true
+  "esnext": true,
+  "validateIndentation":null,
+  "disallowMixedSpacesAndTabs":"smart",
+  "requireDotNotation": null //For ['catch'] for ie compadability
 }
