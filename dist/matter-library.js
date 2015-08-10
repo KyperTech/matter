@@ -1,25 +1,36 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('firebase'), require('axios')) : typeof define === 'function' && define.amd ? define(['firebase', 'axios'], factory) : global.Matter = factory(global.Firebase, global.axios);
-})(this, function (Firebase, axios) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('firebase'), require('axios'), require('babelify/polyfill')) : typeof define === 'function' && define.amd ? define(['firebase', 'axios', 'babelify/polyfill'], factory) : global.Matter = factory(global.Firebase, global.axios, global.polyfill);
+})(this, function (Firebase, axios, polyfill) {
 	'use strict';
 
 	var serverUrl = 'http://localhost:4000';
 	var fbUrl = 'https://pruvit.firebaseio.com';
+	var tokenName = 'matter';
 
 	if (typeof Firebase == 'undefined') {
 		console.error('Firebase is required to use Matter');
 	}
 	if (typeof axios == 'undefined') {
 		console.error('Axios is required to use Matter');
+	} else {
+		// Add a request interceptor
+		axios.interceptors.request.use(function (config) {
+			// Do something before request is sent
+			//TODO: Handle there already being headers
+			if (localStorage.getItem(tokenName)) {
+				config.headers = { 'Authorization': 'Bearer ' + localStorage.getItem(tokenName) };
+				console.log('Set auth header through interceptor');
+			}
+			return config;
+		}, function (error) {
+			// Do something with request error
+			return polyfill.reject(error);
+		});
 	}
 
-	//TODO: Set axios interceptor
-	//headers: {
-	//'Authorization': 'Bearer ' + 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNjb3R0Iiwicm9sZSI6ImFkbWluIiwidXNlcklkIjoiNTU4YWM1Mzk5MTc1YTQ4OTBhYWIyNWEwIiwic2Vzc2lvbklkIjoiNTVjOGI2ZDg4ODM1MDg0ZjgyNDM2NjQxIiwiaWF0IjoxNDM5MjE3MzY4fQ.JlB7DxEbWECF0Ip5qoeIPnM99sRZdwjQmfnrJ2VrJns'
-	//}
 	var matter_library__Matter = {
 		signup: function signup(signupData) {
-			axios.post(serverUrl + '/signup', {}).then(function (response) {
+			return axios.post(serverUrl + '/signup', signupData).then(function (response) {
 				console.log(response);
 			})['catch'](function (response) {
 				console.log(response);
@@ -30,12 +41,12 @@
 			if (!loginData || !loginData.password || !loginData.username) {
 				throw new Error('Username/Email and Password are required to login');
 			}
-			return axios.put(serverUrl + '/login', loginData, {}).then(function (response) {
+			return axios.put(serverUrl + '/login', loginData).then(function (response) {
 				//TODO: Save token locally
 				console.log(response);
-				if (localStorage.getItem('matter') === null) {
-					window.localStorage.setItem('matter', response.data.token);
-					console.log('token set to storage:', window.localStorage.getItem('matter'));
+				if (localStorage.getItem(tokenName) === null) {
+					window.localStorage.setItem(tokenName, response.data.token);
+					console.log('token set to storage:', window.localStorage.getItem(tokenName));
 				}
 				return response.data;
 			})['catch'](function (response) {
@@ -63,15 +74,20 @@
 
 		getAuthToken: function getAuthToken() {
 			//TODO: Load token from storage
-
+			if (typeof window.localStorage.getItem(tokenName) == 'undefined') {
+				return null;
+			}
+			return localStorage.getItem(tokenName);
 		},
 
 		getApps: function getApps() {
 			//TODO:Set authentication header
-			axios.get(serverUrl + '/apps', {}).then(function (response) {
-				console.log(response);
-			})['catch'](function (response) {
-				console.log(response);
+			return axios.get(serverUrl + '/apps', {}).then(function (response) {
+				console.log('Apps loaded:', response.data);
+				return response.data;
+			})['catch'](function (errRes) {
+				console.log(errRes);
+				return errRes;
 			});
 		}
 

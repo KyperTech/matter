@@ -1,18 +1,67 @@
 import Matter from '../../src/matter-library';
 
 describe('Matter', () => {
-  describe('Greet function', () => {
+  describe('Login method', () => {
     beforeEach(() => {
-      spy(Matter, 'greet');
-      Matter.greet();
+      spy(Matter, 'login');
+      Matter.login({username: 'test', password: 'test'});
     });
 
     it('should have been run once', () => {
-      expect(Matter.greet).to.have.been.calledOnce;
+      expect(Matter.login).to.have.been.calledOnce;
     });
 
-    it('should have always returned hello', () => {
-      expect(Matter.greet).to.have.always.returned('hello');
+  });
+  describe('Signup method', () => {
+    beforeEach(() => {
+      spy(Matter, 'signup');
+      Matter.signup({username: 'test', password: 'test'});
+    });
+
+    it('should have been run once', () => {
+      expect(Matter.signup).to.have.been.calledOnce;
+    });
+
+  });
+  describe('Logout method', () => {
+    beforeEach(() => {
+      spy(Matter, 'logout');
+      Matter.logout();
+    });
+
+    it('should have been run once', () => {
+      expect(Matter.logout).to.have.been.calledOnce;
+    });
+
+  });
+  describe('getCurrentUser method', () => {
+    beforeEach(() => {
+      spy(Matter, 'getCurrentUser');
+      Matter.getCurrentUser();
+    });
+
+    it('should have been run once', () => {
+      expect(Matter.getCurrentUser).to.have.been.calledOnce;
+    });
+  });
+  describe('getAuthToken method', () => {
+    beforeEach(() => {
+      spy(Matter, 'getAuthToken');
+      Matter.getAuthToken();
+    });
+
+    it('should have been run once', () => {
+      expect(Matter.getAuthToken).to.have.been.calledOnce;
+    });
+  });
+  describe('getApps method', () => {
+    beforeEach(() => {
+      spy(Matter, 'getApps');
+      Matter.getApps();
+    });
+
+    it('should have been run once', () => {
+      expect(Matter.getApps).to.have.been.calledOnce;
     });
   });
 });
