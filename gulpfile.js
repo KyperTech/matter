@@ -59,16 +59,16 @@ createLintTask('lint-test', ['test/**/*.js']);
 
 // Build two versions of the library
 gulp.task('build', ['lint-src', 'clean'], function(done) {
-  esperanto.bundle({
-    base: 'src',
-    entry: config.entryFileName,
-  }).then(function(bundle) {
-    var res = bundle.toUmd({
-      // Don't worry about the fact that the source map is inlined at this step.
-      // `gulp-sourcemaps`, which comes next, will externalize them.
-      sourceMap: 'inline',
-      name: config.mainVarName
-    });
+  // esperanto.bundle({
+  //   base: 'src',
+  //   entry: config.entryFileName,
+  // }).then(function(bundle) {
+  //   var res = bundle.toUmd({
+  //     // Don't worry about the fact that the source map is inlined at this step.
+  //     // `gulp-sourcemaps`, which comes next, will externalize them.
+  //     sourceMap: 'inline',
+  //     name: config.mainVarName
+  //   });
 
     $.file(exportFileName + '.js', res.code, { src: true })
       .pipe($.plumber())
@@ -83,8 +83,6 @@ gulp.task('build', ['lint-src', 'clean'], function(done) {
       .pipe($.sourcemaps.write('./'))
       .pipe(gulp.dest(destinationFolder))
       .on('end', done);
-  })
-  .catch(done);
 });
 
 function bundle(bundler) {

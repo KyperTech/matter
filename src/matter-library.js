@@ -1,13 +1,15 @@
 import Firebase from 'firebase';
 import axios from 'axios';
 import Promise from 'babelify/polyfill';
-
+require('babel-core/register')({
+  optional: ['es7.asyncFunctions']
+});
 const serverUrl = 'http://localhost:4000';
 const fbUrl = 'https://pruvit.firebaseio.com';
 const tokenName = 'matter';
 
-let user;
-let token;
+var user;
+var token;
 
 if (typeof Firebase == 'undefined') {
 	console.error('Firebase is required to use Matter');
@@ -16,7 +18,7 @@ if (typeof axios == 'undefined') {
 	console.error('Axios is required to use Matter');
 } else {
 	// Add a request interceptor
-	axios.interceptors.request.use(function(config) {
+	axios.interceptors.request.use((config) => {
 		// Do something before request is sent
 		//TODO: Handle there already being headers
 		if (localStorage.getItem(tokenName)) {
@@ -24,71 +26,64 @@ if (typeof axios == 'undefined') {
 			console.log('Set auth header through interceptor');
 		}
 		return config;
-	}, function(error) {
+	}, (error) => {
 		// Do something with request error
 		return Promise.reject(error);
 	});
 }
 
-let Matter = {
-	signup(signupData) {
-		return axios.post(serverUrl + '/signup', signupData)
-		.then(function(response) {
-		  console.log(response);
-		})
-		['catch'](function(errRes) {
-		  console.error('[signup()] Error signing up:', errRes);
-		  return errRes;
-		});
-	},
+class Matter {
+	async function signup(signupData) {
+		try {
+			return await axios.post(`${serverUrl}/signup`, signupData);
+		} catch (err) {
+			throw new Error(err);
+		}
+	}
 
-	login(loginData) {
+	async login(loginData) {
 		if (!loginData || !loginData.password || !loginData.username) {
 			console.error('Username/Email and Password are required to login');
 		}
-		return axios.put(serverUrl + '/login', loginData)
-		.then(function(response) {
-			//TODO: Save token locally
-			console.log(response);
-			token = response.data.token;
+		try {
+			let loginRes = await axios.put(serverUrl + '/login', loginData);
 			if (window.localStorage.getItem(tokenName) === null) {
 				window.localStorage.setItem(tokenName, response.data.token);
 				console.log('token set to storage:', window.localStorage.getItem(tokenName));
 			}
-			return response.data;
-		})['catch'](function(errRes) {
-			console.error('[login()] Error logging in: ', errRes);
-			return errRes;
-		});
-	},
+			return loginRes.data;
+		} catch (err) {
+			console.error('[login()] Error logging in: ', err);
+			throw new Error(err);
+		}
+	}
 
-	logout() {
-		return axios.put(serverUrl + '/logout', {
-		}).then(function(response) {
-		  console.log('[logout()] Logout successful: ', response);
+	async logout() {
+		try {
+			let logoutRes = await axios.put(serverUrl + '/logout');
+			console.log('[logout()] Logout successful: ', logoutRes);
 		  if (typeof window != 'undefined' && typeof window.localStorage.getItem(tokenName) != null) {
 				window.localStorage.setItem(tokenName, null);
 			}
-		  return response.body;
-		})['catch'](function(errRes) {
-		  console.error('[logout()] Error logging out: ', errRes);
+		  return logoutRes.body;
+		} catch (err) {
+			console.error('[logout()] Error logging out: ', errRes);
 		  return errRes;
-		});
-	},
+		}
+	}
 
-	getCurrentUser() {
+	async getCurrentUser() {
 		//TODO: Check Current user variable
-		return axios.get(serverUrl + '/user', {
-		}).then(function(response) {
-			//TODO: Save user information locally
-			console.log('[getCurrentUser()] Current User:', response.data);
-			user = response.data;
+		try {
+			let userRes = await axios.get(serverUrl + '/user');
+			console.log('[getCurrentUser()] Current User:', userRes.data);
+			user = userRes.data;
 			return user;
-		})['catch'](function(errRes) {
+		} catch (errRes) {
 			console.error('[getCurrentUser()] Error getting current user: ', errRes);
 			return errRes;
-		});
-	},
+		}
+	}
 
 	getAuthToken() {
 		//TODO: Load token from storage
@@ -96,18 +91,17 @@ let Matter = {
 			return null;
 		}
 		return window.localStorage.getItem(tokenName);
-	},
+	}
 
-	getApps() {
-		//TODO:Set authentication header
-		return axios.get(serverUrl + '/apps', {
-		}).then(function(response) {
-		  console.log('[getApps()] Apps:', response.data);
-		  return response.data;
-		})['catch'](function(errRes) {
-		  console.error('[getApps()] Error getting apps list: ', errRes);
+	async getApps() {
+		try {
+			let appRes = await axios.get(serverUrl + '/apps');
+			console.log('[getApps()] Apps:', appRes.data);
+			return appRes.data;
+		} catch (errRes) {
+			console.error('[getApps()] Error getting apps list: ', errRes);
 			return errRes;
-		});
+		}
 	}
 
 };
