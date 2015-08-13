@@ -7,7 +7,7 @@
 [![Dependency Status](https://david-dm.org/kypertech/matter-library.svg)](https://david-dm.org/kypertech/matter-library)
 [![devDependency Status](https://david-dm.org/kypertech/matter-library/dev-status.svg)](https://david-dm.org/kypertech/matter-library#info=devDependencies)
 
-Client library to simplify communication with Matter application building service.
+Common Web Application functionality such as authentication. Analytics/Data is available for viewing on [Matter](http://matter.kyper.io).
 
 ## Documentation
 
@@ -49,10 +49,3 @@ Get Auth token for currently logged in user
 
 Example: `var token = Matter.getAuthToken();`
 
-###getApps()
-Log user in provided username/email and password.
-
-Example: 
-```
-Matter.getApps().then(function(appsList){ console.log('Users apps:', appsList)});
-```

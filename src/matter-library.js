@@ -1,17 +1,11 @@
-import Firebase from 'firebase';
 import axios from 'axios';
-import Promise from 'babelify/polyfill';
 
-const serverUrl = 'http://localhost:4000';
-const fbUrl = 'https://pruvit.firebaseio.com';
+const serverUrl = 'http://hypercube.elasticbeanstalk.com';
 const tokenName = 'matter';
 
 let user;
 let token;
 
-if (typeof Firebase == 'undefined') {
-	console.error('Firebase is required to use Matter');
-}
 if (typeof axios == 'undefined') {
 	console.error('Axios is required to use Matter');
 } else {
@@ -30,7 +24,7 @@ if (typeof axios == 'undefined') {
 	});
 }
 
-let Matter = {
+class Matter {
 	signup(signupData) {
 		return axios.post(serverUrl + '/signup', signupData)
 		.then(function(response) {
@@ -38,9 +32,9 @@ let Matter = {
 		})
 		['catch'](function(errRes) {
 		  console.error('[signup()] Error signing up:', errRes);
-		  return errRes;
+		  return Promise.reject(errRes);
 		});
-	},
+	}
 
 	login(loginData) {
 		if (!loginData || !loginData.password || !loginData.username) {
@@ -58,9 +52,9 @@ let Matter = {
 			return response.data;
 		})['catch'](function(errRes) {
 			console.error('[login()] Error logging in: ', errRes);
-			return errRes;
+		  return Promise.reject(errRes);
 		});
-	},
+	}
 
 	logout() {
 		return axios.put(serverUrl + '/logout', {
@@ -72,9 +66,9 @@ let Matter = {
 		  return response.body;
 		})['catch'](function(errRes) {
 		  console.error('[logout()] Error logging out: ', errRes);
-		  return errRes;
+		  return Promise.reject(errRes);
 		});
-	},
+	}
 
 	getCurrentUser() {
 		//TODO: Check Current user variable
@@ -86,9 +80,9 @@ let Matter = {
 			return user;
 		})['catch'](function(errRes) {
 			console.error('[getCurrentUser()] Error getting current user: ', errRes);
-			return errRes;
+		  return Promise.reject(errRes);
 		});
-	},
+	}
 
 	getAuthToken() {
 		//TODO: Load token from storage
@@ -96,21 +90,9 @@ let Matter = {
 			return null;
 		}
 		return window.localStorage.getItem(tokenName);
-	},
-
-	getApps() {
-		//TODO:Set authentication header
-		return axios.get(serverUrl + '/apps', {
-		}).then(function(response) {
-		  console.log('[getApps()] Apps:', response.data);
-		  return response.data;
-		})['catch'](function(errRes) {
-		  console.error('[getApps()] Error getting apps list: ', errRes);
-			return errRes;
-		});
 	}
 
 };
-
-export default Matter;
+var matter = new Matter();
+export default matter;
 
