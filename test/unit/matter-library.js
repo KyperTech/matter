@@ -66,14 +66,4 @@ describe('Matter', () => {
       expect(Matter.getAuthToken).to.have.been.calledOnce;
     });
   });
-  describe('getApps method', () => {
-    beforeEach(() => {
-      spy(Matter, 'getApps');
-      Matter.getApps();
-    });
-
-    it('should have been run once', () => {
-      expect(Matter.getApps).to.have.been.calledOnce;
-    });
-  });
 });
