@@ -1,4 +1,4 @@
-import Matter from '../../src/matter-library';
+import Matter from '../../src/matter';
 
 describe('Matter', () => {
   describe('Login method', () => {

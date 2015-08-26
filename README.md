@@ -1,13 +1,13 @@
-# matter-library
+# Matter
 
 
-[![Travis build status](https://travis-ci.org/KyperTech/matter-library.svg?branch=master)](https://travis-ci.org/kypertech/matter-library)
-[![Code Climate](https://codeclimate.com/github/KyperTech/matter-library/badges/gpa.svg)](https://codeclimate.com/github/kypertech/matter-library)
-[![Test Coverage](https://codeclimate.com/github/KyperTech/matter-library/badges/coverage.svg)](https://codeclimate.com/github/KyperTech/matter-library)
-[![Dependency Status](https://david-dm.org/kypertech/matter-library.svg)](https://david-dm.org/kypertech/matter-library)
-[![devDependency Status](https://david-dm.org/kypertech/matter-library/dev-status.svg)](https://david-dm.org/kypertech/matter-library#info=devDependencies)
+[![Travis build status](https://travis-ci.org/KyperTech/matter.svg?branch=master)](https://travis-ci.org/kypertech/matter)
+[![Code Climate](https://codeclimate.com/github/KyperTech/matter/badges/gpa.svg)](https://codeclimate.com/github/kypertech/matter)
+[![Test Coverage](https://codeclimate.com/github/KyperTech/matter/badges/coverage.svg)](https://codeclimate.com/github/KyperTech/matter)
+[![Dependency Status](https://david-dm.org/kypertech/matter.svg)](https://david-dm.org/kypertech/matter)
+[![devDependency Status](https://david-dm.org/kypertech/matter/dev-status.svg)](https://david-dm.org/kypertech/matter#info=devDependencies)
 
-Common Web Application functionality such as authentication. Analytics/Data is available for viewing on [Matter](http://matter.kyper.io).
+Common Web Application functionality such as user authentication and local/session/token storage. Matter is a javascript library that communicates with [Tessellate](https://github.com/KyperTech/tessellate).
 
 ## Documentation
 

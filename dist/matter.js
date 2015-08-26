@@ -10,8 +10,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	var serverUrl = 'http://hypercube.elasticbeanstalk.com';
 	var tokenName = 'matter';
 
-	var matter_library__user = undefined;
-	var matter_library__token = undefined;
+	var matter__user = undefined;
+	var matter__token = undefined;
 
 	if (typeof axios == 'undefined') {
 		console.error('Axios is required to use Matter');
@@ -55,7 +55,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return axios.put(serverUrl + '/login', loginData).then(function (response) {
 					//TODO: Save token locally
 					console.log(response);
-					matter_library__token = response.data.token;
+					matter__token = response.data.token;
 					if (window.localStorage.getItem(tokenName) === null) {
 						window.localStorage.setItem(tokenName, response.data.token);
 						console.log('token set to storage:', window.localStorage.getItem(tokenName));
@@ -87,8 +87,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return axios.get(serverUrl + '/user', {}).then(function (response) {
 					//TODO: Save user information locally
 					console.log('[getCurrentUser()] Current User:', response.data);
-					matter_library__user = response.data;
-					return matter_library__user;
+					matter__user = response.data;
+					return matter__user;
 				})['catch'](function (errRes) {
 					console.error('[getCurrentUser()] Error getting current user: ', errRes);
 					return Promise.reject(errRes);
@@ -110,8 +110,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 	;
 	var matter = new Matter();
-	var matter_library = matter;
 
-	return matter_library;
+	return matter;
 });
-//# sourceMappingURL=matter-library.js.map
+//# sourceMappingURL=matter.js.map
