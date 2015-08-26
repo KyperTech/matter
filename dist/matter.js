@@ -3,33 +3,179 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('axios')) : typeof define === 'function' && define.amd ? define(['axios'], factory) : global.Matter = factory(global.axios);
-})(this, function (axios) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('superagent')) : typeof define === 'function' && define.amd ? define(['superagent'], factory) : global.Matter = factory(global.superagent);
+})(this, function (superagent) {
 	'use strict';
 
-	var serverUrl = 'http://hypercube.elasticbeanstalk.com';
-	var tokenName = 'matter';
+	superagent = 'default' in superagent ? superagent['default'] : superagent;
 
-	var matter__user = undefined;
-	var matter__token = undefined;
+	var config = {
+		serverUrl: 'http://tessellate.elasticbeanstalk.com',
+		tokenName: 'matter'
+	};
+	//Set server to local server if developing
+	if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
+		config.serverUrl = 'http://localhost:4000';
+	}
 
-	if (typeof axios == 'undefined') {
-		console.error('Axios is required to use Matter');
-	} else {
-		// Add a request interceptor
-		axios.interceptors.request.use(function (config) {
-			// Do something before request is sent
-			//TODO: Handle there already being headers
-			if (localStorage.getItem(tokenName)) {
-				config.headers = { 'Authorization': 'Bearer ' + localStorage.getItem(tokenName) };
-				console.log('Set auth header through interceptor');
+	var storage = Object.defineProperties({
+		/**
+   * @description
+   * Safley sets item to session storage.
+   *
+   * @param {String} itemName The items name
+   * @param {String} itemValue The items value
+   *
+   *  @private
+   */
+		setItem: function setItem(itemName, itemValue) {
+			//TODO: Handle itemValue being an object instead of a string
+			if (this.exists) {
+				window.sessionStorage.setItem(itemName, itemValue);
 			}
-			return config;
-		}, function (error) {
-			// Do something with request error
-			return Promise.reject(error);
+		},
+		/**
+   * @description
+   * Safley gets an item from session storage.
+   *
+   * @param {String} itemName The items name
+   *
+   * @return {String}
+   *
+   */
+		getItem: function getItem(itemName) {
+			if (this.exists) {
+				console.log('item loaded from session');
+				return window.sessionStorage.getItem(itemName);
+			} else {
+				return null;
+			}
+		},
+		/**
+   * @description
+   * Safley removes item from session storage.
+   *
+   * @param {String} itemName - The items name
+   *
+   */
+		removeItem: function removeItem(itemName) {
+			//TODO: Only remove used items
+			if (this.exists) {
+				try {
+					//Clear session storage
+					window.sessionStorage.removeItem(itemName);
+				} catch (err) {
+					console.warn('Item could not be removed from session storage.', err);
+				}
+			}
+		},
+		/**
+   * @description
+   * Safley removes item from session storage.
+   *
+   * @param {String} itemName the items name
+   * @param {String} itemValue the items value
+   *
+   *  @private
+   */
+		clear: function clear() {
+			//TODO: Only remove used items
+			if (this.exists) {
+				try {
+					//Clear session storage
+					window.sessionStorage.clear();
+				} catch (err) {
+					console.warn('Session storage could not be cleared.', err);
+				}
+			}
+		}
+
+	}, {
+		exists: {
+			get: function get() {
+				var testKey = 'test';
+				console.log('storage exists called');
+				if (typeof window != 'undefined') {
+					try {
+						window.sessionStorage.setItem(testKey, '1');
+						window.sessionStorage.removeItem(testKey);
+						return true;
+					} catch (err) {
+						console.warn('Session storage does not exist.', err);
+						return false;
+					}
+				} else {
+					return false;
+				}
+			},
+			configurable: true,
+			enumerable: true
+		}
+	});
+
+	var requester = undefined;
+	if (typeof window == 'undefined') {
+		//Node Mode
+		requester = superagent;
+	} else if (typeof window.superagent == 'undefined') {
+		console.error('Superagent is required to use Matter');
+	} else {
+		//Browser mode
+		requester = window.superagent;
+	}
+
+	var request = {
+		get: function get(endpoint, queryData) {
+			var req = requester.get(endpoint);
+			if (queryData) {
+				req.query(queryData);
+			}
+			req = addAuthHeader(req);
+			return handleResponse(req);
+		},
+		post: function post(endpoint, data) {
+			var req = requester.post(endpoint).send(data);
+			req = addAuthHeader(req);
+			return handleResponse(req);
+		},
+		put: function put(endpoint, data) {
+			var req = requester.put(endpoint).send(data);
+			req = addAuthHeader(req);
+			return handleResponse(req);
+		},
+		del: function del(endpoint, data) {
+			var req = requester.put(endpoint).send(data);
+			req = addAuthHeader(req);
+			return handleResponse(req);
+		}
+
+	};
+
+	function handleResponse(req) {
+		return new Promise(function (resolve, reject) {
+			req.end(function (err, res) {
+				if (!err) {
+					// console.log('Response:', res);
+					return resolve(res.body);
+				} else {
+					if (err.status == 401) {
+						console.warn('Unauthorized. You must be signed into make this request.');
+					}
+					return reject(err);
+				}
+			});
 		});
 	}
+	function addAuthHeader(req) {
+		if (storage.getItem(config.tokenName)) {
+			req = req.set('Authorization', 'Bearer ' + storage.getItem(config.tokenName));
+			console.log('Set auth header');
+		}
+		return req;
+	}
+
+	var user = undefined;
+	var token = undefined;
 
 	var Matter = (function () {
 		function Matter() {
@@ -39,7 +185,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		_createClass(Matter, [{
 			key: 'signup',
 			value: function signup(signupData) {
-				return axios.post(serverUrl + '/signup', signupData).then(function (response) {
+				return request.post(config.serverUrl + '/signup', signupData).then(function (response) {
 					console.log(response);
 				})['catch'](function (errRes) {
 					console.error('[signup()] Error signing up:', errRes);
@@ -52,13 +198,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (!loginData || !loginData.password || !loginData.username) {
 					console.error('Username/Email and Password are required to login');
 				}
-				return axios.put(serverUrl + '/login', loginData).then(function (response) {
+				return request.put(config.serverUrl + '/login', loginData).then(function (response) {
 					//TODO: Save token locally
 					console.log(response);
-					matter__token = response.data.token;
-					if (window.localStorage.getItem(tokenName) === null) {
-						window.localStorage.setItem(tokenName, response.data.token);
-						console.log('token set to storage:', window.localStorage.getItem(tokenName));
+					token = response.data.token;
+					if (window.localStorage.getItem(config.tokenName) === null) {
+						window.localStorage.setItem(config.tokenName, response.data.token);
+						console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
 					}
 					return response.data;
 				})['catch'](function (errRes) {
@@ -69,10 +215,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'logout',
 			value: function logout() {
-				return axios.put(serverUrl + '/logout', {}).then(function (response) {
+				return request.put(config.serverUrl + '/logout', {}).then(function (response) {
 					console.log('[logout()] Logout successful: ', response);
-					if (typeof window != 'undefined' && typeof window.localStorage.getItem(tokenName) != null) {
-						window.localStorage.setItem(tokenName, null);
+					if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
+						window.localStorage.setItem(config.tokenName, null);
 					}
 					return response.body;
 				})['catch'](function (errRes) {
@@ -84,11 +230,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'getCurrentUser',
 			value: function getCurrentUser() {
 				//TODO: Check Current user variable
-				return axios.get(serverUrl + '/user', {}).then(function (response) {
+				return request.get(config.serverUrl + '/user', {}).then(function (response) {
 					//TODO: Save user information locally
 					console.log('[getCurrentUser()] Current User:', response.data);
-					matter__user = response.data;
-					return matter__user;
+					user = response.data;
+					return user;
 				})['catch'](function (errRes) {
 					console.error('[getCurrentUser()] Error getting current user: ', errRes);
 					return Promise.reject(errRes);
@@ -98,10 +244,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'getAuthToken',
 			value: function getAuthToken() {
 				//TODO: Load token from storage
-				if (typeof window == 'undefined' || typeof window.localStorage.getItem(tokenName) == 'undefined') {
+				if (typeof window == 'undefined' || typeof window.localStorage.getItem(config.tokenName) == 'undefined') {
 					return null;
 				}
-				return window.localStorage.getItem(tokenName);
+				return window.localStorage.getItem(config.tokenName);
 			}
 		}]);
 

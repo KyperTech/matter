@@ -1,32 +1,12 @@
-import axios from 'axios';
-
-const serverUrl = 'http://hypercube.elasticbeanstalk.com';
-const tokenName = 'matter';
+import config from './config';
+import request from './utils/request';
 
 let user;
 let token;
 
-if (typeof axios == 'undefined') {
-	console.error('Axios is required to use Matter');
-} else {
-	// Add a request interceptor
-	axios.interceptors.request.use(function(config) {
-		// Do something before request is sent
-		//TODO: Handle there already being headers
-		if (localStorage.getItem(tokenName)) {
-			config.headers = {'Authorization': 'Bearer ' + localStorage.getItem(tokenName)};
-			console.log('Set auth header through interceptor');
-		}
-		return config;
-	}, function(error) {
-		// Do something with request error
-		return Promise.reject(error);
-	});
-}
-
 class Matter {
 	signup(signupData) {
-		return axios.post(serverUrl + '/signup', signupData)
+		return request.post(config.serverUrl + '/signup', signupData)
 		.then(function(response) {
 		  console.log(response);
 		})
@@ -40,14 +20,14 @@ class Matter {
 		if (!loginData || !loginData.password || !loginData.username) {
 			console.error('Username/Email and Password are required to login');
 		}
-		return axios.put(serverUrl + '/login', loginData)
+		return request.put(config.serverUrl + '/login', loginData)
 		.then(function(response) {
 			//TODO: Save token locally
 			console.log(response);
 			token = response.data.token;
-			if (window.localStorage.getItem(tokenName) === null) {
-				window.localStorage.setItem(tokenName, response.data.token);
-				console.log('token set to storage:', window.localStorage.getItem(tokenName));
+			if (window.localStorage.getItem(config.tokenName) === null) {
+				window.localStorage.setItem(config.tokenName, response.data.token);
+				console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
 			}
 			return response.data;
 		})['catch'](function(errRes) {
@@ -57,11 +37,11 @@ class Matter {
 	}
 
 	logout() {
-		return axios.put(serverUrl + '/logout', {
+		return request.put(config.serverUrl + '/logout', {
 		}).then(function(response) {
 		  console.log('[logout()] Logout successful: ', response);
-		  if (typeof window != 'undefined' && typeof window.localStorage.getItem(tokenName) != null) {
-				window.localStorage.setItem(tokenName, null);
+		  if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
+				window.localStorage.setItem(config.tokenName, null);
 			}
 		  return response.body;
 		})['catch'](function(errRes) {
@@ -72,7 +52,7 @@ class Matter {
 
 	getCurrentUser() {
 		//TODO: Check Current user variable
-		return axios.get(serverUrl + '/user', {
+		return request.get(config.serverUrl + '/user', {
 		}).then(function(response) {
 			//TODO: Save user information locally
 			console.log('[getCurrentUser()] Current User:', response.data);
@@ -86,10 +66,10 @@ class Matter {
 
 	getAuthToken() {
 		//TODO: Load token from storage
-		if (typeof window == 'undefined' || typeof window.localStorage.getItem(tokenName) == 'undefined') {
+		if (typeof window == 'undefined' || typeof window.localStorage.getItem(config.tokenName) == 'undefined') {
 			return null;
 		}
-		return window.localStorage.getItem(tokenName);
+		return window.localStorage.getItem(config.tokenName);
 	}
 
 };
