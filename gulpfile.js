@@ -14,13 +14,14 @@ const rollup = require('rollup');
 const browserify = require('browserify');
 const runSequence = require('run-sequence');
 const source = require('vinyl-source-stream');
-
+const awspublish = require('gulp-awspublish');
 // Gather the library data from `package.json`
 const manifest = require('./package.json');
 const config = manifest.babelBoilerplateOptions;
 const mainFile = manifest.main;
 const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
+const conf = require('./config.json');
 
 // Remove the built files
 gulp.task('clean', function(cb) {
@@ -118,7 +119,7 @@ function addExternalModules(code) {
   // should individually load up pieces of our application.
   // We also include the browserify setup file.
   // Create our bundler, passing in the arguments required for watchify
-  var bundler = browserify('src/' + exportFileName + '.js', {standalone:'Matter'});
+  var bundler = browserify(destinationFolder+'/' + exportFileName + '.js', {standalone:'Matter'});
 
   // Watch the bundler, and re-bundle it whenever files change
   // bundler = watchify(bundler);
@@ -219,5 +220,29 @@ gulp.task('test-browser', ['build-in-sequence'], function() {
   return gulp.watch(otherWatchFiles, ['build-in-sequence']);
 });
 
+// Bump to a new version and release to npm and api
+gulp.task('release', function() {
+  //Bump version
+  //git tag -a v0.0.1 -m ""
+  //git push origin v0.0.1
+  //Upload to cdn (kyper-api /js/matter/v0.0.1/)
+  //npm publish
+});
+gulp.task('upload', function() {
+  var s3Config = {
+    accessKeyId:process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY,
+    params:{
+      Bucket:conf.cdn.bucketName
+    }
+  };
+  var publisher = awspublish.create(s3Config);
+  return gulp.src('./' + conf.distFolder + '/**')
+    .pipe($.rename(function (path) {
+      path.dirname = conf.cdn.path + '/' + manifest.version + '/' + path.dirname;
+    }))
+    .pipe(publisher.publish())
+    .pipe(awspublish.reporter());
+});
 // An alias of test
 gulp.task('default', ['test']);
