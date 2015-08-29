@@ -16,12 +16,20 @@
     });
     
     function login(){
-      console.log('login called');
-      matter.login({username:'scott', password:'wrx2dcy43'}).then(function(loginInfo){
+      //Information will need to be changed for a successful login
+      matter.login({username:'test', password:'test'}).then(function(loginInfo){
         console.log('successful login:', loginInfo);
         document.getElementById("status").innerHTML = "True";
       }, function(err){
         console.error('login() : Error logging in:', err);
+      });   
+    }
+    function logout(){
+      matter.logout().then(function(){
+        console.log('successful logout');
+        document.getElementById("status").innerHTML = "False";
+      }, function(err){
+        console.error('logout() : Error logging out:', err);
       });   
     }
   </script>
@@ -33,6 +41,8 @@
     <h4>Logged In: <span id='status'>False</span></h4>
       <p class="submit">
         <button onclick="login()">Login As Test User</button>
+        <button onclick="logout()">Logout</button>
+
       </p>
   </div>
 

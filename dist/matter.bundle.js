@@ -61,7 +61,6 @@ function _classCallCheck(instance, Constructor) {
    */
 		getItem: function getItem(itemName) {
 			if (this.exists) {
-				console.log('item loaded from session');
 				return window.sessionStorage.getItem(itemName);
 			} else {
 				return null;
@@ -110,7 +109,6 @@ function _classCallCheck(instance, Constructor) {
 		exists: {
 			get: function get() {
 				var testKey = 'test';
-				console.log('storage exists called');
 				if (typeof window != 'undefined') {
 					try {
 						window.sessionStorage.setItem(testKey, '1');
@@ -185,16 +183,17 @@ function _classCallCheck(instance, Constructor) {
 		}
 
 		_createClass(token, [{
-			key: 'str',
-			value: function str() {
+			key: 'string',
+
+			//TODO: Decode token
+			value: function string(tokenStr) {
+				console.log('Token was set', tokenStr);
 				return storage.setItem(config.tokenName, tokenStr);
 			}
 		}, {
 			key: 'save',
-
-			//TODO: Decode token
 			value: function save(tokenStr) {
-				this.str = tokenStr;
+				this.string = tokenStr;
 				storage.setItem(config.tokenName, tokenStr);
 			}
 		}, {
@@ -203,7 +202,7 @@ function _classCallCheck(instance, Constructor) {
 				storage.removeItem(config.tokenName);
 			}
 		}, {
-			key: 'str',
+			key: 'string',
 			get: function get() {
 				return storage.getItem(config.tokenName);
 			}
@@ -260,17 +259,18 @@ function _classCallCheck(instance, Constructor) {
 			value: function login(loginData) {
 				if (!loginData || !loginData.password || !loginData.username) {
 					console.error('Username/Email and Password are required to login');
+					return Promise.reject({ message: 'Username/Email and Password are required to login' });
 				}
 				return request.put(this.endpoint + '/login', loginData).then(function (response) {
 					//TODO: Save token locally
-					console.log(response);
 					if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
-						console.error('[login()] Account not found: ', response);
+						console.error('[Matter.login()] Account not found: ', response);
 						return Promise.reject(response.data);
 					} else {
 						if (_.has(response, 'token')) {
-							token.str = response.token;
+							token.string = response.token;
 						}
+						console.log('[Matter.login()] Successful login: ', response);
 						return response;
 					}
 				})['catch'](function (errRes) {
@@ -287,13 +287,13 @@ function _classCallCheck(instance, Constructor) {
 			key: 'logout',
 			value: function logout() {
 				return request.put(this.endpoint + '/logout', {}).then(function (response) {
-					console.log('[logout()] Logout successful: ', response);
+					console.log('[Matter.logout()] Logout successful: ', response);
 					if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
 						window.localStorage.setItem(config.tokenName, null);
 					}
 					return response.body;
 				})['catch'](function (errRes) {
-					console.error('[logout()] Error logging out: ', errRes);
+					console.error('[Matter.logout()] Error logging out: ', errRes);
 					return Promise.reject(errRes);
 				});
 			}
@@ -323,12 +323,18 @@ function _classCallCheck(instance, Constructor) {
 		}, {
 			key: 'endpoint',
 			get: function get() {
+				var serverUrl = undefined;
 				if (this.name == 'tessellate') {
-					return config.serverUrl;
-					//TODO:remove host if it is tessellate.kyper.io or tessellate.elasticbeanstalk.com
-				} else {
-						return config.serverUrl + '/apps/' + this.name;
+					serverUrl = config.serverUrl;
+					//Remove url if host is server
+					if (window && _.has(window, 'location') && window.location.host == serverUrl) {
+						console.warn('Host is Server, serverUrl simplified!');
+						serverUrl = '';
 					}
+				} else {
+					serverUrl = config.serverUrl + '/apps/' + this.name;
+				}
+				return serverUrl;
 			}
 		}]);
 
