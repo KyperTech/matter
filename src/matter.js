@@ -7,6 +7,9 @@ let token;
 let endpoints;
 
 class Matter {
+	/* Constructor
+	 * @param {string} appName Name of application
+	 */
 	constructor(appName) {
 		if (!appName) {
 			throw new Error('Application name is required to use Matter');
@@ -14,18 +17,12 @@ class Matter {
 			this.name = appName;
 		}
 	}
+	/* Constructor
+	 * @param {string} appName Name of application
+	 */
 	get endpoint() {
 		return config.serverUrl + '/apps/' + this.name;
 	}
-	// async signup(signupData) {
-	// 	try {
-	// 		var response = await request.post(endpoints.signup, signupData);
-	// 		console.log('Successful signup call:', response);
-	// 	} catch(err) {
-	// 	  console.error('[signup()] Error signing up:', errRes);
-	// 	  throw err;
-	// 	}
-	// }
 	signup(signupData) {
 		return request.post(this.endpoint + '/signup', signupData)
 		.then(function(response) {
