@@ -7,7 +7,7 @@
   <!-- Polyfill (required by Babel) -->
   <script src='../dist/matter.bundle.js'></script>
   <script>
-    var matter = new Matter('exampleApp');
+    var matter = new Matter('tessellate');
     console.log('matter:', matter);
     document.addEventListener("DOMContentLoaded", function(event) { 
       if(matter.getAuthToken()){
@@ -17,7 +17,7 @@
     
     function login(){
       console.log('login called');
-      matter.login({username:'test', password:'test'}).then(function(loginInfo){
+      matter.login({username:'scott', password:'wrx2dcy43'}).then(function(loginInfo){
         console.log('successful login:', loginInfo);
         document.getElementById("status").innerHTML = "True";
       }, function(err){

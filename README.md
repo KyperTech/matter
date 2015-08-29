@@ -18,7 +18,7 @@ Using matter requires having created an application on [Tessellate](http://tesse
   Add script tag to index.html:
     
     ```html
-    <script src="http://api.kyper.io/js/matter/0.0.1/matter.bundle.js"></script>
+    <script src="http://cdn.kyper.io/js/matter/0.0.2/matter.bundle.js"></script>
     ```
 
   #### Bower
@@ -91,6 +91,7 @@ Example: `var token = Matter.getAuthToken();`
 ## TODO
 * Improve Documentation
 * Change Password Method
+* Run tests git pre-push
 * More local storage capabilities
 * Upload to cdn gulp task
 * Version release gulp task

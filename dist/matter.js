@@ -164,11 +164,50 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		return req;
 	}
 
+	var token = (function () {
+		function token() {
+			_classCallCheck(this, token);
+		}
+
+		_createClass(token, [{
+			key: 'str',
+			value: function str() {
+				return storage.setItem(config.tokenName, tokenStr);
+			}
+		}, {
+			key: 'save',
+
+			//TODO: Decode token
+			value: function save(tokenStr) {
+				this.str = tokenStr;
+				storage.setItem(config.tokenName, tokenStr);
+			}
+		}, {
+			key: 'delete',
+			value: function _delete() {
+				storage.removeItem(config.tokenName);
+			}
+		}, {
+			key: 'str',
+			get: function get() {
+				return storage.getItem(config.tokenName);
+			}
+		}, {
+			key: 'data',
+			get: function get() {}
+		}]);
+
+		return token;
+	})();
+
 	var user = undefined;
-	var token = undefined;
 	var endpoints = undefined;
 
 	var Matter = (function () {
+		/* Constructor
+   * @param {string} appName Name of application
+   */
+
 		function Matter(appName) {
 			_classCallCheck(this, Matter);
 
@@ -179,18 +218,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}
 
+		/* Endpoint getter
+   *
+   */
+
 		_createClass(Matter, [{
 			key: 'signup',
 
-			// async signup(signupData) {
-			// 	try {
-			// 		var response = await request.post(endpoints.signup, signupData);
-			// 		console.log('Successful signup call:', response);
-			// 	} catch(err) {
-			// 	  console.error('[signup()] Error signing up:', errRes);
-			// 	  throw err;
-			// 	}
-			// }
+			/* Signup
+    *
+    */
 			value: function signup(signupData) {
 				return request.post(this.endpoint + '/signup', signupData).then(function (response) {
 					console.log(response);
@@ -199,6 +236,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject(errRes);
 				});
 			}
+
+			/** Login
+    *
+    */
 		}, {
 			key: 'login',
 			value: function login(loginData) {
@@ -212,12 +253,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 						console.error('[login()] Account not found: ', response);
 						return Promise.reject(response.data);
 					} else {
-						token = response.data.token;
-						if (window.localStorage.getItem(config.tokenName) === null) {
-							window.localStorage.setItem(config.tokenName, response.data.token);
-							console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
+						if (_.has(response, 'token')) {
+							token.str = response.token;
 						}
-						return response.data;
+						return response;
 					}
 				})['catch'](function (errRes) {
 					if (errRes.status == 409) {
@@ -226,6 +265,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject(errRes);
 				});
 			}
+
+			/** Logout
+    */
 		}, {
 			key: 'logout',
 			value: function logout() {
@@ -266,7 +308,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'endpoint',
 			get: function get() {
-				return config.serverUrl + '/apps/' + this.name;
+				if (this.name == 'tessellate') {
+					return config.serverUrl;
+					//TODO:remove host if it is tessellate.kyper.io or tessellate.elasticbeanstalk.com
+				} else {
+						return config.serverUrl + '/apps/' + this.name;
+					}
 			}
 		}]);
 

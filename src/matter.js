@@ -1,9 +1,9 @@
 import config from './config';
 import request from './utils/request';
+import token from './utils/token';
 import _ from 'underscore';
 
 let user;
-let token;
 let endpoints;
 
 class Matter {
@@ -17,12 +17,24 @@ class Matter {
 			this.name = appName;
 		}
 	}
-	/* Constructor
-	 * @param {string} appName Name of application
+	/* Endpoint getter
+	 *
 	 */
 	get endpoint() {
-		return config.serverUrl + '/apps/' + this.name;
+		if (this.name == 'tessellate') {
+			let serverUrl = config.serverUrl;
+			//Remove url if host is server
+			if(window && _.has(window, 'location') && window.location.host == serverUrl){
+				serverUrl = '';
+			}
+		} else {
+			let serverUrl = config.serverUrl + '/apps/' + this.name;
+		}
+		return serverUrl;
 	}
+	/* Signup
+	 *
+	 */
 	signup(signupData) {
 		return request.post(this.endpoint + '/signup', signupData)
 		.then(function(response) {
@@ -33,7 +45,9 @@ class Matter {
 		  return Promise.reject(errRes);
 		});
 	}
-
+	/** Login
+	 *
+	 */
 	login(loginData) {
 		if (!loginData || !loginData.password || !loginData.username) {
 			console.error('Username/Email and Password are required to login');
@@ -46,12 +60,10 @@ class Matter {
 				console.error('[login()] Account not found: ', response);
 				return Promise.reject(response.data);
 			} else {
-				token = response.data.token;
-				if (window.localStorage.getItem(config.tokenName) === null) {
-					window.localStorage.setItem(config.tokenName, response.data.token);
-					console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
+				if (_.has(response, 'token')) {
+					token.str = response.token;
 				}
-				return response.data;
+				return response;
 			}
 		})['catch'](function(errRes) {
 			if (errRes.status == 409) {
@@ -60,7 +72,8 @@ class Matter {
 		  return Promise.reject(errRes);
 		});
 	}
-
+	/** Logout
+	 */
 	logout() {
 		return request.put(this.endpoint + '/logout', {
 		}).then(function(response) {
