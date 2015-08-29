@@ -166,18 +166,33 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 	var user = undefined;
 	var token = undefined;
+	var endpoints = undefined;
 
 	var Matter = (function () {
 		function Matter(appName) {
 			_classCallCheck(this, Matter);
 
-			this.name = appName;
+			if (!appName) {
+				throw new Error('Application name is required to use Matter');
+			} else {
+				this.name = appName;
+			}
 		}
 
 		_createClass(Matter, [{
 			key: 'signup',
+
+			// async signup(signupData) {
+			// 	try {
+			// 		var response = await request.post(endpoints.signup, signupData);
+			// 		console.log('Successful signup call:', response);
+			// 	} catch(err) {
+			// 	  console.error('[signup()] Error signing up:', errRes);
+			// 	  throw err;
+			// 	}
+			// }
 			value: function signup(signupData) {
-				return request.post(config.serverUrl + '/signup', signupData).then(function (response) {
+				return request.post(this.endpoint + '/signup', signupData).then(function (response) {
 					console.log(response);
 				})['catch'](function (errRes) {
 					console.error('[signup()] Error signing up:', errRes);
@@ -190,7 +205,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (!loginData || !loginData.password || !loginData.username) {
 					console.error('Username/Email and Password are required to login');
 				}
-				return request.put(config.serverUrl + '/login', loginData).then(function (response) {
+				return request.put(this.endpoint + '/login', loginData).then(function (response) {
 					//TODO: Save token locally
 					console.log(response);
 					if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
@@ -206,7 +221,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					}
 				})['catch'](function (errRes) {
 					if (errRes.status == 409) {
-						errRes = 'Account not found';
+						errRes = errRes.response.text;
 					}
 					return Promise.reject(errRes);
 				});
@@ -214,7 +229,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'logout',
 			value: function logout() {
-				return request.put(config.serverUrl + '/logout', {}).then(function (response) {
+				return request.put(this.endpoint + '/logout', {}).then(function (response) {
 					console.log('[logout()] Logout successful: ', response);
 					if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
 						window.localStorage.setItem(config.tokenName, null);
@@ -229,7 +244,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'getCurrentUser',
 			value: function getCurrentUser() {
 				//TODO: Check Current user variable
-				return request.get(config.serverUrl + '/user', {}).then(function (response) {
+				return request.get(this.endpoint + '/user', {}).then(function (response) {
 					//TODO: Save user information locally
 					console.log('[getCurrentUser()] Current User:', response.data);
 					user = response.data;
@@ -247,6 +262,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return null;
 				}
 				return window.localStorage.getItem(config.tokenName);
+			}
+		}, {
+			key: 'endpoint',
+			get: function get() {
+				return config.serverUrl + '/apps/' + this.name;
 			}
 		}]);
 

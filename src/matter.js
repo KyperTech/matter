@@ -4,14 +4,30 @@ import _ from 'underscore';
 
 let user;
 let token;
+let endpoints;
 
 class Matter {
 	constructor(appName) {
-		this.name = appName;
+		if (!appName) {
+			throw new Error('Application name is required to use Matter');
+		} else {
+			this.name = appName;
+		}
 	}
-
+	get endpoint() {
+		return config.serverUrl + '/apps/' + this.name;
+	}
+	// async signup(signupData) {
+	// 	try {
+	// 		var response = await request.post(endpoints.signup, signupData);
+	// 		console.log('Successful signup call:', response);
+	// 	} catch(err) {
+	// 	  console.error('[signup()] Error signing up:', errRes);
+	// 	  throw err;
+	// 	}
+	// }
 	signup(signupData) {
-		return request.post(config.serverUrl + '/signup', signupData)
+		return request.post(this.endpoint + '/signup', signupData)
 		.then(function(response) {
 		  console.log(response);
 		})
@@ -25,7 +41,7 @@ class Matter {
 		if (!loginData || !loginData.password || !loginData.username) {
 			console.error('Username/Email and Password are required to login');
 		}
-		return request.put(config.serverUrl + '/login', loginData)
+		return request.put(this.endpoint + '/login', loginData)
 		.then(function(response) {
 			//TODO: Save token locally
 			console.log(response);
@@ -42,14 +58,14 @@ class Matter {
 			}
 		})['catch'](function(errRes) {
 			if (errRes.status == 409) {
-				errRes = 'Account not found';
+				errRes = errRes.response.text;
 			}
 		  return Promise.reject(errRes);
 		});
 	}
 
 	logout() {
-		return request.put(config.serverUrl + '/logout', {
+		return request.put(this.endpoint + '/logout', {
 		}).then(function(response) {
 		  console.log('[logout()] Logout successful: ', response);
 		  if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
@@ -64,7 +80,7 @@ class Matter {
 
 	getCurrentUser() {
 		//TODO: Check Current user variable
-		return request.get(config.serverUrl + '/user', {
+		return request.get(this.endpoint + '/user', {
 		}).then(function(response) {
 			//TODO: Save user information locally
 			console.log('[getCurrentUser()] Current User:', response.data);

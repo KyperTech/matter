@@ -7,7 +7,7 @@
   <!-- Polyfill (required by Babel) -->
   <script src='../dist/matter.bundle.js'></script>
   <script>
-    var matter = new Matter('');
+    var matter = new Matter('exampleApp');
     console.log('matter:', matter);
     document.addEventListener("DOMContentLoaded", function(event) { 
       if(matter.getAuthToken()){

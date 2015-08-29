@@ -2919,18 +2919,33 @@ var _underscore2 = _interopRequireDefault(_underscore);
 
 var user = undefined;
 var token = undefined;
+var endpoints = undefined;
 
 var Matter = (function () {
 	function Matter(appName) {
 		_classCallCheck(this, Matter);
 
-		this.name = appName;
+		if (!appName) {
+			throw new Error('Application name is required to use Matter');
+		} else {
+			this.name = appName;
+		}
 	}
 
 	_createClass(Matter, [{
 		key: 'signup',
+
+		// async signup(signupData) {
+		// 	try {
+		// 		var response = await request.post(endpoints.signup, signupData);
+		// 		console.log('Successful signup call:', response);
+		// 	} catch(err) {
+		// 	  console.error('[signup()] Error signing up:', errRes);
+		// 	  throw err;
+		// 	}
+		// }
 		value: function signup(signupData) {
-			return _utilsRequest2['default'].post(_config2['default'].serverUrl + '/signup', signupData).then(function (response) {
+			return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
 				console.log(response);
 			})['catch'](function (errRes) {
 				console.error('[signup()] Error signing up:', errRes);
@@ -2943,7 +2958,7 @@ var Matter = (function () {
 			if (!loginData || !loginData.password || !loginData.username) {
 				console.error('Username/Email and Password are required to login');
 			}
-			return _utilsRequest2['default'].put(_config2['default'].serverUrl + '/login', loginData).then(function (response) {
+			return _utilsRequest2['default'].put(this.endpoint + '/login', loginData).then(function (response) {
 				//TODO: Save token locally
 				console.log(response);
 				if (_underscore2['default'].has(response, 'data') && _underscore2['default'].has(response.data, 'status') && response.data.status == 409) {
@@ -2959,7 +2974,7 @@ var Matter = (function () {
 				}
 			})['catch'](function (errRes) {
 				if (errRes.status == 409) {
-					errRes = 'Account not found';
+					errRes = errRes.response.text;
 				}
 				return Promise.reject(errRes);
 			});
@@ -2967,7 +2982,7 @@ var Matter = (function () {
 	}, {
 		key: 'logout',
 		value: function logout() {
-			return _utilsRequest2['default'].put(_config2['default'].serverUrl + '/logout', {}).then(function (response) {
+			return _utilsRequest2['default'].put(this.endpoint + '/logout', {}).then(function (response) {
 				console.log('[logout()] Logout successful: ', response);
 				if (typeof window != 'undefined' && typeof window.localStorage.getItem(_config2['default'].tokenName) != null) {
 					window.localStorage.setItem(_config2['default'].tokenName, null);
@@ -2982,7 +2997,7 @@ var Matter = (function () {
 		key: 'getCurrentUser',
 		value: function getCurrentUser() {
 			//TODO: Check Current user variable
-			return _utilsRequest2['default'].get(_config2['default'].serverUrl + '/user', {}).then(function (response) {
+			return _utilsRequest2['default'].get(this.endpoint + '/user', {}).then(function (response) {
 				//TODO: Save user information locally
 				console.log('[getCurrentUser()] Current User:', response.data);
 				user = response.data;
@@ -3000,6 +3015,11 @@ var Matter = (function () {
 				return null;
 			}
 			return window.localStorage.getItem(_config2['default'].tokenName);
+		}
+	}, {
+		key: 'endpoint',
+		get: function get() {
+			return _config2['default'].serverUrl + '/apps/' + this.name;
 		}
 	}]);
 
