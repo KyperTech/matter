@@ -3,11 +3,12 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('superagent')) : typeof define === 'function' && define.amd ? define(['superagent'], factory) : global.Matter = factory(global.superagent);
-})(this, function (superagent) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('superagent'), require('underscore')) : typeof define === 'function' && define.amd ? define(['superagent', 'underscore'], factory) : global.Matter = factory(global.requester, global._);
+})(this, function (requester, _) {
 	'use strict';
 
-	superagent = 'default' in superagent ? superagent['default'] : superagent;
+	requester = 'default' in requester ? requester['default'] : requester;
+	_ = 'default' in _ ? _['default'] : _;
 
 	var config = {
 		serverUrl: 'http://tessellate.elasticbeanstalk.com',
@@ -113,17 +114,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 	});
 
-	var requester = undefined;
-	if (typeof window == 'undefined') {
-		//Node Mode
-		requester = superagent;
-	} else if (typeof window.superagent == 'undefined') {
-		console.error('Superagent is required to use Matter');
-	} else {
-		//Browser mode
-		requester = window.superagent;
-	}
-
 	var request = {
 		get: function get(endpoint, queryData) {
 			var req = requester.get(endpoint);
@@ -178,8 +168,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	var token = undefined;
 
 	var Matter = (function () {
-		function Matter() {
+		function Matter(appName) {
 			_classCallCheck(this, Matter);
+
+			this.name = appName;
 		}
 
 		_createClass(Matter, [{
@@ -201,14 +193,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return request.put(config.serverUrl + '/login', loginData).then(function (response) {
 					//TODO: Save token locally
 					console.log(response);
-					token = response.data.token;
-					if (window.localStorage.getItem(config.tokenName) === null) {
-						window.localStorage.setItem(config.tokenName, response.data.token);
-						console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
+					if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
+						console.error('[login()] Account not found: ', response);
+						return Promise.reject(response.data);
+					} else {
+						token = response.data.token;
+						if (window.localStorage.getItem(config.tokenName) === null) {
+							window.localStorage.setItem(config.tokenName, response.data.token);
+							console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
+						}
+						return response.data;
 					}
-					return response.data;
 				})['catch'](function (errRes) {
-					console.error('[login()] Error logging in: ', errRes);
+					if (errRes.status == 409) {
+						errRes = 'Account not found';
+					}
 					return Promise.reject(errRes);
 				});
 			}
@@ -255,8 +254,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	})();
 
 	;
-	var matter = new Matter();
 
-	return matter;
+	return Matter;
 });
 //# sourceMappingURL=matter.js.map

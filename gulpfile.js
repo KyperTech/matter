@@ -70,7 +70,6 @@ gulp.task('build', ['lint-src', 'clean'], function(done) {
       sourceMap: 'inline',
       moduleName: config.mainVarName
     });
-
     $.file(exportFileName + '.js', res.code, { src: true })
       .pipe($.plumber())
       .pipe($.sourcemaps.init({ loadMaps: true }))
@@ -85,10 +84,11 @@ gulp.task('build', ['lint-src', 'clean'], function(done) {
       .pipe(gulp.dest(destinationFolder))
       .on('end', done);
   })
+  
   .catch(done);
 });
 
-function bundle(bundler) {
+function bundleTest(bundler) {
   return bundler.bundle()
     .on('error', function(err) {
       console.log(err.message);
@@ -100,8 +100,42 @@ function bundle(bundler) {
     .pipe(gulp.dest(''))
     .pipe($.livereload());
 }
+function bundle(bundler) {
+  return bundler.bundle()
+    .on('error', function(err) {
+      console.log(err.message);
+      this.emit('end');
+    })
+    .pipe($.plumber())
+    .pipe(source('./tmp/__matter.bundle.js'))
+    .pipe(buffer())
+    .pipe($.rename(exportFileName + '.bundle.js'))
+    .pipe(gulp.dest(destinationFolder))
+    .pipe($.livereload());
+}
+function addExternalModules(code) {
+  // Our browserify bundle is made up of our unit tests, which
+  // should individually load up pieces of our application.
+  // We also include the browserify setup file.
+  // Create our bundler, passing in the arguments required for watchify
+  var bundler = browserify('src/' + exportFileName + '.js', {standalone:'Matter'});
 
-function getBundler() {
+  // Watch the bundler, and re-bundle it whenever files change
+  // bundler = watchify(bundler);
+  // bundler.on('update', function() {
+  //   bundle(bundler);
+  // });
+
+  // // Set up Babelify so that ES6 works in the tests
+  bundler.transform(babelify.configure({
+    ignore: /(bower_components)|(node_modules)/,
+    sourceMapRelative: __dirname + '/src',
+    optional: ["es7.asyncFunctions"],
+    stage:2
+  }));
+  return bundler;
+};
+function getTestBundler() {
   // Our browserify bundle is made up of our unit tests, which
   // should individually load up pieces of our application.
   // We also include the browserify setup file.
@@ -126,11 +160,16 @@ function getBundler() {
 
   return bundler;
 };
-
+gulp.task('addExternals', function() {
+  return bundle(addExternalModules());
+});
+gulp.task('build-bundle', function(callback) {
+  runSequence(['build'], 'addExternals', callback);
+});
 // Build the unit test suite for running tests
 // in the browser
 gulp.task('browserify', function() {
-  return bundle(getBundler());
+  return bundleTest(getTestBundler());
 });
 
 function test() {

@@ -1,10 +1,15 @@
 import config from './config';
 import request from './utils/request';
+import _ from 'underscore';
 
 let user;
 let token;
 
 class Matter {
+	constructor(appName) {
+		this.name = appName;
+	}
+
 	signup(signupData) {
 		return request.post(config.serverUrl + '/signup', signupData)
 		.then(function(response) {
@@ -24,14 +29,21 @@ class Matter {
 		.then(function(response) {
 			//TODO: Save token locally
 			console.log(response);
-			token = response.data.token;
-			if (window.localStorage.getItem(config.tokenName) === null) {
-				window.localStorage.setItem(config.tokenName, response.data.token);
-				console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
+			if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
+				console.error('[login()] Account not found: ', response);
+				return Promise.reject(response.data);
+			} else {
+				token = response.data.token;
+				if (window.localStorage.getItem(config.tokenName) === null) {
+					window.localStorage.setItem(config.tokenName, response.data.token);
+					console.log('token set to storage:', window.localStorage.getItem(config.tokenName));
+				}
+				return response.data;
 			}
-			return response.data;
 		})['catch'](function(errRes) {
-			console.error('[login()] Error logging in: ', errRes);
+			if (errRes.status == 409) {
+				errRes = 'Account not found';
+			}
 		  return Promise.reject(errRes);
 		});
 	}
@@ -73,6 +85,5 @@ class Matter {
 	}
 
 };
-var matter = new Matter();
-export default matter;
+export default Matter;
 

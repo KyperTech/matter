@@ -3,12 +3,11 @@
 <head>
   <meta charset='utf-8'>
   <title>Tests</title>
-  <script src='../node_modules/axios/dist/axios.js'></script>
 
   <!-- Polyfill (required by Babel) -->
-  <script src='../dist/matter-library.js'></script>
+  <script src='../dist/matter.bundle.js'></script>
   <script>
-    var matter = Matter;
+    var matter = new Matter('');
     console.log('matter:', matter);
     document.addEventListener("DOMContentLoaded", function(event) { 
       if(matter.getAuthToken()){
@@ -21,6 +20,8 @@
       matter.login({username:'test', password:'test'}).then(function(loginInfo){
         console.log('successful login:', loginInfo);
         document.getElementById("status").innerHTML = "True";
+      }, function(err){
+        console.error('login() : Error logging in:', err);
       });   
     }
   </script>

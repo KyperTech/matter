@@ -1,14 +1,9 @@
 import config from '../config';
 import browserStorage from './browserStorage';
-import superagent from 'superagent';
+import requester from 'superagent';
 
-let requester;
-if (typeof window == 'undefined') { //Node Mode
-	requester = superagent;
-} else if (typeof window.superagent == 'undefined') {
-	console.error('Superagent is required to use Matter');
-} else { //Browser mode
-	requester = window.superagent;
+if (typeof requester == 'undefined') {
+	console.error('superagent is required for Matter');
 }
 
 let request = {
