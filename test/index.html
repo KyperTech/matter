@@ -7,7 +7,7 @@
   <!-- Polyfill (required by Babel) -->
   <script src='../dist/matter.bundle.js'></script>
   <script>
-    var matter = new Matter('tessellate');
+    var matter = new Matter('tessellate', {localServer:true});
     console.log('matter:', matter);
     document.addEventListener("DOMContentLoaded", function(event) { 
       if(matter.getAuthToken()){
@@ -42,7 +42,6 @@
       <p class="submit">
         <button onclick="login()">Login As Test User</button>
         <button onclick="logout()">Logout</button>
-
       </p>
   </div>
 

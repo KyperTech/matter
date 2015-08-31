@@ -18,21 +18,17 @@ function _classCallCheck(instance, Constructor) {
 }
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('superagent'), require('underscore')) : typeof define === 'function' && define.amd ? define(['superagent', 'underscore'], factory) : global.Matter = factory(global.requester, global._);
-})(undefined, function (requester, _) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('superagent'), require('underscore')) : typeof define === 'function' && define.amd ? define(['superagent', 'underscore'], factory) : global.Matter = factory(global.superagent, global._);
+})(undefined, function (superagent, _) {
 	'use strict';
 
-	requester = 'default' in requester ? requester['default'] : requester;
+	superagent = 'default' in superagent ? superagent['default'] : superagent;
 	_ = 'default' in _ ? _['default'] : _;
 
 	var config = {
 		serverUrl: 'http://tessellate.elasticbeanstalk.com',
 		tokenName: 'matter'
 	};
-	//Set server to local server if developing
-	if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
-		config.serverUrl = 'http://localhost:4000';
-	}
 
 	var storage = Object.defineProperties({
 		/**
@@ -127,9 +123,47 @@ function _classCallCheck(instance, Constructor) {
 		}
 	});
 
+	var token = (function () {
+		function token() {
+			_classCallCheck(this, token);
+		}
+
+		_createClass(token, [{
+			key: 'string',
+
+			//TODO: Decode token
+			value: function string(tokenStr) {
+				console.log('Token was set', tokenStr);
+				return storage.setItem(config.tokenName, tokenStr);
+			}
+		}, {
+			key: 'save',
+			value: function save(tokenStr) {
+				this.string = tokenStr;
+				storage.setItem(config.tokenName, tokenStr);
+			}
+		}, {
+			key: 'delete',
+			value: function _delete() {
+				storage.removeItem(config.tokenName);
+				console.log('Token was removed');
+			}
+		}, {
+			key: 'string',
+			get: function get() {
+				return storage.getItem(config.tokenName);
+			}
+		}, {
+			key: 'data',
+			get: function get() {}
+		}]);
+
+		return token;
+	})();
+
 	var request = {
 		get: function get(endpoint, queryData) {
-			var req = requester.get(endpoint);
+			var req = superagent.get(endpoint);
 			if (queryData) {
 				req.query(queryData);
 			}
@@ -137,17 +171,17 @@ function _classCallCheck(instance, Constructor) {
 			return handleResponse(req);
 		},
 		post: function post(endpoint, data) {
-			var req = requester.post(endpoint).send(data);
+			var req = superagent.post(endpoint).send(data);
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		},
 		put: function put(endpoint, data) {
-			var req = requester.put(endpoint).send(data);
+			var req = superagent.put(endpoint).send(data);
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		},
 		del: function del(endpoint, data) {
-			var req = requester.put(endpoint).send(data);
+			var req = superagent.put(endpoint).send(data);
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		}
@@ -177,43 +211,6 @@ function _classCallCheck(instance, Constructor) {
 		return req;
 	}
 
-	var token = (function () {
-		function token() {
-			_classCallCheck(this, token);
-		}
-
-		_createClass(token, [{
-			key: 'string',
-
-			//TODO: Decode token
-			value: function string(tokenStr) {
-				console.log('Token was set', tokenStr);
-				return storage.setItem(config.tokenName, tokenStr);
-			}
-		}, {
-			key: 'save',
-			value: function save(tokenStr) {
-				this.string = tokenStr;
-				storage.setItem(config.tokenName, tokenStr);
-			}
-		}, {
-			key: 'delete',
-			value: function _delete() {
-				storage.removeItem(config.tokenName);
-			}
-		}, {
-			key: 'string',
-			get: function get() {
-				return storage.getItem(config.tokenName);
-			}
-		}, {
-			key: 'data',
-			get: function get() {}
-		}]);
-
-		return token;
-	})();
-
 	var user = undefined;
 	var endpoints = undefined;
 
@@ -222,13 +219,16 @@ function _classCallCheck(instance, Constructor) {
    * @param {string} appName Name of application
    */
 
-		function Matter(appName) {
+		function Matter(appName, opts) {
 			_classCallCheck(this, Matter);
 
 			if (!appName) {
 				throw new Error('Application name is required to use Matter');
 			} else {
 				this.name = appName;
+			}
+			if (opts) {
+				this.options = opts;
 			}
 		}
 
@@ -274,7 +274,7 @@ function _classCallCheck(instance, Constructor) {
 						return response;
 					}
 				})['catch'](function (errRes) {
-					if (errRes.status == 409) {
+					if (errRes.status == 409 || errRes.status == 400) {
 						errRes = errRes.response.text;
 					}
 					return Promise.reject(errRes);
@@ -286,14 +286,13 @@ function _classCallCheck(instance, Constructor) {
 		}, {
 			key: 'logout',
 			value: function logout() {
-				return request.put(this.endpoint + '/logout', {}).then(function (response) {
+				return request.put(this.endpoint + '/logout').then(function (response) {
 					console.log('[Matter.logout()] Logout successful: ', response);
-					if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
-						window.localStorage.setItem(config.tokenName, null);
-					}
-					return response.body;
+					token['delete']();
+					return response;
 				})['catch'](function (errRes) {
 					console.error('[Matter.logout()] Error logging out: ', errRes);
+					token['delete']();
 					return Promise.reject(errRes);
 				});
 			}
@@ -314,18 +313,16 @@ function _classCallCheck(instance, Constructor) {
 		}, {
 			key: 'getAuthToken',
 			value: function getAuthToken() {
-				//TODO: Load token from storage
-				if (typeof window == 'undefined' || typeof window.localStorage.getItem(config.tokenName) == 'undefined') {
-					return null;
-				}
-				return window.localStorage.getItem(config.tokenName);
+				return token.string;
 			}
 		}, {
 			key: 'endpoint',
 			get: function get() {
-				var serverUrl = undefined;
+				var serverUrl = config.serverUrl;
+				if (_.has(this, 'options') && this.options.localServer) {
+					serverUrl = 'http://localhost:4000';
+				}
 				if (this.name == 'tessellate') {
-					serverUrl = config.serverUrl;
 					//Remove url if host is server
 					if (window && _.has(window, 'location') && window.location.host == serverUrl) {
 						console.warn('Host is Server, serverUrl simplified!');

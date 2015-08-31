@@ -1,69 +1,92 @@
 import Matter from '../../src/matter';
+import request from '../../src/utils/request';
 
+let matter = new Matter('exampleApp');
+let mockGet = sinon.stub(request, 'get', function() {
+ console.log('mock get called with:', arguments);
+ return new Promise((resolve) => {
+   resolve({body: {}});
+ });
+});
+let mockPut = sinon.stub(request, 'put', function() {
+ console.log('mock put called with:', arguments);
+ return new Promise((resolve) => {
+   resolve({body: {}});
+ });
+});
+let mockPost = sinon.stub(request, 'post', function(url, postData) {
+ console.log('mock post called with:', arguments);
+ return new Promise((resolve, reject) => {
+   if (!postData || postData == {}) {
+     reject({});
+   }
+   resolve({body: {}});
+ });
+});
 describe('Matter', () => {
   describe('Login method', () => {
     beforeEach(() => {
-      spy(Matter, 'login');
+      spy(matter, 'login');
       spy(console, 'error');
     });
 
     it('should have been run once', () => {
-      Matter.login({username: 'test', password: 'test'});
-      expect(Matter.login).to.have.been.calledOnce;
+      matter.login({username: 'test', password: 'test'});
+      expect(matter.login).to.have.been.calledOnce;
     });
     it('handle no input', () => {
-      Matter.login();
-      expect(Matter.login).to.have.been.calledOnce;
+      matter.login();
+      expect(matter.login).to.have.been.calledOnce;
     });
   });
   describe('Signup method', () => {
     beforeEach(() => {
-      spy(Matter, 'signup');
-      Matter.signup({username: 'test', password: 'test'});
+      spy(matter, 'signup');
+      matter.signup({username: 'test', password: 'test'});
     });
 
     it('should have been run once', () => {
-      expect(Matter.signup).to.have.been.calledOnce;
+      expect(matter.signup).to.have.been.calledOnce;
     });
 
   });
   describe('Logout method', () => {
     beforeEach(() => {
-      spy(Matter, 'logout');
-      Matter.logout();
+      spy(matter, 'logout');
+      matter.logout();
     });
 
     it('should have been run once', () => {
-      expect(Matter.logout).to.have.been.calledOnce;
+      expect(matter.logout).to.have.been.calledOnce;
     });
 
   });
   describe('getCurrentUser method', () => {
     beforeEach(() => {
-      spy(Matter, 'getCurrentUser');
-      Matter.getCurrentUser();
+      spy(matter, 'getCurrentUser');
+      matter.getCurrentUser();
     });
 
     it('should have been run once', () => {
-      expect(Matter.getCurrentUser).to.have.been.calledOnce;
+      expect(matter.getCurrentUser).to.have.been.calledOnce;
     });
   });
   describe('getAuthToken method', () => {
     beforeEach(() => {
-      spy(Matter, 'getAuthToken');
+      spy(matter, 'getAuthToken');
     });
 
     it('should have been run once', () => {
-      Matter.getAuthToken();
-      expect(Matter.getAuthToken).to.have.been.calledOnce;
+      matter.getAuthToken();
+      expect(matter.getAuthToken).to.have.been.calledOnce;
     });
     it('get auth token', () => {
       window = {localStorage: {}};
       window.localStorage.getItem = () => {
         return '';
       };
-      Matter.getAuthToken();
-      expect(Matter.getAuthToken).to.have.been.calledOnce;
+      matter.getAuthToken();
+      expect(matter.getAuthToken).to.have.been.calledOnce;
     });
   });
 });

@@ -18,6 +18,7 @@ class token {
 	}
 	delete() {
 		storage.removeItem(config.tokenName);
+		console.log('Token was removed');
 	}
 }
 

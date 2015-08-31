@@ -49,6 +49,15 @@ matter.login({username:"test", password:"test"}).then(function(user){
 ```
 
 ## API Documentation
+### Options
+Pass an options object when creating a new Matter object:
+
+```javascript
+//Set api server to local (for local tessellate instance)
+var matter = new Matter('exampleApp', {localServer:true});
+```
+#### Current Options
+* localServer {Boolean} - Use local server url instead of hosted version of [Tessellate](http://tessellate.elasticbeanstalk.com)
 
 ### Logout()
 Log current user out

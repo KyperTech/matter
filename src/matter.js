@@ -10,20 +10,25 @@ class Matter {
 	/* Constructor
 	 * @param {string} appName Name of application
 	 */
-	constructor(appName) {
+	constructor(appName, opts) {
 		if (!appName) {
 			throw new Error('Application name is required to use Matter');
 		} else {
 			this.name = appName;
+		}
+		if (opts) {
+			this.options = opts;
 		}
 	}
 	/* Endpoint getter
 	 *
 	 */
 	get endpoint() {
-		let serverUrl;
+		let serverUrl = config.serverUrl;
+		if (_.has(this, 'options') && this.options.localServer) {
+			serverUrl = 'http://localhost:4000';
+		}
 		if (this.name == 'tessellate') {
-			serverUrl = config.serverUrl;
 			//Remove url if host is server
 			if (window && _.has(window, 'location') && window.location.host == serverUrl) {
 				console.warn('Host is Server, serverUrl simplified!');
@@ -69,7 +74,7 @@ class Matter {
 				return response;
 			}
 		})['catch'](function(errRes) {
-			if (errRes.status == 409) {
+			if (errRes.status == 409 || errRes.status == 400) {
 				errRes = errRes.response.text;
 			}
 		  return Promise.reject(errRes);
@@ -78,15 +83,13 @@ class Matter {
 	/** Logout
 	 */
 	logout() {
-		return request.put(this.endpoint + '/logout', {
-		}).then(function(response) {
+		return request.put(this.endpoint + '/logout').then(function(response) {
 		  console.log('[Matter.logout()] Logout successful: ', response);
-		  if (typeof window != 'undefined' && typeof window.localStorage.getItem(config.tokenName) != null) {
-				window.localStorage.setItem(config.tokenName, null);
-			}
-		  return response.body;
+		  token.delete();
+		  return response;
 		})['catch'](function(errRes) {
 		  console.error('[Matter.logout()] Error logging out: ', errRes);
+		  token.delete();
 		  return Promise.reject(errRes);
 		});
 	}
@@ -106,13 +109,7 @@ class Matter {
 	}
 
 	getAuthToken() {
-		//TODO: Load token from storage
-		if (typeof window == 'undefined' || typeof window.localStorage.getItem(config.tokenName) == 'undefined') {
-			return null;
-		}
-		return window.localStorage.getItem(config.tokenName);
+		return token.string;
 	}
-
 };
 export default Matter;
-
