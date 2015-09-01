@@ -1,5 +1,6 @@
 import config from '../config';
-import browserStorage from './browserStorage';
+import logger from './logger';
+import storage from './envStorage';
 import superagent from 'superagent';
 
 let request = {
@@ -39,7 +40,7 @@ function handleResponse(req) {
 				return resolve(res.body);
 			} else {
 				if (err.status == 401) {
-					console.warn('Unauthorized. You must be signed into make this request.');
+					logger.warn('Unauthorized. You must be signed into make this request.');
 				}
 				return reject(err);
 			}
@@ -47,9 +48,9 @@ function handleResponse(req) {
 	});
 }
 function addAuthHeader(req) {
-	if (browserStorage.getItem(config.tokenName)) {
-		req = req.set('Authorization', 'Bearer ' + browserStorage.getItem(config.tokenName));
-		console.log('Set auth header');
+	if (storage.getItem(config.tokenName)) {
+		req = req.set('Authorization', 'Bearer ' + storage.getItem(config.tokenName));
+		logger.info({message: 'Set auth header', func: addAuthHeader, file: request});
 	}
 	return req;
 }

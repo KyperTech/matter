@@ -1,5 +1,6 @@
 import config from '../config';
-import storage from './browserStorage';
+import logger from './logger';
+import storage from './envStorage';
 
 class token {
 	get string() {

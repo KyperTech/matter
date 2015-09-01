@@ -18,18 +18,95 @@ function _classCallCheck(instance, Constructor) {
 }
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('superagent'), require('underscore')) : typeof define === 'function' && define.amd ? define(['superagent', 'underscore'], factory) : global.Matter = factory(global.superagent, global._);
-})(undefined, function (superagent, _) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('superagent')) : typeof define === 'function' && define.amd ? define(['underscore', 'superagent'], factory) : global.Matter = factory(global._, global.superagent);
+})(undefined, function (_, superagent) {
 	'use strict';
 
-	superagent = 'default' in superagent ? superagent['default'] : superagent;
 	_ = 'default' in _ ? _['default'] : _;
+	superagent = 'default' in superagent ? superagent['default'] : superagent;
 
 	var config = {
 		serverUrl: 'http://tessellate.elasticbeanstalk.com',
-		tokenName: 'matter'
+		tokenName: 'tessellate'
 	};
 
+	var logger = {
+		log: function log() {
+			var msgStr = buildMessageStr(logData);
+			if (config.envName == 'local') {
+				console.log(logData);
+			} else {
+				console.log(msgStr);
+			}
+		},
+		info: function info() {
+			var msgStr = buildMessageStr(logData);
+			if (config.envName == 'local') {
+				console.info(logData);
+			} else {
+				console.info(msgStr);
+			}
+		},
+		warn: function warn() {
+			var msgStr = buildMessageStr(logData);
+			if (config.envName == 'local') {
+				console.warn(logData);
+			} else {
+				console.warn(msgStr);
+			}
+		},
+		debug: function debug() {
+			var msgStr = buildMessageStr(logData);
+			if (config.envName == 'local') {
+				console.log(logData);
+			} else {
+				console.log(msgStr);
+			}
+		},
+		error: function error() {
+			var msgStr = buildMessageStr(logData);
+			if (config.envName == 'local') {
+				console.error(logData);
+			} else {
+				// console.error(msgStr);
+				//TODO: Log to external logger
+			}
+		}
+	};
+
+	function buildMessageStr(logData) {
+		var msg = '';
+		//TODO: Attach time stamp
+		if (_.isObject(logData)) {
+			if (_.has(logData, 'func')) {
+				if (_.has(logData, 'obj')) {
+					msg += '[' + logData.obj + '.' + logData.func + '()] ';
+				} else if (_.has(logData, 'file')) {
+					msg += '[' + logData.file + ' > ' + logData.func + '()] ';
+				} else {
+					msg += '[' + logData.func + '()] ';
+				}
+			}
+			//Print each key and its value other than obj and func
+			_.each(_.omit(_.keys(logData), 'obj', 'func'), function (key, ind, list) {
+				if (_.isString(logData[key])) {
+					msg += key + ': ' + logData[key] + ', ';
+				} else {
+					//Print objects differently
+					msg += key + ': ' + logData[key] + ', ';
+				}
+				if (ind != list.length - 1) {
+					msg += '\n';
+				}
+			});
+		} else if (_.isString(logData)) {
+			msg = logData;
+		}
+		return msg;
+	}
+
+	var data = {};
+	// TODO: Store objects within local storage.
 	var storage = Object.defineProperties({
 		/**
    * @description
@@ -38,17 +115,30 @@ function _classCallCheck(instance, Constructor) {
    * @param {String} itemName The items name
    * @param {String} itemValue The items value
    *
-   *  @private
    */
-		setItem: function setItem(itemName, itemValue) {
+		item: function item(itemName, itemValue) {
 			//TODO: Handle itemValue being an object instead of a string
-			if (this.exists) {
+			data[itemName] = itemValue;
+			if (this.localExists) {
 				window.sessionStorage.setItem(itemName, itemValue);
 			}
 		},
 		/**
    * @description
-   * Safley gets an item from session storage.
+   * Safley sets item to session storage. Alias: item()
+   *
+   * @param {String} itemName The items name
+   * @param {String} itemValue The items value
+   *
+   */
+		setItem: function setItem(itemName, itemValue) {
+			//TODO: Handle itemValue being an object instead of a string
+			// this.item(itemName) = itemValue;
+		},
+
+		/**
+   * @description
+   * Safley gets an item from session storage. Alias: item()
    *
    * @param {String} itemName The items name
    *
@@ -56,7 +146,9 @@ function _classCallCheck(instance, Constructor) {
    *
    */
 		getItem: function getItem(itemName) {
-			if (this.exists) {
+			if (data[itemName]) {
+				return data[itemName];
+			} else if (this.localExists) {
 				return window.sessionStorage.getItem(itemName);
 			} else {
 				return null;
@@ -71,12 +163,15 @@ function _classCallCheck(instance, Constructor) {
    */
 		removeItem: function removeItem(itemName) {
 			//TODO: Only remove used items
-			if (this.exists) {
+			if (data[itemName]) {
+				data[itemName] = null;
+			}
+			if (this.localExists) {
 				try {
 					//Clear session storage
 					window.sessionStorage.removeItem(itemName);
 				} catch (err) {
-					console.warn('Item could not be removed from session storage.', err);
+					logger.error({ description: 'Error removing item from session storage', error: err, obj: 'storage', func: 'removeItem' });
 				}
 			}
 		},
@@ -87,31 +182,31 @@ function _classCallCheck(instance, Constructor) {
    * @param {String} itemName the items name
    * @param {String} itemValue the items value
    *
-   *  @private
    */
 		clear: function clear() {
 			//TODO: Only remove used items
-			if (this.exists) {
+			data = {};
+			if (this.localExists) {
 				try {
 					//Clear session storage
 					window.sessionStorage.clear();
 				} catch (err) {
-					console.warn('Session storage could not be cleared.', err);
+					logger.warn('Session storage could not be cleared.', err);
 				}
 			}
 		}
 
 	}, {
-		exists: {
+		localExists: {
 			get: function get() {
 				var testKey = 'test';
-				if (typeof window != 'undefined') {
+				if (typeof window != 'undefined' && typeof window.sessionStorage != 'undefined') {
 					try {
 						window.sessionStorage.setItem(testKey, '1');
 						window.sessionStorage.removeItem(testKey);
 						return true;
 					} catch (err) {
-						console.warn('Session storage does not exist.', err);
+						logger.error({ description: 'Error saving to session storage', error: err, obj: 'storage', func: 'localExists' });
 						return false;
 					}
 				} else {
@@ -196,7 +291,7 @@ function _classCallCheck(instance, Constructor) {
 					return resolve(res.body);
 				} else {
 					if (err.status == 401) {
-						console.warn('Unauthorized. You must be signed into make this request.');
+						logger.warn('Unauthorized. You must be signed into make this request.');
 					}
 					return reject(err);
 				}
@@ -206,7 +301,7 @@ function _classCallCheck(instance, Constructor) {
 	function addAuthHeader(req) {
 		if (storage.getItem(config.tokenName)) {
 			req = req.set('Authorization', 'Bearer ' + storage.getItem(config.tokenName));
-			console.log('Set auth header');
+			logger.info({ message: 'Set auth header', func: addAuthHeader, file: request });
 		}
 		return req;
 	}

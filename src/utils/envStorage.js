@@ -1,15 +1,18 @@
 import config from '../config';
+import logger from './logger';
 
+let data = {};
+// TODO: Store objects within local storage.
 let storage = {
-	get exists() {
+	get localExists() {
 		const testKey = 'test';
-		if (typeof window != 'undefined') {
+		if (typeof window != 'undefined' && typeof window.sessionStorage != 'undefined') {
 			try {
 				window.sessionStorage.setItem(testKey, '1');
 				window.sessionStorage.removeItem(testKey);
 				return true;
 			} catch (err) {
-				console.warn('Session storage does not exist.', err);
+				logger.error({description: 'Error saving to session storage', error: err,  obj: 'storage', func: 'localExists'});
 				return false;
 			}
 		} else {
@@ -23,17 +26,30 @@ let storage = {
 	 * @param {String} itemName The items name
 	 * @param {String} itemValue The items value
 	 *
-	 *  @private
 	 */
-	setItem(itemName, itemValue) {
+	item(itemName, itemValue) {
 		//TODO: Handle itemValue being an object instead of a string
-		if (this.exists) {
+		data[itemName] = itemValue;
+		if (this.localExists) {
 			window.sessionStorage.setItem(itemName, itemValue);
 		}
 	},
 	/**
 	 * @description
-	 * Safley gets an item from session storage.
+	 * Safley sets item to session storage. Alias: item()
+	 *
+	 * @param {String} itemName The items name
+	 * @param {String} itemValue The items value
+	 *
+	 */
+	setItem(itemName, itemValue) {
+		//TODO: Handle itemValue being an object instead of a string
+		// this.item(itemName) = itemValue;
+	},
+
+	/**
+	 * @description
+	 * Safley gets an item from session storage. Alias: item()
 	 *
 	 * @param {String} itemName The items name
 	 *
@@ -41,7 +57,9 @@ let storage = {
 	 *
 	 */
 	getItem(itemName) {
-		if (this.exists) {
+		if (data[itemName]) {
+			return data[itemName];
+		} else if (this.localExists) {
 			return window.sessionStorage.getItem(itemName);
 		} else {
 			return null;
@@ -56,12 +74,15 @@ let storage = {
 	 */
 	removeItem(itemName) {
 		//TODO: Only remove used items
-		if (this.exists) {
+		if (data[itemName]) {
+			data[itemName] = null;
+		}
+		if (this.localExists) {
 			try {
 				//Clear session storage
 				window.sessionStorage.removeItem(itemName);
 			} catch (err) {
-				console.warn('Item could not be removed from session storage.', err);
+				logger.error({description: 'Error removing item from session storage', error: err,  obj: 'storage', func: 'removeItem'});
 			}
 		}
 	},
@@ -72,16 +93,16 @@ let storage = {
 	 * @param {String} itemName the items name
 	 * @param {String} itemValue the items value
 	 *
-	 *  @private
 	 */
 	clear() {
 		//TODO: Only remove used items
-		if (this.exists) {
+		data = {};
+		if (this.localExists) {
 			try {
 					//Clear session storage
 				window.sessionStorage.clear();
 			} catch (err) {
-				console.warn('Session storage could not be cleared.', err);
+				logger.warn('Session storage could not be cleared.', err);
 			}
 		}
 	}

@@ -1,4 +1,5 @@
 import config from './config';
+import logger from './utils/logger';
 import request from './utils/request';
 import token from './utils/token';
 import _ from 'underscore';
@@ -57,14 +58,14 @@ class Matter {
 	 */
 	login(loginData) {
 		if (!loginData || !loginData.password || !loginData.username) {
-			console.error('Username/Email and Password are required to login');
+			logger.error('Username/Email and Password are required to login');
 		  return Promise.reject({message: 'Username/Email and Password are required to login'});
 		}
 		return request.put(this.endpoint + '/login', loginData)
 		.then(function(response) {
 			//TODO: Save token locally
 			if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
-				console.error('[Matter.login()] Account not found: ', response);
+				logger.error('[Matter.login()] Account not found: ', response);
 				return Promise.reject(response.data);
 			} else {
 				if (_.has(response, 'token')) {
