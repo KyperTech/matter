@@ -1,5 +1,6 @@
 import config from '../config';
 import logger from './logger';
+import token from './token';
 import storage from './envStorage';
 import superagent from 'superagent';
 
@@ -36,7 +37,7 @@ function handleResponse(req) {
 	return new Promise((resolve, reject) => {
 		req.end((err, res) => {
 			if (!err) {
-				// console.log('Response:', res);
+				// logger.log({description: 'Response:', response:res, func:'handleResponse', file: 'request'});
 				return resolve(res.body);
 			} else {
 				if (err.status == 401) {
@@ -48,9 +49,9 @@ function handleResponse(req) {
 	});
 }
 function addAuthHeader(req) {
-	if (storage.getItem(config.tokenName)) {
-		req = req.set('Authorization', 'Bearer ' + storage.getItem(config.tokenName));
-		logger.info({message: 'Set auth header', func: addAuthHeader, file: request});
+	if (token.string) {
+		req = req.set('Authorization', 'Bearer ' + token.string);
+		logger.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
 	}
 	return req;
 }

@@ -1,45 +1,45 @@
 import config from '../config';
-import _ from 'underscore';
+import _ from 'lodash';
 
 let logger = {
-	log() {
-		let msgStr = buildMessageStr(logData);
+	log(logData) {
+		let msgArgs = buildMessageArgs(logData);
 		if (config.envName == 'local') {
 			console.log(logData);
 		} else {
-			console.log(msgStr);
+			console.log.apply(console, msgArgs);
 		}
 	},
-	info() {
-		let msgStr = buildMessageStr(logData);
+	info(logData) {
+		let msgArgs = buildMessageArgs(logData);
 		if (config.envName == 'local') {
 			console.info(logData);
 		} else {
-			console.info(msgStr);
+			console.info.apply(console, msgArgs);
 		}
 	},
-	warn() {
-		let msgStr = buildMessageStr(logData);
+	warn(logData) {
+		let msgArgs = buildMessageArgs(logData);
 		if (config.envName == 'local') {
 			console.warn(logData);
 		} else {
-			console.warn(msgStr);
+			console.warn.apply(console, msgArgs);
 		}
 	},
-	debug() {
-		let msgStr = buildMessageStr(logData);
+	debug(logData) {
+		let msgArgs = buildMessageArgs(logData);
 		if (config.envName == 'local') {
 			console.log(logData);
 		} else {
-			console.log(msgStr);
+			console.log.apply(console, msgArgs);
 		}
 	},
-	error() {
-		let msgStr = buildMessageStr(logData);
+	error(logData) {
+		let msgArgs = buildMessageArgs(logData);
 		if (config.envName == 'local') {
 			console.error(logData);
 		} else {
-			// console.error(msgStr);
+			console.error.apply(console, msgArgs);
 			//TODO: Log to external logger
 		}
 	}
@@ -47,33 +47,40 @@ let logger = {
 
 export default logger;
 
-function buildMessageStr(logData) {
-	var msg = '';
+function buildMessageArgs(logData) {
+	var msgStr = '';
+	var msgObj = {};
 	//TODO: Attach time stamp
 	if (_.isObject(logData)) {
 		if (_.has(logData, 'func')) {
 			if (_.has(logData, 'obj')) {
-				msg += '[' + logData.obj + '.' + logData.func + '()] ';
+				msgStr += '[' + logData.obj + '.' + logData.func + '()] ';
 			} else if (_.has(logData, 'file')) {
-				msg += '[' + logData.file + ' > ' + logData.func + '()] ';
+				msgStr += '[' + logData.file + ' > ' + logData.func + '()] ';
 			} else {
-				msg += '[' + logData.func + '()] ';
+				msgStr += '[' + logData.func + '()] ';
 			}
 		}
 		//Print each key and its value other than obj and func
-		_.each(_.omit(_.keys(logData), 'obj', 'func'), function(key, ind, list) {
-			if (_.isString(logData[key])) {
-				msg += key + ': ' + logData[key] + ', ';
-			} else {
-				//Print objects differently
-				msg += key + ': ' + logData[key] + ', ';
-			}
-			if (ind != list.length - 1) {
-				msg += '\n';
+		_.each(_.omit(_.keys(logData)), function(key, ind, list) {
+			if (key != 'func' && key != 'obj') {
+				if (key == 'description' || key == 'message') {
+					msgStr += logData[key];
+				} else if (_.isString(logData[key])) {
+					// msgStr += key + ': ' + logData[key] + ', ';
+					msgObj[key] = logData[key];
+				} else {
+					//Print objects differently
+					// msgStr += key + ': ' + logData[key] + ', ';
+					msgObj[key] = logData[key];
+				}
 			}
 		});
+		msgStr += '\n';
 	} else if (_.isString(logData)) {
-		msg = logData;
+		msgStr = logData;
 	}
+	var msg = [msgStr, msgObj];
+
 	return msg;
 }

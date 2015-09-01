@@ -29,10 +29,7 @@ let storage = {
 	 */
 	item(itemName, itemValue) {
 		//TODO: Handle itemValue being an object instead of a string
-		data[itemName] = itemValue;
-		if (this.localExists) {
-			window.sessionStorage.setItem(itemName, itemValue);
-		}
+		return this.setItem(itemName, itemValue);
 	},
 	/**
 	 * @description
@@ -45,6 +42,10 @@ let storage = {
 	setItem(itemName, itemValue) {
 		//TODO: Handle itemValue being an object instead of a string
 		// this.item(itemName) = itemValue;
+		data[itemName] = itemValue;
+		if (this.localExists) {
+			window.sessionStorage.setItem(itemName, itemValue);
+		}
 	},
 
 	/**

@@ -61,32 +61,18 @@ describe('Matter', () => {
     });
 
   });
-  describe('getCurrentUser method', () => {
-    beforeEach(() => {
-      spy(matter, 'getCurrentUser');
-      matter.getCurrentUser();
-    });
+  describe('currentUser method', () => {
 
-    it('should have been run once', () => {
-      expect(matter.getCurrentUser).to.have.been.calledOnce;
+    it('should request current user', () => {
+      matter.auth.currentUser();
+      expect(mockGet).to.have.been.calledOnce;
     });
-  });
-  describe('getAuthToken method', () => {
-    beforeEach(() => {
-      spy(matter, 'getAuthToken');
-    });
-
-    it('should have been run once', () => {
-      matter.getAuthToken();
-      expect(matter.getAuthToken).to.have.been.calledOnce;
-    });
-    it('get auth token', () => {
-      window = {localStorage: {}};
-      window.localStorage.getItem = () => {
-        return '';
-      };
-      matter.getAuthToken();
-      expect(matter.getAuthToken).to.have.been.calledOnce;
+    it('should load current user from memory', () => {
+      matter.storage.setItem('currentUser', {username: 'testUser'});
+      matter.auth.currentUser().then((user) => {
+        expect(user).to.have.property('username');
+        expect(user.username).to.be('testUser');
+      });
     });
   });
 });
