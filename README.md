@@ -95,11 +95,25 @@ Get whether or not there is a user currently logged in
 **Example:**
 ```javascript
 if(matter.isLoggedIn){
-
+  console.log('User is currently logged in.');
 }
 ```
 
-#### `currentUser()`
+#### `currentUser`
+
+Get current user data if it is available. Returns `null` if no user is currently logged in.
+
+**Example:**
+```javascript
+if(matter.currentUser){
+  console.log('The current users data:', matter.currentUser);
+}
+if(matter.currentUser == null){
+  console.log('No user is currently logged in.');
+}
+```
+
+#### `getCurrentUser()`
 
 Get currently logged in user.
 
@@ -146,6 +160,7 @@ storage.setItem('myObject', myData);
 storage.item('myString', 'AnyStringValue');
 
 ```
+
 #### `storage.getItem()`
 
 Safley get an item within in memory storage and session storage when available (in the browser). Works for strings and objects.
@@ -184,6 +199,7 @@ Use local server url instead of hosted version of [Tessellate](http://tessellate
 
 ## TODO
 * 3rd Party provider logins (keys set on tessellate)
+* Session publicly accessible
 * Update user info Method
 * Improve Documentation
 * Run tests git pre-push

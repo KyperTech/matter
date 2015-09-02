@@ -109,7 +109,7 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-	get currentUser() {
+	getCurrentUser() {
 		if (this.storage.item('currentUser')) {
 			//TODO: Check to see if this comes back as a string
 			return Promise.resove(this.storage.item('currentUser'));
@@ -125,14 +125,80 @@ class Matter {
 			});
 		}
 	}
+	set currentUser(userData) {
+		logger.log({description: 'Current User Request responded.', user: userData, func: 'currentUser', obj: 'Matter'});
+		this.storage.setItem(userData);
+	}
+	get currentUser() {
+		if (this.storage.getItem('currentUser')) {
+			return this.storage.getItem('currentUser');
+		} else {
+			return null;
+		}
+	}
 	get storage() {
 		return envStorage;
 	}
 	get token() {
 		return token;
 	}
+	get utils() {
+		return {logger: logger, request: request, storage: envStorage};
+	}
 	get isLoggedIn() {
 		return this.token.string ? true : false;
+	}
+	//Check that user is in a single group or in all of a list of groups
+	//TODO: Take order of groups into account
+	isInGroup(checkGroups) {
+		if (!this.isLoggedIn) {
+			logger.log({description: 'No logged in user to check.', func: 'isInGroup', obj: 'Matter'});
+			return false;
+		}
+		//Check if user is
+		if (checkGroups && _.isString(checkGroups)) {
+			//Single role or string list of roles
+			var groupsArray = checkGroups.split(',');
+			if (groupsArray.length > 1) {
+				//String list of roles
+				logger.info({description: 'String list of groups.', list: groupsArray, func: 'isInGroup', obj: 'Matter'});
+				return _.every(groupsArray, (group) => {
+					return this.isInGroup(group);
+				});
+			} else {
+				//Single group
+				logger.log({description: 'Checking if user is in group.', group: checkGroups, userGroups: this.token.data.groups,  func: 'isInGroup', obj: 'Matter'});
+				_.any(this.token.data.groups, (group) =>  {
+					return checkGroups == group.name;
+				});
+			}
+		} else if (checkGroups && _.isArray(checkGroups)) {
+			//Array of roles
+			//Check that user is in every group
+			logger.info({description: 'Array of groups.', list: checkGroups, func: 'isInGroup', obj: 'Matter'});
+			return _.every(checkGroups, (group) =>  {
+				return this.isInGroup(group);
+			});
+		} else {
+			return false;
+		}
+		//TODO: Handle string and array inputs
+	}
+	isInGroups(checkGroups) {
+		//Check if user is in any of the provided groups
+		if (checkGroups && _.isArray(checkGroups)) {
+			return _.map(checkGroups, (group) =>  {
+				if (_.isString(group)) {
+					//Group is string
+					return this.isInGroup(group);
+				} else {
+					//Group is object
+					return this.isInGroup(group.name);
+				}
+			});
+		} else {
+			logger.error({description: 'Invalid groups list.', func: 'isInGroups', obj: 'Matter'});
+		}
 	}
 };
 export default Matter;

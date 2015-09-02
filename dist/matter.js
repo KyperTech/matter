@@ -220,7 +220,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				tokenData = jwtDecode(tokenStr);
 			} catch (err) {
 				logger.error({ description: 'Error decoding token.', data: tokenData, error: err, func: 'decodeToken', file: 'token' });
-				throw new Error('Error decoding token.');
+				throw new Error('Invalid token string.');
 			}
 		}
 		return tokenData;
@@ -293,7 +293,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		}
-
 	};
 
 	function handleResponse(req) {
@@ -421,6 +420,87 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				});
 			}
 		}, {
+			key: 'getCurrentUser',
+			value: function getCurrentUser() {
+				var _this3 = this;
+
+				if (this.storage.item('currentUser')) {
+					//TODO: Check to see if this comes back as a string
+					return Promise.resove(this.storage.item('currentUser'));
+				} else {
+					return request.get(this.endpoint + '/user').then(function (response) {
+						//TODO: Save user information locally
+						logger.log({ description: 'Current User Request responded.', responseData: response.data, func: 'currentUser', obj: 'Matter' });
+						_this3.currentUser = response.data;
+						return response.data;
+					})['catch'](function (errRes) {
+						logger.error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });
+						return Promise.reject(errRes);
+					});
+				}
+			}
+		}, {
+			key: 'isInGroup',
+
+			//Check that user is in a single group or in all of a list of groups
+			//TODO: Take order of groups into account
+			value: function isInGroup(checkGroups) {
+				var _this4 = this;
+
+				if (!this.isLoggedIn) {
+					logger.log({ description: 'No logged in user to check.', func: 'isInGroup', obj: 'Matter' });
+					return false;
+				}
+				//Check if user is
+				if (checkGroups && _.isString(checkGroups)) {
+					//Single role or string list of roles
+					var groupsArray = checkGroups.split(',');
+					if (groupsArray.length > 1) {
+						//String list of roles
+						logger.info({ description: 'String list of groups.', list: groupsArray, func: 'isInGroup', obj: 'Matter' });
+						return _.every(groupsArray, function (group) {
+							return _this4.isInGroup(group);
+						});
+					} else {
+						//Single group
+						logger.log({ description: 'Checking if user is in group.', group: checkGroups, userGroups: this.token.data.groups, func: 'isInGroup', obj: 'Matter' });
+						_.any(this.token.data.groups, function (group) {
+							return checkGroups == group.name;
+						});
+					}
+				} else if (checkGroups && _.isArray(checkGroups)) {
+					//Array of roles
+					//Check that user is in every group
+					logger.info({ description: 'Array of groups.', list: checkGroups, func: 'isInGroup', obj: 'Matter' });
+					return _.every(checkGroups, function (group) {
+						return _this4.isInGroup(group);
+					});
+				} else {
+					return false;
+				}
+				//TODO: Handle string and array inputs
+			}
+		}, {
+			key: 'isInGroups',
+			value: function isInGroups(checkGroups) {
+				var _this5 = this;
+
+				//Check if user is in any of the provided groups
+				if (checkGroups && _.isArray(checkGroups)) {
+					return _.map(checkGroups, function (group) {
+						if (_.isString(group)) {
+							//Group is string
+							return _this5.isInGroup(group);
+						} else {
+							//Group is object
+							return _this5.isInGroup(group.name);
+						}
+					});
+				} else {
+					logger.error({ description: 'Invalid groups list.', func: 'isInGroups', obj: 'Matter' });
+				}
+			}
+		}, {
 			key: 'endpoint',
 			get: function get() {
 				var serverUrl = config.serverUrl;
@@ -442,22 +522,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}, {
 			key: 'currentUser',
+			set: function set(userData) {
+				logger.log({ description: 'Current User Request responded.', user: userData, func: 'currentUser', obj: 'Matter' });
+				this.storage.setItem(userData);
+			},
 			get: function get() {
-				var _this3 = this;
-
 				if (this.storage.item('currentUser')) {
-					//TODO: Check to see if this comes back as a string
-					return Promise.resove(this.storage.item('currentUser'));
+					return this.storage.item('currentUser');
 				} else {
-					return request.get(this.endpoint + '/user').then(function (response) {
-						//TODO: Save user information locally
-						logger.log({ description: 'Current User Request responded.', responseData: response.data, func: 'currentUser', obj: 'Matter' });
-						_this3.currentUser = response.data;
-						return response.data;
-					})['catch'](function (errRes) {
-						logger.error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });
-						return Promise.reject(errRes);
-					});
+					return null;
 				}
 			}
 		}, {
@@ -469,6 +542,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'token',
 			get: function get() {
 				return token;
+			}
+		}, {
+			key: 'utils',
+			get: function get() {
+				return { logger: logger, request: request, storage: storage };
 			}
 		}, {
 			key: 'isLoggedIn',

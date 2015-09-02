@@ -102,13 +102,13 @@ describe('Matter', () => {
   });
   describe('currentUser method', () => {
     it('requests user endpoint', () => {
-      matter.currentUser.then((user) =>  {
+      matter.getCurrentUser().then((user) =>  {
         expect(mockGet).to.have.been.calledOnce;
       });
     });
     it('loads current user from memory', () =>  {
-      matter.storage.setItem('currentUser', {username: 'testUser'});
-      matter.currentUser.then((user) =>  {
+      matter.currentUser = {username: 'testUser'};
+      matter.getCurrentUser().then((user) =>  {
         expect(user).to.have.property('username');
         expect(user.username).to.be('testUser');
       });

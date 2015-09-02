@@ -209,7 +209,7 @@ const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
 // Run the headless unit tests as you make changes.
 gulp.task('watch', function() {
   const watchFiles = jsWatchFiles.concat(otherWatchFiles);
-  gulp.watch(watchFiles, ['test']);
+  gulp.watch(watchFiles, ['test', 'build-bundle']);
 });
 
 // Set up a livereload environment for our spec runner
@@ -238,6 +238,22 @@ gulp.task('upload', function() {
   return gulp.src('./' + conf.distFolder + '/**')
     .pipe($.rename(function (path) {
       path.dirname = conf.cdn.path + '/' + manifest.version + '/' + path.dirname;
+    }))
+    .pipe(publisher.publish())
+    .pipe(awspublish.reporter());
+});
+gulp.task('upload-latest', function() {
+  var s3Config = {
+    accessKeyId:process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY,
+    params:{
+      Bucket:conf.cdn.bucketName
+    }
+  };
+  var publisher = awspublish.create(s3Config);
+  return gulp.src('./' + conf.distFolder + '/**')
+    .pipe($.rename(function (path) {
+      path.dirname = conf.cdn.path + '/latest/' + path.dirname;
     }))
     .pipe(publisher.publish())
     .pipe(awspublish.reporter());
