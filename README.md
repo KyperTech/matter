@@ -19,7 +19,8 @@ Using Matter requires having created an application on [Tessellate](http://tesse
 
   To use the CDN, add the following script tag to your `index.html`:
     
-    ```html
+    ```HTML
+    <!-- Matter Library Bundle -->
     <script src="http://cdn.kyper.io/js/matter/0.0.4/matter.bundle.js"></script>
     ```
   #### Bower
@@ -28,8 +29,9 @@ Using Matter requires having created an application on [Tessellate](http://tesse
 1. Start using Matter by providing the name of the app you created on [Tessellate](http://tessellate.elasticbeanstalk.com).
 
   ```javascript
-  //New matter object with the application name 'exampleApp'
+  //New Matter object with the application name 'exampleApp'
   var matter = new Matter('exampleApp');
+  
   //Login to account with username "test" and password "test"
   matter.login({username:"test", password:"test"}).then(function(user){
       console.log('User logged into exampleApp:', user);
@@ -65,52 +67,71 @@ Log user in provided username/email and password.
 **Example:**
 ```javascript
 matter.login({username: 'test', password: 'test'})
-.then(function(userData){ console.log('User logged in', userData)});
-```
-
-#### `signup()`
-
-Create a new user and login
-
-**Example:**
-```javascript
-Matter.signup({username: 'test', name:'Test User', password: 'test'})
-.then(function(userData){ console.log('User signed up.', userData)});
-```
-#### `logout()`
-
-Log current user out.
-
-**Example:**
-```javascript
-Matter.logout().then(function(){ 
-  console.log('User logged out');
+.then(function(userData){ 
+  console.log('User logged in. Account:', userData.account);
 });
 ```
 
-#### `isLoggedIn`
+### `signup()`
 
-Get whether or not there is a user currently logged in
+Signup a new user and login as that user. Useful for a signup page that has authentication and userdata available when it succeeds.
 
 **Example:**
 ```javascript
-if(matter.isLoggedIn){
+var signupInfo = {
+  username: 'test', 
+  name:'Test User', 
+  email:'test@test.com', 
+  password: 'test'
+};
+matter.signup(signupInfo)
+.then(function(userData){ 
+  console.log('User signed up. Account:', userData.account);
+}, function(err){
+  //Handle errors such as username being taken
+  console.error('Error siging up: ', err);
+});
 
+```
+### `logout()`
+
+Log currently logged in user out. This is safe to use even if there is not a user currently logged in, and it can be handled through the error callback.
+
+**Example:**
+```javascript
+matter.logout().then(function(){ 
+  console.log('User logged out');
+}, function(err){
+  console.error(err);
+});
+```
+
+### `isLoggedIn`
+
+Get logged in status for current user. Useful for showing and hideing items that only logged in users should see. See `examples/browser` for an example of a logout button that shows/hides.
+
+**Example:**
+```javascript
+//If currently logged in
+if(matter.isLoggedIn){
+  console.log('User is logged in');
 }
 ```
 
-#### `currentUser()`
+### `currentUser()`
 
-Get currently logged in user.
+Get currently logged in user's account information. Useful for displaying the currently logged in user's username or email in navs/headers.
 
 **Example:**
 ```javascript
-Matter.currentUser().then(function(user){ console.log('Currently logged in user:', user)});
+matter.currentUser().then(function(user){ 
+  console.log('Currently logged in user:', user)
+});
 ```
 
 
 ### token
-Get Auth token for currently logged in user
+Get string of Auth token for currently logged in user. This is not very useful unless externally unless you are attempting to decode the token yourself (already handled when calling `token.data`);
 
 **Example:**
 ```javascript
@@ -136,28 +157,28 @@ Alias: `storage.item`
 
 ```javascript
 //Storing a string
-storage.setItem('myString', 'AnyStringValue');
+matter.storage.setItem('myString', 'AnyStringValue');
 
 //Storing an object
 var myData = {some:'example data'};
-storage.setItem('myObject', myData);
+matter.storage.setItem('myObject', myData);
 
 //Using item alias
-storage.item('myString', 'AnyStringValue');
+matter.storage.item('myString', 'AnyStringValue');
 
 ```
 #### `storage.getItem()`
 
-Safley get an item within in memory storage and session storage when available (in the browser). Works for strings and objects.
+Safley get an item from within in-memory storage and `sessionStorage` when available (in the browser). Works for strings and objects.
 
 **Example:**
 
 ```javascript
 //Getting a string
-var myStr = storage.getItem('myString');
+var myStr = matter.storage.getItem('myString');
 
 //Getting an object
-var myObj = storage.getItem('myObject');
+var myObj = matter.storage.getItem('myObject');
 ```
 
 ### Settings
