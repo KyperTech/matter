@@ -3,7 +3,6 @@ import logger from './logger';
 import token from './token';
 import storage from './envStorage';
 import superagent from 'superagent';
-
 let request = {
 	get(endpoint, queryData) {
 		var req = superagent.get(endpoint);
@@ -28,7 +27,6 @@ let request = {
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	}
-
 };
 
 export default request;

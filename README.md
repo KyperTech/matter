@@ -183,9 +183,7 @@ Use local server url instead of hosted version of [Tessellate](http://tessellate
 
 
 ## TODO
-* 3D Party provider logins (keys set on tessellate)
-* Testers for all/most methods in test page
-* Watch/Rebuild task improvement
+* 3rd Party provider logins (keys set on tessellate)
 * Update user info Method
 * Improve Documentation
 * Run tests git pre-push

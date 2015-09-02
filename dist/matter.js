@@ -3,16 +3,18 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash'), require('superagent')) : typeof define === 'function' && define.amd ? define(['lodash', 'superagent'], factory) : global.Matter = factory(global._, global.superagent);
-})(this, function (_, superagent) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash'), require('jwt-decode'), require('superagent')) : typeof define === 'function' && define.amd ? define(['lodash', 'jwt-decode', 'superagent'], factory) : global.Matter = factory(global._, global.jwtDecode, global.superagent);
+})(this, function (_, jwtDecode, superagent) {
 	'use strict';
 
 	_ = 'default' in _ ? _['default'] : _;
+	jwtDecode = 'default' in jwtDecode ? jwtDecode['default'] : jwtDecode;
 	superagent = 'default' in superagent ? superagent['default'] : superagent;
 
 	var config = {
 		serverUrl: 'http://tessellate.elasticbeanstalk.com',
-		tokenName: 'tessellate'
+		tokenName: 'tessellate',
+		tokenDataName: 'tessellate-tokenData'
 	};
 
 	var logger = {
@@ -211,10 +213,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 	});
 
+	function decodeToken(tokenStr) {
+		var tokenData = undefined;
+		if (tokenStr && tokenStr != '') {
+			try {
+				tokenData = jwtDecode(tokenStr);
+			} catch (err) {
+				logger.error({ description: 'Error decoding token.', data: tokenData, error: err, func: 'decodeToken', file: 'token' });
+				throw new Error('Error decoding token.');
+			}
+		}
+		return tokenData;
+	}
 	var token = Object.defineProperties({
 		save: function save(tokenStr) {
 			this.string = tokenStr;
-			storage.setItem(config.tokenName, tokenStr);
 		},
 		'delete': function _delete() {
 			storage.removeItem(config.tokenName);
@@ -225,17 +238,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			get: function get() {
 				return storage.getItem(config.tokenName);
 			},
-
-			//TODO: Decode token
 			set: function set(tokenStr) {
 				logger.log({ description: 'Token was set.', token: tokenStr, func: 'string', obj: 'token' });
-				return storage.setItem(config.tokenName, tokenStr);
+				this.data = jwtDecode(tokenStr);
+				storage.setItem(config.tokenName, tokenStr);
 			},
 			configurable: true,
 			enumerable: true
 		},
 		data: {
-			get: function get() {},
+			get: function get() {
+				if (storage.getItem(config.tokenDataName)) {
+					return storage.getItem(config.tokenDataName);
+				} else {
+					return decodeToken(this.string);
+				}
+			},
+			set: function set(tokenData) {
+				if (_.isString(tokenData)) {
+					var tokenStr = tokenData;
+					tokenData = decodeToken(tokenStr);
+					logger.info({ description: 'Token data was set as string. Decoding token.', token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token' });
+				} else {
+					logger.log({ description: 'Token data was set.', data: tokenData, func: 'data', obj: 'token' });
+					storage.setItem(config.tokenDataName, tokenData);
+				}
+			},
 			configurable: true,
 			enumerable: true
 		}

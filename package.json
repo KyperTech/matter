@@ -73,6 +73,7 @@
     ]
   },
   "dependencies": {
+    "jwt-decode": "^1.4.0",
     "lodash": "^3.10.1",
     "superagent": "^1.3.0"
   }
