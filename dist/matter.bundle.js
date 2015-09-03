@@ -13803,9 +13803,9 @@ var config = {
 	tokenDataName: 'tessellate-tokenData'
 };
 //Set server to local server if developing
-// if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
-// 	config.serverUrl = 'http://localhost:4000';
-// }
+if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
+	config.serverUrl = 'http://localhost:4000';
+}
 exports['default'] = config;
 module.exports = exports['default'];
 
@@ -13913,7 +13913,7 @@ var Matter = (function () {
 						_this.token.string = response.token;
 					}
 					if (_lodash2['default'].has(response, 'account')) {
-						_this.storage.setItem('currentUser');
+						_this.storage.setItem('currentUser', response.account);
 					}
 					return response.account;
 				}
@@ -13951,7 +13951,6 @@ var Matter = (function () {
 			var _this3 = this;
 
 			if (this.storage.item('currentUser')) {
-				//TODO: Check to see if this comes back as a string
 				return Promise.resove(this.storage.item('currentUser'));
 			} else {
 				return _utilsRequest2['default'].get(this.endpoint + '/user').then(function (response) {
@@ -13966,12 +13965,37 @@ var Matter = (function () {
 			}
 		}
 	}, {
+		key: 'updateProfile',
+
+		/** updateProfile
+   */
+		value: function updateProfile(updateData) {
+			var _this4 = this;
+
+			if (!this.isLoggedIn) {
+				_utilsLogger2['default'].error({ description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter' });
+				return Promise.reject({ message: 'Must be logged in to update profile.' });
+			}
+			//Send update request
+			_utilsLogger2['default'].warn({ description: 'Calling update endpoint.', endpoint: this.endpoint + '/user/' + this.token.data.username, func: 'updateProfile', obj: 'Matter' });
+			return _utilsRequest2['default'].put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
+				_utilsLogger2['default'].log({ description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter' });
+				_this4.currentUser = response;
+				return response;
+			})['catch'](function (errRes) {
+				_utilsLogger2['default'].error({ description: 'Error requesting current user.', error: errRes, func: 'updateProfile', obj: 'Matter' });
+				return Promise.reject(errRes);
+			});
+		}
+
+		/** updateProfile
+   */
+	}, {
 		key: 'isInGroup',
 
 		//Check that user is in a single group or in all of a list of groups
-		//TODO: Take order of groups into account
 		value: function isInGroup(checkGroups) {
-			var _this4 = this;
+			var _this5 = this;
 
 			if (!this.isLoggedIn) {
 				_utilsLogger2['default'].log({ description: 'No logged in user to check.', func: 'isInGroup', obj: 'Matter' });
@@ -13979,28 +14003,34 @@ var Matter = (function () {
 			}
 			//Check if user is
 			if (checkGroups && _lodash2['default'].isString(checkGroups)) {
-				//Single role or string list of roles
-				var groupsArray = checkGroups.split(',');
-				if (groupsArray.length > 1) {
-					//String list of roles
-					_utilsLogger2['default'].info({ description: 'String list of groups.', list: groupsArray, func: 'isInGroup', obj: 'Matter' });
-					return _lodash2['default'].every(groupsArray, function (group) {
-						return _this4.isInGroup(group);
-					});
-				} else {
-					//Single group
-					_utilsLogger2['default'].log({ description: 'Checking if user is in group.', group: checkGroups, userGroups: this.token.data.groups, func: 'isInGroup', obj: 'Matter' });
-					_lodash2['default'].any(this.token.data.groups, function (group) {
-						return checkGroups == group.name;
-					});
-				}
+				var _ret = (function () {
+					var groupName = checkGroups;
+					//Single role or string list of roles
+					var groupsArray = groupName.split(',');
+					if (groupsArray.length > 1) {
+						//String list of groupts
+						_utilsLogger2['default'].info({ description: 'String list of groups.', list: groupsArray, func: 'isInGroup', obj: 'Matter' });
+						return {
+							v: _this5.isInGroups(groupsArray)
+						};
+					} else {
+						//Single group
+						var groups = _this5.token.data.groups || [];
+						_utilsLogger2['default'].log({ description: 'Checking if user is in group.', group: groupName, userGroups: _this5.token.data.groups || [], func: 'isInGroup', obj: 'Matter' });
+						return {
+							v: _lodash2['default'].any(groups, function (group) {
+								return groupName == group.name;
+							})
+						};
+					}
+				})();
+
+				if (typeof _ret === 'object') return _ret.v;
 			} else if (checkGroups && _lodash2['default'].isArray(checkGroups)) {
 				//Array of roles
 				//Check that user is in every group
 				_utilsLogger2['default'].info({ description: 'Array of groups.', list: checkGroups, func: 'isInGroup', obj: 'Matter' });
-				return _lodash2['default'].every(checkGroups, function (group) {
-					return _this4.isInGroup(group);
-				});
+				return this.isInGroups(checkGroups);
 			} else {
 				return false;
 			}
@@ -14009,19 +14039,26 @@ var Matter = (function () {
 	}, {
 		key: 'isInGroups',
 		value: function isInGroups(checkGroups) {
-			var _this5 = this;
+			var _this6 = this;
 
 			//Check if user is in any of the provided groups
 			if (checkGroups && _lodash2['default'].isArray(checkGroups)) {
 				return _lodash2['default'].map(checkGroups, function (group) {
 					if (_lodash2['default'].isString(group)) {
 						//Group is string
-						return _this5.isInGroup(group);
+						return _this6.isInGroup(group);
 					} else {
 						//Group is object
-						return _this5.isInGroup(group.name);
+						return _this6.isInGroup(group.name);
 					}
 				});
+			} else if (checkGroups && _lodash2['default'].isString(checkGroups)) {
+				//TODO: Handle spaces within string list
+				var groupsArray = checkGroups.split(',');
+				if (groupsArray.length > 1) {
+					return this.isInGroups(groupsArray);
+				}
+				return this.isInGroup(groupsArray[0]);
 			} else {
 				_utilsLogger2['default'].error({ description: 'Invalid groups list.', func: 'isInGroups', obj: 'Matter' });
 			}
@@ -14053,8 +14090,8 @@ var Matter = (function () {
 			this.storage.setItem(userData);
 		},
 		get: function get() {
-			if (this.storage.item('currentUser')) {
-				return this.storage.item('currentUser');
+			if (this.storage.getItem('currentUser')) {
+				return this.storage.getItem('currentUser');
 			} else {
 				return null;
 			}
@@ -14064,6 +14101,9 @@ var Matter = (function () {
 		get: function get() {
 			return _utilsEnvStorage2['default'];
 		}
+
+		/** updateProfile
+   */
 	}, {
 		key: 'token',
 		get: function get() {
@@ -14103,8 +14143,11 @@ var _logger = require('./logger');
 
 var _logger2 = _interopRequireDefault(_logger);
 
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 var data = {};
-// TODO: Store objects within local storage.
 var storage = Object.defineProperties({
 	/**
   * @description
@@ -14115,7 +14158,6 @@ var storage = Object.defineProperties({
   *
   */
 	item: function item(itemName, itemValue) {
-		//TODO: Handle itemValue being an object instead of a string
 		return this.setItem(itemName, itemValue);
 	},
 	/**
@@ -14127,10 +14169,12 @@ var storage = Object.defineProperties({
   *
   */
 	setItem: function setItem(itemName, itemValue) {
-		//TODO: Handle itemValue being an object instead of a string
-		// this.item(itemName) = itemValue;
 		data[itemName] = itemValue;
 		if (this.localExists) {
+			//Convert object to string
+			if (_lodash2['default'].isObject(itemValue)) {
+				itemValue = JSON.stringify(itemValue);
+			}
 			window.sessionStorage.setItem(itemName, itemValue);
 		}
 	},
@@ -14148,7 +14192,25 @@ var storage = Object.defineProperties({
 		if (data[itemName]) {
 			return data[itemName];
 		} else if (this.localExists) {
-			return window.sessionStorage.getItem(itemName);
+			var itemStr = window.sessionStorage.getItem(itemName);
+			//Check that str is not null before parsing
+			if (itemStr) {
+				var isObj = false;
+				var itemObj = null;
+				//Try parsing to object
+				try {
+					itemObj = JSON.parse(itemStr);
+					isObj = true;
+				} catch (err) {
+					// logger.log({message: 'String could not be parsed.', error: err, func: 'getItem', obj: 'storage'});
+					//Parsing failed, this must just be a string
+					isObj = false;
+				}
+				if (isObj) {
+					return itemObj;
+				}
+			}
+			return itemStr;
 		} else {
 			return null;
 		}
@@ -14220,7 +14282,7 @@ var storage = Object.defineProperties({
 exports['default'] = storage;
 module.exports = exports['default'];
 
-},{"../config":9,"./logger":12}],12:[function(require,module,exports){
+},{"../config":9,"./logger":12,"lodash":5}],12:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14444,6 +14506,7 @@ var token = Object.defineProperties({
 	},
 	'delete': function _delete() {
 		_envStorage2['default'].removeItem(_config2['default'].tokenName);
+		_envStorage2['default'].removeItem(_config2['default'].tokenDataName);
 		_logger2['default'].log({ description: 'Token was removed.', func: 'delete', obj: 'token' });
 	}
 }, {
