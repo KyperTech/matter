@@ -1,7 +1,8 @@
 import Matter from '../../src/matter';
 import request from '../../src/utils/request';
-
-let matter = new Matter('exampleApp');
+import config from '../../src/config';
+let exampleAppName = 'exampleApp';
+let matter = new Matter(exampleAppName);
 let mockGet = sinon.stub(request, 'get', function() {
  console.log('mock get called with:', arguments);
  return new Promise((resolve) => {
@@ -25,6 +26,11 @@ let mockPost = sinon.stub(request, 'post', function(url, postData) {
 });
 // TODO: Test options functionality
 describe('Matter', () => {
+  describe('Config', () => {
+    it('sets correct serverUrl', () => {
+      expect(matter.endpoint).to.equal(`${config.serverUrl}/apps/${exampleAppName}`);
+    });
+  });
   describe('Login method', () => {
     beforeEach(() => {
       spy(matter, 'login');

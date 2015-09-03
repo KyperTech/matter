@@ -13803,9 +13803,9 @@ var config = {
 	tokenDataName: 'tessellate-tokenData'
 };
 //Set server to local server if developing
-if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
-	config.serverUrl = 'http://localhost:4000';
-}
+// if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
+// 	config.serverUrl = 'http://localhost:4000';
+// }
 exports['default'] = config;
 module.exports = exports['default'];
 
