@@ -13803,9 +13803,9 @@ var config = {
 	tokenDataName: 'tessellate-tokenData'
 };
 //Set server to local server if developing
-// if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
-// 	config.serverUrl = 'http://localhost:4000';
-// }
+if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
+	config.serverUrl = 'http://localhost:4000';
+}
 exports['default'] = config;
 module.exports = exports['default'];
 
@@ -13946,6 +13946,26 @@ var Matter = (function () {
 			});
 		}
 	}, {
+		key: 'updateProfile',
+		value: function updateProfile(updateData) {
+			var _this3 = this;
+
+			if (!this.isLoggedIn) {
+				_utilsLogger2['default'].error({ description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter' });
+				return Promise.reject({ message: 'Must be logged in to update profile.' });
+			}
+			//Send update request
+			_utilsLogger2['default'].warn({ description: 'Calling update endpoint.', endpoint: this.endpoint + '/user/' + this.token.data.username, func: 'updateProfile', obj: 'Matter' });
+			return _utilsRequest2['default'].put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
+				_utilsLogger2['default'].log({ description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter' });
+				_this3.currentUser = response;
+				return response;
+			})['catch'](function (errRes) {
+				_utilsLogger2['default'].error({ description: 'Error requesting current user.', error: errRes, func: 'updateProfile', obj: 'Matter' });
+				return Promise.reject(errRes);
+			});
+		}
+	}, {
 		key: 'endpoint',
 		get: function get() {
 			var serverUrl = _config2['default'].serverUrl;
@@ -13968,7 +13988,7 @@ var Matter = (function () {
 	}, {
 		key: 'currentUser',
 		get: function get() {
-			var _this3 = this;
+			var _this4 = this;
 
 			if (this.storage.item('currentUser')) {
 				//TODO: Check to see if this comes back as a string
@@ -13977,7 +13997,7 @@ var Matter = (function () {
 				return _utilsRequest2['default'].get(this.endpoint + '/user').then(function (response) {
 					//TODO: Save user information locally
 					_utilsLogger2['default'].log({ description: 'Current User Request responded.', responseData: response.data, func: 'currentUser', obj: 'Matter' });
-					_this3.currentUser = response.data;
+					_this4.currentUser = response.data;
 					return response.data;
 				})['catch'](function (errRes) {
 					_utilsLogger2['default'].error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });
@@ -14292,7 +14312,6 @@ var request = {
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	}
-
 };
 
 exports['default'] = request;
@@ -14355,7 +14374,7 @@ function decodeToken(tokenStr) {
 			tokenData = (0, _jwtDecode2['default'])(tokenStr);
 		} catch (err) {
 			_logger2['default'].error({ description: 'Error decoding token.', data: tokenData, error: err, func: 'decodeToken', file: 'token' });
-			throw new Error('Error decoding token.');
+			throw new Error('Invalid token string.');
 		}
 	}
 	return tokenData;

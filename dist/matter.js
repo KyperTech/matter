@@ -16,6 +16,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		tokenName: 'tessellate',
 		tokenDataName: 'tessellate-tokenData'
 	};
+	//Set server to local server if developing
+	if (typeof window != 'undefined' && (window.location.hostname == '' || window.location.hostname == 'localhost')) {
+		config.serverUrl = 'http://localhost:4000';
+	}
 
 	var logger = {
 		log: function log(logData) {
@@ -220,7 +224,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				tokenData = jwtDecode(tokenStr);
 			} catch (err) {
 				logger.error({ description: 'Error decoding token.', data: tokenData, error: err, func: 'decodeToken', file: 'token' });
-				throw new Error('Error decoding token.');
+				throw new Error('Invalid token string.');
 			}
 		}
 		return tokenData;
@@ -293,7 +297,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		}
-
 	};
 
 	function handleResponse(req) {
@@ -421,6 +424,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				});
 			}
 		}, {
+			key: 'updateProfile',
+			value: function updateProfile(updateData) {
+				var _this3 = this;
+
+				if (!this.isLoggedIn) {
+					logger.error({ description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter' });
+					return Promise.reject({ message: 'Must be logged in to update profile.' });
+				}
+				//Send update request
+				logger.warn({ description: 'Calling update endpoint.', endpoint: this.endpoint + '/user/' + this.token.data.username, func: 'updateProfile', obj: 'Matter' });
+				return request.put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
+					logger.log({ description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter' });
+					_this3.currentUser = response;
+					return response;
+				})['catch'](function (errRes) {
+					logger.error({ description: 'Error requesting current user.', error: errRes, func: 'updateProfile', obj: 'Matter' });
+					return Promise.reject(errRes);
+				});
+			}
+		}, {
 			key: 'endpoint',
 			get: function get() {
 				var serverUrl = config.serverUrl;
@@ -443,7 +466,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'currentUser',
 			get: function get() {
-				var _this3 = this;
+				var _this4 = this;
 
 				if (this.storage.item('currentUser')) {
 					//TODO: Check to see if this comes back as a string
@@ -452,7 +475,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return request.get(this.endpoint + '/user').then(function (response) {
 						//TODO: Save user information locally
 						logger.log({ description: 'Current User Request responded.', responseData: response.data, func: 'currentUser', obj: 'Matter' });
-						_this3.currentUser = response.data;
+						_this4.currentUser = response.data;
 						return response.data;
 					})['catch'](function (errRes) {
 						logger.error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });

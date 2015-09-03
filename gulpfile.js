@@ -22,7 +22,6 @@ const mainFile = manifest.main;
 const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
 const conf = require('./config.json');
-
 // Remove the built files
 gulp.task('clean', function(cb) {
   del([destinationFolder], cb);

@@ -125,6 +125,22 @@ class Matter {
 			});
 		}
 	}
+	updateProfile(updateData) {
+		if (!this.isLoggedIn) {
+			logger.error({description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter'});
+			return Promise.reject({message: 'Must be logged in to update profile.'});
+		}
+		//Send update request
+		logger.warn({description: 'Calling update endpoint.', endpoint: `${this.endpoint}/user/${this.token.data.username}` , func: 'updateProfile', obj: 'Matter'});
+		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
+			logger.log({description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter'});
+			this.currentUser = response;
+			return response;
+		})['catch']((errRes) => {
+			logger.error({description: 'Error requesting current user.', error: errRes, func: 'updateProfile', obj: 'Matter'});
+			return Promise.reject(errRes);
+		});
+	}
 	get storage() {
 		return envStorage;
 	}
