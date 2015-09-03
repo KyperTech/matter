@@ -104,7 +104,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	}
 
 	var data = {};
-	// TODO: Store objects within local storage.
 	var storage = Object.defineProperties({
 		/**
    * @description
@@ -115,7 +114,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		item: function item(itemName, itemValue) {
-			//TODO: Handle itemValue being an object instead of a string
 			return this.setItem(itemName, itemValue);
 		},
 		/**
@@ -127,10 +125,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		setItem: function setItem(itemName, itemValue) {
-			//TODO: Handle itemValue being an object instead of a string
-			// this.item(itemName) = itemValue;
 			data[itemName] = itemValue;
 			if (this.localExists) {
+				//Convert object to string
+				if (_.isObject(itemValue)) {
+					itemValue = JSON.stringify(itemValue);
+				}
 				window.sessionStorage.setItem(itemName, itemValue);
 			}
 		},
@@ -148,7 +148,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			if (data[itemName]) {
 				return data[itemName];
 			} else if (this.localExists) {
-				return window.sessionStorage.getItem(itemName);
+				var itemStr = window.sessionStorage.getItem(itemName);
+				//Check that str is not null before parsing
+				if (itemStr) {
+					var isObj = false;
+					var itemObj = null;
+					//Try parsing to object
+					try {
+						itemObj = JSON.parse(itemStr);
+						isObj = true;
+					} catch (err) {
+						// logger.log({message: 'String could not be parsed.', error: err, func: 'getItem', obj: 'storage'});
+						//Parsing failed, this must just be a string
+						isObj = false;
+					}
+					if (isObj) {
+						return itemObj;
+					}
+				}
+				return itemStr;
 			} else {
 				return null;
 			}
@@ -235,6 +253,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		},
 		'delete': function _delete() {
 			storage.removeItem(config.tokenName);
+			storage.removeItem(config.tokenDataName);
 			logger.log({ description: 'Token was removed.', func: 'delete', obj: 'token' });
 		}
 	}, {
@@ -391,7 +410,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 							_this.token.string = response.token;
 						}
 						if (_.has(response, 'account')) {
-							_this.storage.setItem('currentUser');
+							_this.storage.setItem('currentUser', response.account);
 						}
 						return response.account;
 					}
@@ -423,8 +442,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject(errRes);
 				});
 			}
+
+			/** currentUser
+    */
 		}, {
 			key: 'updateProfile',
+
+			/** updateProfile
+    */
 			value: function updateProfile(updateData) {
 				var _this3 = this;
 
@@ -443,6 +468,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject(errRes);
 				});
 			}
+
+			/** updateProfile
+    */
 		}, {
 			key: 'endpoint',
 			get: function get() {
@@ -469,7 +497,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				var _this4 = this;
 
 				if (this.storage.item('currentUser')) {
-					//TODO: Check to see if this comes back as a string
 					return Promise.resove(this.storage.item('currentUser'));
 				} else {
 					return request.get(this.endpoint + '/user').then(function (response) {
@@ -488,15 +515,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			get: function get() {
 				return storage;
 			}
+
+			/** updateProfile
+    */
 		}, {
 			key: 'token',
 			get: function get() {
 				return token;
 			}
+
+			/** updateProfile
+    */
 		}, {
 			key: 'isLoggedIn',
 			get: function get() {
 				return this.token.string ? true : false;
+			}
+
+			/** utils
+    */
+		}, {
+			key: 'utils',
+			get: function get() {
+				return { request: request, logger: logger, storage: storage };
 			}
 		}]);
 

@@ -13913,7 +13913,7 @@ var Matter = (function () {
 						_this.token.string = response.token;
 					}
 					if (_lodash2['default'].has(response, 'account')) {
-						_this.storage.setItem('currentUser');
+						_this.storage.setItem('currentUser', response.account);
 					}
 					return response.account;
 				}
@@ -13945,8 +13945,14 @@ var Matter = (function () {
 				return Promise.reject(errRes);
 			});
 		}
+
+		/** currentUser
+   */
 	}, {
 		key: 'updateProfile',
+
+		/** updateProfile
+   */
 		value: function updateProfile(updateData) {
 			var _this3 = this;
 
@@ -13965,6 +13971,9 @@ var Matter = (function () {
 				return Promise.reject(errRes);
 			});
 		}
+
+		/** updateProfile
+   */
 	}, {
 		key: 'endpoint',
 		get: function get() {
@@ -13991,7 +14000,6 @@ var Matter = (function () {
 			var _this4 = this;
 
 			if (this.storage.item('currentUser')) {
-				//TODO: Check to see if this comes back as a string
 				return Promise.resove(this.storage.item('currentUser'));
 			} else {
 				return _utilsRequest2['default'].get(this.endpoint + '/user').then(function (response) {
@@ -14010,15 +14018,29 @@ var Matter = (function () {
 		get: function get() {
 			return _utilsEnvStorage2['default'];
 		}
+
+		/** updateProfile
+   */
 	}, {
 		key: 'token',
 		get: function get() {
 			return _utilsToken2['default'];
 		}
+
+		/** updateProfile
+   */
 	}, {
 		key: 'isLoggedIn',
 		get: function get() {
 			return this.token.string ? true : false;
+		}
+
+		/** utils
+   */
+	}, {
+		key: 'utils',
+		get: function get() {
+			return { request: _utilsRequest2['default'], logger: _utilsLogger2['default'], storage: _utilsEnvStorage2['default'] };
 		}
 	}]);
 
@@ -14044,8 +14066,11 @@ var _logger = require('./logger');
 
 var _logger2 = _interopRequireDefault(_logger);
 
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 var data = {};
-// TODO: Store objects within local storage.
 var storage = Object.defineProperties({
 	/**
   * @description
@@ -14056,7 +14081,6 @@ var storage = Object.defineProperties({
   *
   */
 	item: function item(itemName, itemValue) {
-		//TODO: Handle itemValue being an object instead of a string
 		return this.setItem(itemName, itemValue);
 	},
 	/**
@@ -14068,10 +14092,12 @@ var storage = Object.defineProperties({
   *
   */
 	setItem: function setItem(itemName, itemValue) {
-		//TODO: Handle itemValue being an object instead of a string
-		// this.item(itemName) = itemValue;
 		data[itemName] = itemValue;
 		if (this.localExists) {
+			//Convert object to string
+			if (_lodash2['default'].isObject(itemValue)) {
+				itemValue = JSON.stringify(itemValue);
+			}
 			window.sessionStorage.setItem(itemName, itemValue);
 		}
 	},
@@ -14089,7 +14115,25 @@ var storage = Object.defineProperties({
 		if (data[itemName]) {
 			return data[itemName];
 		} else if (this.localExists) {
-			return window.sessionStorage.getItem(itemName);
+			var itemStr = window.sessionStorage.getItem(itemName);
+			//Check that str is not null before parsing
+			if (itemStr) {
+				var isObj = false;
+				var itemObj = null;
+				//Try parsing to object
+				try {
+					itemObj = JSON.parse(itemStr);
+					isObj = true;
+				} catch (err) {
+					// logger.log({message: 'String could not be parsed.', error: err, func: 'getItem', obj: 'storage'});
+					//Parsing failed, this must just be a string
+					isObj = false;
+				}
+				if (isObj) {
+					return itemObj;
+				}
+			}
+			return itemStr;
 		} else {
 			return null;
 		}
@@ -14161,7 +14205,7 @@ var storage = Object.defineProperties({
 exports['default'] = storage;
 module.exports = exports['default'];
 
-},{"../config":9,"./logger":12}],12:[function(require,module,exports){
+},{"../config":9,"./logger":12,"lodash":5}],12:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14385,6 +14429,7 @@ var token = Object.defineProperties({
 	},
 	'delete': function _delete() {
 		_envStorage2['default'].removeItem(_config2['default'].tokenName);
+		_envStorage2['default'].removeItem(_config2['default'].tokenDataName);
 		_logger2['default'].log({ description: 'Token was removed.', func: 'delete', obj: 'token' });
 	}
 }, {

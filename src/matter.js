@@ -82,7 +82,7 @@ class Matter {
 					this.token.string = response.token;
 				}
 				if (_.has(response, 'account')) {
-					this.storage.setItem('currentUser');
+					this.storage.setItem('currentUser', response.account);
 				}
 				return response.account;
 			}
@@ -109,9 +109,10 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+	/** currentUser
+	 */
 	get currentUser() {
 		if (this.storage.item('currentUser')) {
-			//TODO: Check to see if this comes back as a string
 			return Promise.resove(this.storage.item('currentUser'));
 		} else {
 			return request.get(this.endpoint + '/user').then((response) => {
@@ -125,6 +126,8 @@ class Matter {
 			});
 		}
 	}
+	/** updateProfile
+	 */
 	updateProfile(updateData) {
 		if (!this.isLoggedIn) {
 			logger.error({description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter'});
@@ -141,14 +144,25 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+	/** updateProfile
+	 */
 	get storage() {
 		return envStorage;
 	}
+	/** updateProfile
+	 */
 	get token() {
 		return token;
 	}
+	/** updateProfile
+	 */
 	get isLoggedIn() {
 		return this.token.string ? true : false;
+	}
+	/** utils
+	 */
+	get utils() {
+		return {request: request, logger: logger, storage: envStorage};
 	}
 };
 export default Matter;

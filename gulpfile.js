@@ -208,7 +208,7 @@ const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
 // Run the headless unit tests as you make changes.
 gulp.task('watch', function() {
   const watchFiles = jsWatchFiles.concat(otherWatchFiles);
-  gulp.watch(watchFiles, ['test']);
+  gulp.watch(watchFiles, ['test', 'build-bundle']);
 });
 
 // Set up a livereload environment for our spec runner
