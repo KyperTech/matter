@@ -23,6 +23,7 @@ let mockPost = sinon.stub(request, 'post', function(url, postData) {
    resolve({body: {}});
  });
 });
+// TODO: Test options functionality
 describe('Matter', () => {
   describe('Login method', () => {
     beforeEach(() => {
@@ -112,6 +113,20 @@ describe('Matter', () => {
         expect(user).to.have.property('username');
         expect(user.username).to.be('testUser');
       });
+    });
+  });
+  describe('utils', () => {
+    it('exists', () => {
+      expect(matter.utils).to.be.an('object');
+    });
+    it('has request', () =>  {
+      expect(matter.utils).to.have.property('request');
+    });
+    it('has logger', () =>  {
+      expect(matter.utils).to.have.property('logger');
+    });
+    it('has storage', () =>  {
+      expect(matter.utils).to.have.property('logger');
     });
   });
 });

@@ -82,7 +82,7 @@ class Matter {
 					this.token.string = response.token;
 				}
 				if (_.has(response, 'account')) {
-					this.storage.setItem('currentUser');
+					this.storage.setItem('currentUser', response.account);
 				}
 				return response.account;
 			}
@@ -111,7 +111,6 @@ class Matter {
 	}
 	getCurrentUser() {
 		if (this.storage.item('currentUser')) {
-			//TODO: Check to see if this comes back as a string
 			return Promise.resove(this.storage.item('currentUser'));
 		} else {
 			return request.get(this.endpoint + '/user').then((response) => {
@@ -136,9 +135,31 @@ class Matter {
 			return null;
 		}
 	}
+	/** updateProfile
+	 */
+	updateProfile(updateData) {
+		if (!this.isLoggedIn) {
+			logger.error({description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter'});
+			return Promise.reject({message: 'Must be logged in to update profile.'});
+		}
+		//Send update request
+		logger.warn({description: 'Calling update endpoint.', endpoint: `${this.endpoint}/user/${this.token.data.username}` , func: 'updateProfile', obj: 'Matter'});
+		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
+			logger.log({description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter'});
+			this.currentUser = response;
+			return response;
+		})['catch']((errRes) => {
+			logger.error({description: 'Error requesting current user.', error: errRes, func: 'updateProfile', obj: 'Matter'});
+			return Promise.reject(errRes);
+		});
+	}
+	/** updateProfile
+	 */
 	get storage() {
 		return envStorage;
 	}
+	/** updateProfile
+	 */
 	get token() {
 		return token;
 	}
@@ -149,7 +170,6 @@ class Matter {
 		return this.token.string ? true : false;
 	}
 	//Check that user is in a single group or in all of a list of groups
-	//TODO: Take order of groups into account
 	isInGroup(checkGroups) {
 		if (!this.isLoggedIn) {
 			logger.log({description: 'No logged in user to check.', func: 'isInGroup', obj: 'Matter'});
@@ -157,28 +177,26 @@ class Matter {
 		}
 		//Check if user is
 		if (checkGroups && _.isString(checkGroups)) {
+			let groupName = checkGroups;
 			//Single role or string list of roles
-			var groupsArray = checkGroups.split(',');
+			let groupsArray = groupName.split(',');
 			if (groupsArray.length > 1) {
-				//String list of roles
+				//String list of groupts
 				logger.info({description: 'String list of groups.', list: groupsArray, func: 'isInGroup', obj: 'Matter'});
-				return _.every(groupsArray, (group) => {
-					return this.isInGroup(group);
-				});
+				return this.isInGroups(groupsArray);
 			} else {
 				//Single group
-				logger.log({description: 'Checking if user is in group.', group: checkGroups, userGroups: this.token.data.groups,  func: 'isInGroup', obj: 'Matter'});
-				_.any(this.token.data.groups, (group) =>  {
-					return checkGroups == group.name;
+				let groups = this.token.data.groups || [];
+				logger.log({description: 'Checking if user is in group.', group: groupName, userGroups: this.token.data.groups || [],  func: 'isInGroup', obj: 'Matter'});
+				return _.any(groups, (group) =>  {
+					return groupName == group.name;
 				});
 			}
 		} else if (checkGroups && _.isArray(checkGroups)) {
 			//Array of roles
 			//Check that user is in every group
 			logger.info({description: 'Array of groups.', list: checkGroups, func: 'isInGroup', obj: 'Matter'});
-			return _.every(checkGroups, (group) =>  {
-				return this.isInGroup(group);
-			});
+			return this.isInGroups(checkGroups);
 		} else {
 			return false;
 		}
@@ -196,6 +214,13 @@ class Matter {
 					return this.isInGroup(group.name);
 				}
 			});
+		} else if (checkGroups && _.isString(checkGroups)) {
+			//TODO: Handle spaces within string list
+			let groupsArray = checkGroups.split(',');
+			if (groupsArray.length > 1) {
+				return this.isInGroups(groupsArray);
+			}
+			return this.isInGroup(groupsArray[0]);
 		} else {
 			logger.error({description: 'Invalid groups list.', func: 'isInGroups', obj: 'Matter'});
 		}
