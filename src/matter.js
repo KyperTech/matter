@@ -82,7 +82,7 @@ class Matter {
 					this.token.string = response.token;
 				}
 				if (_.has(response, 'account')) {
-					this.storage.setItem('currentUser', response.account);
+					this.storage.setItem(config.tokenUserDataName, response.account);
 				}
 				return response.account;
 			}
@@ -99,38 +99,47 @@ class Matter {
 	logout() {
 		return request.put(this.endpoint + '/logout').then((response) => {
 			logger.log({description: 'Logout successful.', response: response, func: 'logout', obj: 'Matter'});
-			this.storage.removeItem('currentUser');
+			this.currentUser = null;
 			this.token.delete();
 			return response;
 		})['catch']((errRes) => {
 			logger.error({description: 'Error requesting log out: ', error: errRes, func: 'logout', obj: 'Matter'});
-			this.storage.removeItem('currentUser');
+			this.storage.removeItem(config.tokenUserDataName);
 			this.token.delete();
 			return Promise.reject(errRes);
 		});
 	}
 	getCurrentUser() {
-		if (this.storage.item('currentUser')) {
-			return Promise.resove(this.storage.item('currentUser'));
+		if (this.storage.item(config.tokenUserDataName)) {
+			return Promise.resove(this.storage.getItem(config.tokenUserDataName));
 		} else {
-			return request.get(this.endpoint + '/user').then((response) => {
-				//TODO: Save user information locally
-				logger.log({description: 'Current User Request responded.', responseData: response.data, func: 'currentUser', obj: 'Matter'});
-				this.currentUser = response.data;
-				return response.data;
-			})['catch']((errRes) => {
-				logger.error({description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter'});
-				return Promise.reject(errRes);
-			});
+			if (this.isLoggedIn) {
+				return request.get(this.endpoint + '/user').then((response) => {
+					//TODO: Save user information locally
+					logger.log({description: 'Current User Request responded.', responseData: response, func: 'currentUser', obj: 'Matter'});
+					this.currentUser = response;
+					return response;
+				})['catch']((errRes) => {
+					if (err.status == 401) {
+						logger.warn({description: 'Called for current user without token.', error: errRes, func: 'currentUser', obj: 'Matter'});
+						return Promise.resolve(null);
+					} else {
+						logger.error({description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter'});
+						return Promise.reject(errRes);
+					}
+				});
+			} else {
+				return Promise.resolve(null);
+			}
 		}
 	}
 	set currentUser(userData) {
-		logger.log({description: 'Current User Request responded.', user: userData, func: 'currentUser', obj: 'Matter'});
-		this.storage.setItem(userData);
+		logger.log({description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter'});
+		this.storage.setItem(config.tokenUserDataName, userData);
 	}
 	get currentUser() {
-		if (this.storage.getItem('currentUser')) {
-			return this.storage.getItem('currentUser');
+		if (this.storage.getItem(config.tokenUserDataName)) {
+			return this.storage.getItem(config.tokenUserDataName);
 		} else {
 			return null;
 		}

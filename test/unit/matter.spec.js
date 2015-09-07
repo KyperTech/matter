@@ -3,6 +3,7 @@ import request from '../../src/utils/request';
 import config from '../../src/config';
 let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);
+let mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
 let mockGet = sinon.stub(request, 'get', function() {
  console.log('mock get called with:', arguments);
  return new Promise((resolve) => {
@@ -89,7 +90,7 @@ describe('Matter', () => {
   describe('Logout method', () => {
     beforeEach(() => {
       spy(matter, 'logout');
-      matter.token.string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
+      matter.token.string = mockToken;
     });
     it('should call logout endpoint', () => {
       matter.logout().then(() =>  {
@@ -107,14 +108,15 @@ describe('Matter', () => {
       });
     });
   });
-  describe('currentUser method', () => {
+  describe('getCurrentUser method', () => {
     it('requests user endpoint', () => {
+      matter.token.string = mockToken;
       matter.getCurrentUser().then((user) =>  {
         expect(mockGet).to.have.been.calledOnce;
       });
     });
     it('loads current user from memory', () =>  {
-      matter.currentUser = {username: 'testUser'};
+      matter.token.string = mockToken;
       matter.getCurrentUser().then((user) =>  {
         expect(user).to.have.property('username');
         expect(user.username).to.be('testUser');

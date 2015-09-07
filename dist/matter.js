@@ -14,7 +14,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	var config = {
 		serverUrl: 'http://tessellate.elasticbeanstalk.com',
 		tokenName: 'tessellate',
-		tokenDataName: 'tessellate-tokenData'
+		tokenDataName: 'tessellate-tokenData',
+		tokenUserDataName: 'tessellate-currentUser'
 	};
 
 	var logger = {
@@ -322,7 +323,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return resolve(res.body);
 				} else {
 					if (err.status == 401) {
-						logger.warn('Unauthorized. You must be signed into make this request.');
+						console.warn('Unauthorized. You must be signed into make this request.');
 					}
 					return reject(err);
 				}
@@ -332,7 +333,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	function addAuthHeader(req) {
 		if (token.string) {
 			req = req.set('Authorization', 'Bearer ' + token.string);
-			logger.info({ message: 'Set auth header', func: 'addAuthHeader', file: 'request' });
+			console.info({ message: 'Set auth header', func: 'addAuthHeader', file: 'request' });
 		}
 		return req;
 	}
@@ -406,7 +407,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 							_this.token.string = response.token;
 						}
 						if (_.has(response, 'account')) {
-							_this.storage.setItem('currentUser', response.account);
+							_this.storage.setItem(config.tokenUserDataName, response.account);
 						}
 						return response.account;
 					}
@@ -428,12 +429,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 				return request.put(this.endpoint + '/logout').then(function (response) {
 					logger.log({ description: 'Logout successful.', response: response, func: 'logout', obj: 'Matter' });
-					_this2.storage.removeItem('currentUser');
+					_this2.currentUser = null;
 					_this2.token['delete']();
 					return response;
 				})['catch'](function (errRes) {
 					logger.error({ description: 'Error requesting log out: ', error: errRes, func: 'logout', obj: 'Matter' });
-					_this2.storage.removeItem('currentUser');
+					_this2.storage.removeItem(config.tokenUserDataName);
 					_this2.token['delete']();
 					return Promise.reject(errRes);
 				});
@@ -443,18 +444,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function getCurrentUser() {
 				var _this3 = this;
 
-				if (this.storage.item('currentUser')) {
-					return Promise.resove(this.storage.item('currentUser'));
+				if (this.storage.item(config.tokenUserDataName)) {
+					return Promise.resove(this.storage.getItem(config.tokenUserDataName));
 				} else {
-					return request.get(this.endpoint + '/user').then(function (response) {
-						//TODO: Save user information locally
-						logger.log({ description: 'Current User Request responded.', responseData: response.data, func: 'currentUser', obj: 'Matter' });
-						_this3.currentUser = response.data;
-						return response.data;
-					})['catch'](function (errRes) {
-						logger.error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });
-						return Promise.reject(errRes);
-					});
+					if (this.isLoggedIn) {
+						return request.get(this.endpoint + '/user').then(function (response) {
+							//TODO: Save user information locally
+							logger.log({ description: 'Current User Request responded.', responseData: response, func: 'currentUser', obj: 'Matter' });
+							_this3.currentUser = response;
+							return response;
+						})['catch'](function (errRes) {
+							if (err.status == 401) {
+								logger.warn({ description: 'Called for current user without token.', error: errRes, func: 'currentUser', obj: 'Matter' });
+								return Promise.resolve(null);
+							} else {
+								logger.error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });
+								return Promise.reject(errRes);
+							}
+						});
+					} else {
+						return Promise.resolve(null);
+					}
 				}
 			}
 		}, {
@@ -579,12 +589,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'currentUser',
 			set: function set(userData) {
-				logger.log({ description: 'Current User Request responded.', user: userData, func: 'currentUser', obj: 'Matter' });
-				this.storage.setItem(userData);
+				logger.log({ description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter' });
+				this.storage.setItem(config.tokenUserDataName, userData);
 			},
 			get: function get() {
-				if (this.storage.getItem('currentUser')) {
-					return this.storage.getItem('currentUser');
+				if (this.storage.getItem(config.tokenUserDataName)) {
+					return this.storage.getItem(config.tokenUserDataName);
 				} else {
 					return null;
 				}
