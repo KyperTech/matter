@@ -21,47 +21,56 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	var logger = {
 		log: function log(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (config.envName == 'local') {
-				console.log(logData);
+			if (config.envName == 'production') {
+				runConsoleMethod('log', msgArgs);
 			} else {
-				console.log.apply(console, msgArgs);
+				runConsoleMethod('log', msgArgs);
 			}
 		},
 		info: function info(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (config.envName == 'local') {
-				console.info(logData);
+			if (config.envName == 'production') {
+				runConsoleMethod('info', msgArgs);
 			} else {
-				console.info.apply(console, msgArgs);
+				runConsoleMethod('info', msgArgs);
 			}
 		},
 		warn: function warn(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (config.envName == 'local') {
-				console.warn(logData);
+			if (config.envName == 'production') {
+				runConsoleMethod('warn', msgArgs);
 			} else {
-				console.warn.apply(console, msgArgs);
+				runConsoleMethod('warn', msgArgs);
 			}
 		},
 		debug: function debug(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (config.envName == 'local') {
-				console.log(logData);
+			if (config.envName == 'production') {
+				// runConsoleMethod('debug', msgArgs);
+				//Do not display console debugs in production
 			} else {
-				console.log.apply(console, msgArgs);
-			}
+					runConsoleMethod('debug', msgArgs);
+				}
 		},
 		error: function error(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (config.envName == 'local') {
-				console.error(logData);
-			} else {
-				console.error.apply(console, msgArgs);
+			if (config.envName == 'production') {
 				//TODO: Log to external logger
+				runConsoleMethod('error', msgArgs);
+			} else {
+				runConsoleMethod('error', msgArgs);
 			}
 		}
 	};
 
+	function runConsoleMethod(methodName, methodData) {
+		//Safley run console methods or use console log
+		if (methodName && console[methodName]) {
+			return console[methodName].apply(console, methodData);
+		} else {
+			return console.log.apply(console, methodData);
+		}
+	}
 	function buildMessageArgs(logData) {
 		var msgStr = '';
 		var msgObj = {};
