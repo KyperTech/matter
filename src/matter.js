@@ -1,12 +1,11 @@
 import config from './config';
 import logger from './utils/logger';
+import dom from './utils/dom';
 import request from './utils/request';
 import token from './utils/token';
 import envStorage from './utils/envStorage';
 import _ from 'lodash';
-
-let user;
-let endpoints;
+import Google from './utils/google';
 
 class Matter {
 	/* Constructor
@@ -48,20 +47,28 @@ class Matter {
 	 *
 	 */
 	signup(signupData) {
-		return request.post(this.endpoint + '/signup', signupData)
-		.then((response) => {
-			logger.log({description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter'});
-			if (_.has(response, 'account')) {
-				return response.account;
-			} else {
-				logger.warn({description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter'});
-				return response;
-			}
-		})
-		['catch']((errRes) => {
-			logger.error({description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter'});
-			return Promise.reject(errRes);
-		});
+		if (_.isObject(signupData)) {
+			return request.post(this.endpoint + '/signup', signupData)
+			.then((response) => {
+				logger.log({description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter'});
+				if (_.has(response, 'account')) {
+					return response.account;
+				} else {
+					logger.warn({description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter'});
+					return response;
+				}
+			})
+			['catch']((errRes) => {
+				logger.error({description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter'});
+				return Promise.reject(errRes);
+			});
+		} else {
+			//Handle 3rd Party signups
+			new Google().signup().then((res) => {
+				logger.warn('Signup successful:', res);
+			});
+		}
+
 	}
 	/** Login
 	 *
@@ -132,6 +139,12 @@ class Matter {
 				return Promise.resolve(null);
 			}
 		}
+	}
+	/* Signup with google
+	 *
+	 */
+	googleSignup() {
+		return new Google().signup();
 	}
 	set currentUser(userData) {
 		logger.log({description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter'});

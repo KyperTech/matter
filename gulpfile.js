@@ -61,7 +61,7 @@ createLintTask('lint-test', ['test/**/*.js']);
 gulp.task('build', ['lint-src', 'clean'], function(done) {
   rollup.rollup({
     entry: config.entryFileName,
-    external:['lodash','superagent', 'jwt-decode'],
+    external:['lodash','superagent', 'jwt-decode', 'googleapis'],
   }).then(function(bundle) {
     var res = bundle.generate({
       // Don't worry about the fact that the source map is inlined at this step.
@@ -257,5 +257,16 @@ gulp.task('upload-latest', function() {
     .pipe(publisher.publish())
     .pipe(awspublish.reporter());
 });
+var browserSync = require('browser-sync').create();
+
+// Static server
+gulp.task('browser-sync', function() {
+  browserSync.init({
+    server: {
+      baseDir: "./"
+    }
+  });
+});
+
 // An alias of test
 gulp.task('default', ['coverage', 'build-bundle']);

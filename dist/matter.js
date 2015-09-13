@@ -347,8 +347,131 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		return req;
 	}
 
-	var user = undefined;
-	var endpoints = undefined;
+	var domUtil = {
+		/**
+   * @description
+   * Appends given css source to DOM head.
+   *
+   * @param {String} src - url src for css to append
+   *
+   */
+		loadCss: function loadCss(src) {
+			if (!document) {
+				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+				throw new Error('Document object is required to load assets.');
+			} else {
+				var css = document.createElement('link');
+				css.rel = 'stylesheet';
+				css.type = 'text/css';
+				css.href = src;
+				document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
+				logger.log({ description: 'CSS was loaded into document.', element: css, func: 'loadCss', obj: 'dom' });
+				return css; //Return link element
+			}
+		},
+		/**
+   * @description
+   * Appends given javascript source to DOM head.
+   *
+   * @param {String} src - url src for javascript to append
+   *
+   */
+		loadJs: function loadJs(src) {
+			if (window && !_.has(window, 'document')) {
+				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+				throw new Error('Document object is required to load assets.');
+			} else {
+				var js = window.document.createElement('script');
+				js.src = src;
+				js.type = 'text/javascript';
+				window.document.getElementsByTagName('head')[0].appendChild(js);
+				logger.log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
+				return js; //Return script element
+			}
+		},
+		/**
+   * @description
+   * Appends given javascript source to DOM head.
+   *
+   * @param {String} src - url src for javascript to append
+   *
+   */
+		asyncLoadJs: function asyncLoadJs(src) {
+			if (!_.has(window, 'document')) {
+				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+				throw new Error('Document object is required to load assets.');
+			} else {
+				var js = window.document.createElement('script');
+				js.src = src;
+				js.type = 'text/javascript';
+				window.document.getElementsByTagName('head')[0].appendChild(js);
+				logger.log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
+				return new Promise(function (resolve, reject) {
+					window.setTimeout(resolve, 2);
+				});
+			}
+		}
+	};
+
+	var Google = (function () {
+		function Google(app) {
+			_classCallCheck(this, Google);
+
+			this.app = app ? app : null;
+			domUtil.asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
+		}
+
+		// Use a button to handle authentication the first time.
+
+		_createClass(Google, [{
+			key: 'signup',
+			value: function signup() {
+				//Initalize Hello
+				this.initHello.then(function () {
+					if (window) {
+						window.hello.login('google');
+					}
+				});
+			}
+		}, {
+			key: 'loadHello',
+			get: function get() {
+				return domUtil.asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
+			}
+		}, {
+			key: 'initHello',
+			get: function get() {
+				return this.loadHello.then(function () {
+					//TODO: Load client id from tessellate
+					window.hello.init({
+						google: '582741153619-9b3vifnmv2a32v49l63got889tgmnrhs.apps.googleusercontent.com'
+					}, { redirect_uri: 'redirect.html' });
+					//Login Listener
+					window.hello.on('auth.login', function (auth) {
+						logger.info({ description: 'User logged in to google.', func: 'loadHello', obj: 'Google' });
+						// Call user information, for the given network
+						window.hello(auth.network).api('/me').then(function (r) {
+							// Inject it into the container
+							//TODO:Send account informaiton to server
+							var userData = r;
+							userData.provider = auth.network;
+							//Login or Signup endpoint
+							return request.post(this.endpoint + '/provider', userData).then(function (response) {
+								logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'GoogleUtil' });
+								return response;
+							})['catch'](function (errRes) {
+								logger.error({ description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter' });
+								return Promise.reject(errRes);
+							});
+						});
+					});
+					return Promise.resolve();
+				});
+			}
+		}]);
+
+		return Google;
+	})();
 
 	var Matter = (function () {
 		/* Constructor
@@ -380,18 +503,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     *
     */
 			value: function signup(signupData) {
-				return request.post(this.endpoint + '/signup', signupData).then(function (response) {
-					logger.log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-					if (_.has(response, 'account')) {
-						return response.account;
-					} else {
-						logger.warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-						return response;
-					}
-				})['catch'](function (errRes) {
-					logger.error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
-					return Promise.reject(errRes);
-				});
+				if (_.isObject(signupData)) {
+					return request.post(this.endpoint + '/signup', signupData).then(function (response) {
+						logger.log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
+						if (_.has(response, 'account')) {
+							return response.account;
+						} else {
+							logger.warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
+							return response;
+						}
+					})['catch'](function (errRes) {
+						logger.error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
+						return Promise.reject(errRes);
+					});
+				} else {
+					//Handle 3rd Party signups
+					new Google().signup().then(function (res) {
+						logger.warn('Signup successful:', res);
+					});
+				}
 			}
 
 			/** Login
@@ -475,6 +605,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 						return Promise.resolve(null);
 					}
 				}
+			}
+
+			/* Signup with google
+    *
+    */
+		}, {
+			key: 'googleSignup',
+			value: function googleSignup() {
+				return new Google().signup();
 			}
 		}, {
 			key: 'updateProfile',

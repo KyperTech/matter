@@ -13825,6 +13825,10 @@ var _utilsLogger = require('./utils/logger');
 
 var _utilsLogger2 = _interopRequireDefault(_utilsLogger);
 
+var _utilsDom = require('./utils/dom');
+
+var _utilsDom2 = _interopRequireDefault(_utilsDom);
+
 var _utilsRequest = require('./utils/request');
 
 var _utilsRequest2 = _interopRequireDefault(_utilsRequest);
@@ -13841,8 +13845,9 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var user = undefined;
-var endpoints = undefined;
+var _utilsGoogle = require('./utils/google');
+
+var _utilsGoogle2 = _interopRequireDefault(_utilsGoogle);
 
 var Matter = (function () {
 	/* Constructor
@@ -13874,18 +13879,25 @@ var Matter = (function () {
    *
    */
 		value: function signup(signupData) {
-			return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
-				_utilsLogger2['default'].log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-				if (_lodash2['default'].has(response, 'account')) {
-					return response.account;
-				} else {
-					_utilsLogger2['default'].warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-					return response;
-				}
-			})['catch'](function (errRes) {
-				_utilsLogger2['default'].error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
-				return Promise.reject(errRes);
-			});
+			if (_lodash2['default'].isObject(signupData)) {
+				return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
+					_utilsLogger2['default'].log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
+					if (_lodash2['default'].has(response, 'account')) {
+						return response.account;
+					} else {
+						_utilsLogger2['default'].warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
+						return response;
+					}
+				})['catch'](function (errRes) {
+					_utilsLogger2['default'].error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
+					return Promise.reject(errRes);
+				});
+			} else {
+				//Handle 3rd Party signups
+				new _utilsGoogle2['default']().signup().then(function (res) {
+					_utilsLogger2['default'].warn('Signup successful:', res);
+				});
+			}
 		}
 
 		/** Login
@@ -13969,6 +13981,15 @@ var Matter = (function () {
 					return Promise.resolve(null);
 				}
 			}
+		}
+
+		/* Signup with google
+   *
+   */
+	}, {
+		key: 'googleSignup',
+		value: function googleSignup() {
+			return new _utilsGoogle2['default']().signup();
 		}
 	}, {
 		key: 'updateProfile',
@@ -14134,7 +14155,90 @@ var Matter = (function () {
 exports['default'] = Matter;
 module.exports = exports['default'];
 
-},{"./config":9,"./utils/envStorage":11,"./utils/logger":12,"./utils/request":13,"./utils/token":14,"lodash":5}],11:[function(require,module,exports){
+},{"./config":9,"./utils/dom":11,"./utils/envStorage":12,"./utils/google":13,"./utils/logger":14,"./utils/request":15,"./utils/token":16,"lodash":5}],11:[function(require,module,exports){
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _logger = require('./logger');
+
+var _logger2 = _interopRequireDefault(_logger);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var domUtil = {
+	/**
+  * @description
+  * Appends given css source to DOM head.
+  *
+  * @param {String} src - url src for css to append
+  *
+  */
+	loadCss: function loadCss(src) {
+		if (!document) {
+			_logger2['default'].error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var css = document.createElement('link');
+			css.rel = 'stylesheet';
+			css.type = 'text/css';
+			css.href = src;
+			document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
+			_logger2['default'].log({ description: 'CSS was loaded into document.', element: css, func: 'loadCss', obj: 'dom' });
+			return css; //Return link element
+		}
+	},
+	/**
+  * @description
+  * Appends given javascript source to DOM head.
+  *
+  * @param {String} src - url src for javascript to append
+  *
+  */
+	loadJs: function loadJs(src) {
+		if (window && !_lodash2['default'].has(window, 'document')) {
+			_logger2['default'].error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var js = window.document.createElement('script');
+			js.src = src;
+			js.type = 'text/javascript';
+			window.document.getElementsByTagName('head')[0].appendChild(js);
+			_logger2['default'].log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
+			return js; //Return script element
+		}
+	},
+	/**
+  * @description
+  * Appends given javascript source to DOM head.
+  *
+  * @param {String} src - url src for javascript to append
+  *
+  */
+	asyncLoadJs: function asyncLoadJs(src) {
+		if (!_lodash2['default'].has(window, 'document')) {
+			_logger2['default'].error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var js = window.document.createElement('script');
+			js.src = src;
+			js.type = 'text/javascript';
+			window.document.getElementsByTagName('head')[0].appendChild(js);
+			_logger2['default'].log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
+			return new Promise(function (resolve, reject) {
+				window.setTimeout(resolve, 2);
+			});
+		}
+	}
+};
+exports['default'] = domUtil;
+module.exports = exports['default'];
+
+},{"./logger":14,"lodash":5}],12:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14288,7 +14392,115 @@ var storage = Object.defineProperties({
 exports['default'] = storage;
 module.exports = exports['default'];
 
-},{"../config":9,"./logger":12,"lodash":5}],12:[function(require,module,exports){
+},{"../config":9,"./logger":14,"lodash":5}],13:[function(require,module,exports){
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _request = require('./request');
+
+var _request2 = _interopRequireDefault(_request);
+
+var _logger = require('./logger');
+
+var _logger2 = _interopRequireDefault(_logger);
+
+var _dom = require('./dom');
+
+var _dom2 = _interopRequireDefault(_dom);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+// import google from 'googleapis';
+// import hello from 'hellojs';
+
+var clientId = '582741153619-9b3vifnmv2a32v49l63got889tgmnrhs.apps.googleusercontent.com';
+var apiKey = 'AIzaSyADsjtMTCk0qroTi8LTKxhcd8qacBtAGr0';
+// To enter one or more authentication scopes, refer to the documentation for the API.
+var scopes = 'https://www.googleapis.com/auth/plus.me';
+
+// Use a button to handle authentication the first time.
+function handleClientLoad() {
+	gapi.client.setApiKey(apiKey);
+	// window.setTimeout(checkAuth,1);
+}
+
+var Google = (function () {
+	function Google(app) {
+		_classCallCheck(this, Google);
+
+		this.app = app ? app : null;
+		_dom2['default'].asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
+	}
+
+	_createClass(Google, [{
+		key: 'signup',
+		value: function signup() {
+			//Initalize Hello
+			this.initHello.then(function () {
+				if (window) {
+					window.hello.login('google');
+				}
+			});
+		}
+	}, {
+		key: 'loadHello',
+		get: function get() {
+			return _dom2['default'].asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
+		}
+	}, {
+		key: 'initHello',
+		get: function get() {
+			return this.loadHello.then(function () {
+				//TODO: Load client id from tessellate
+				window.hello.init({
+					google: '582741153619-9b3vifnmv2a32v49l63got889tgmnrhs.apps.googleusercontent.com'
+				}, { redirect_uri: 'redirect.html' });
+				//Login Listener
+				window.hello.on('auth.login', function (auth) {
+					_logger2['default'].info({ description: 'User logged in to google.', func: 'loadHello', obj: 'Google' });
+					// Call user information, for the given network
+					window.hello(auth.network).api('/me').then(function (r) {
+						// Inject it into the container
+						//TODO:Send account informaiton to server
+						var userData = r;
+						userData.provider = auth.network;
+						//Login or Signup endpoint
+						return _request2['default'].post(this.endpoint + '/provider', userData).then(function (response) {
+							_logger2['default'].log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'GoogleUtil' });
+							return response;
+						})['catch'](function (errRes) {
+							_logger2['default'].error({ description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter' });
+							return Promise.reject(errRes);
+						});
+					});
+				});
+				return Promise.resolve();
+			});
+		}
+	}]);
+
+	return Google;
+})();
+
+exports['default'] = Google;
+
+// Use a button to handle authentication the first time.
+module.exports = exports['default'];
+
+},{"../config":9,"./dom":11,"./logger":14,"./request":15,"lodash":5}],14:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14397,7 +14609,7 @@ function buildMessageArgs(logData) {
 }
 module.exports = exports['default'];
 
-},{"../config":9,"lodash":5}],13:[function(require,module,exports){
+},{"../config":9,"lodash":5}],15:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14476,7 +14688,7 @@ function addAuthHeader(req) {
 }
 module.exports = exports['default'];
 
-},{"../config":9,"./envStorage":11,"./logger":12,"./token":14,"superagent":6}],14:[function(require,module,exports){
+},{"../config":9,"./envStorage":12,"./logger":14,"./token":16,"superagent":6}],16:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14563,5 +14775,5 @@ var token = Object.defineProperties({
 exports['default'] = token;
 module.exports = exports['default'];
 
-},{"../config":9,"./envStorage":11,"./logger":12,"jwt-decode":2,"lodash":5}]},{},[10])(10)
+},{"../config":9,"./envStorage":12,"./logger":14,"jwt-decode":2,"lodash":5}]},{},[10])(10)
 });
