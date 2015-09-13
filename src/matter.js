@@ -38,7 +38,7 @@ class Matter {
 				logger.info({description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 			}
 		} else {
-			serverUrl = config.serverUrl + '/apps/' + this.name;
+			serverUrl = serverUrl + '/apps/' + this.name;
 			logger.log({description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 		}
 		return serverUrl;
@@ -76,11 +76,14 @@ class Matter {
 	 *
 	 */
 	login(loginData) {
-		if (!loginData || !loginData.password || !loginData.username) {
+		if (!loginData) {
 			logger.error({description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter'});
-			return Promise.reject({message: 'Username/Email and Password are required to login'});
+			return Promise.reject({message: 'Login data is required to login.'});
 		}
 		if (_.isObject(loginData)) {
+			if (!loginData.password || !loginData.username) {
+				return Promise.reject({message: 'Username/Email and Password are required to login'});
+			}
 			//Username/Email Login
 			return request.put(this.endpoint + '/login', loginData)
 			.then((response) => {

@@ -12,11 +12,6 @@ class ProviderAuth {
 		this.app = actionData.app ? actionData.app : null;
 		this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
 		this.provider = actionData.provider ? actionData.provider : null;
-		//Get provider data from application
-		if (this.app && _.has(this.app, 'providers')) {
-			//TODO: Make this apply to all providers
-			clientIds.google = providers.google;
-		}
 	}
 	get loadHello() {
 		//Load hellojs script
@@ -27,39 +22,53 @@ class ProviderAuth {
 			return Promise.resolve();
 		}
 	}
+	get helloLoginListener() {
+		//Login Listener
+		window.hello.on('auth.login', (auth) => {
+		logger.info({description: 'User logged in to google.', func: 'loadHello', obj: 'Google'});
+			// Call user information, for the given network
+			window.hello(auth.network).api('/me').then(function(r) {
+				// Inject it into the container
+				//TODO:Send account informaiton to server
+				var userData = r;
+				userData.provider = auth.network;
+				//Login or Signup endpoint
+				return request.post(this.endpoint + '/provider', userData)
+					.then((response) => {
+						logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'GoogleUtil'});
+						return response;
+					})
+					['catch']((errRes) => {
+						logger.error({description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter'});
+						return Promise.reject(errRes);
+					});
+			});
+		});
+	}
 	get initHello() {
 		return this.loadHello.then(() => {
-			window.hello.init(clientIds, {redirect_uri: this.redirectUri});
-			//Login Listener
-			window.hello.on('auth.login', (auth) => {
-				logger.info({description: 'User logged in to google.', func: 'loadHello', obj: 'Google'});
-					// Call user information, for the given network
-					window.hello(auth.network).api('/me').then(function(r) {
-						// Inject it into the container
-						//TODO:Send account informaiton to server
-						var userData = r;
-						userData.provider = auth.network;
-						//Login or Signup endpoint
-						return request.post(this.endpoint + '/provider', userData)
-							.then((response) => {
-								logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'GoogleUtil'});
-								return response;
-							})
-							['catch']((errRes) => {
-								logger.error({description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter'});
-								return Promise.reject(errRes);
-							});
-					});
-				});
-			return Promise.resolve();
+			return request.get(this.app.endpoint)
+		.then((response) => {
+			logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'ProviderAuth'});
+			var provider = _.findWhere(response.providers, {name: this.provider});
+			logger.warn({description: 'Provider found', findWhere: provider , func: 'login', obj: 'ProviderAuth'});
+			if (!provider) {
+				logger.error({description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + this.provider, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
+				return Promise.reject({message: 'Provider is not setup.'});
+			}
+			var providersConfig = {};
+			providersConfig[provider.name] = provider.clientId;
+			logger.warn({description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth'});
+				return window.hello.init(providersConfig, {redirect_uri: this.redirectUri});
+			})
+			['catch']((errRes) => {
+				logger.error({description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter'});
+				return Promise.reject(errRes);
+			});
 		});
 	}
 	login() {
 		//Initalize Hello
-		if (!_.has(clientIds, this.provider)) {
-			logger.error({description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + this.provider, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
-			return Promise.reject();
-		}
 		return this.initHello.then(() => {
 			if (window) {
 				return window.hello.login(this.provider);

@@ -1,4 +1,4 @@
-var matter = new Matter('tessellate', {localServer:true});
+var matter = new Matter('cloudbrain', {localServer:true});
 console.log('matter:', matter);
 //Set logged in status when dom is loaded
 document.addEventListener("DOMContentLoaded", function(event) { 
@@ -21,10 +21,13 @@ function setStatus() {
   }
 }
 
-function login(){
-  var username = document.getElementById('login-username').value;
-  var password = document.getElementById('login-password').value;
-  matter.login({username:username, password:password}).then(function(loginInfo){
+function login(loginData){
+  if(!loginData){
+    var loginData = {};
+    loginData.username = document.getElementById('login-username').value;
+    loginData.password = document.getElementById('login-password').value;
+  }
+  matter.login(loginData).then(function(loginInfo){
     console.log('successful login:', loginInfo);
     setStatus();
   }, function(err){

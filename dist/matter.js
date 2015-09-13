@@ -435,11 +435,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			this.app = actionData.app ? actionData.app : null;
 			this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
 			this.provider = actionData.provider ? actionData.provider : null;
-			//Get provider data from application
-			if (this.app && _.has(this.app, 'providers')) {
-				//TODO: Make this apply to all providers
-				clientIds.google = providers.google;
-			}
 		}
 
 		_createClass(ProviderAuth, [{
@@ -448,10 +443,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				var _this = this;
 
 				//Initalize Hello
-				if (!_.has(clientIds, this.provider)) {
-					logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + this.provider, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
-					return Promise.reject();
-				}
 				return this.initHello.then(function () {
 					if (window) {
 						return window.hello.login(_this.provider);
@@ -486,32 +477,50 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 			}
 		}, {
+			key: 'helloLoginListener',
+			get: function get() {
+				//Login Listener
+				window.hello.on('auth.login', function (auth) {
+					logger.info({ description: 'User logged in to google.', func: 'loadHello', obj: 'Google' });
+					// Call user information, for the given network
+					window.hello(auth.network).api('/me').then(function (r) {
+						// Inject it into the container
+						//TODO:Send account informaiton to server
+						var userData = r;
+						userData.provider = auth.network;
+						//Login or Signup endpoint
+						return request.post(this.endpoint + '/provider', userData).then(function (response) {
+							logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'GoogleUtil' });
+							return response;
+						})['catch'](function (errRes) {
+							logger.error({ description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter' });
+							return Promise.reject(errRes);
+						});
+					});
+				});
+			}
+		}, {
 			key: 'initHello',
 			get: function get() {
 				var _this3 = this;
 
 				return this.loadHello.then(function () {
-					window.hello.init(clientIds, { redirect_uri: _this3.redirectUri });
-					//Login Listener
-					window.hello.on('auth.login', function (auth) {
-						logger.info({ description: 'User logged in to google.', func: 'loadHello', obj: 'Google' });
-						// Call user information, for the given network
-						window.hello(auth.network).api('/me').then(function (r) {
-							// Inject it into the container
-							//TODO:Send account informaiton to server
-							var userData = r;
-							userData.provider = auth.network;
-							//Login or Signup endpoint
-							return request.post(this.endpoint + '/provider', userData).then(function (response) {
-								logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'GoogleUtil' });
-								return response;
-							})['catch'](function (errRes) {
-								logger.error({ description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter' });
-								return Promise.reject(errRes);
-							});
-						});
+					return request.get(_this3.app.endpoint).then(function (response) {
+						logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'ProviderAuth' });
+						var provider = _.findWhere(response.providers, { name: _this3.provider });
+						logger.warn({ description: 'Provider found', findWhere: provider, func: 'login', obj: 'ProviderAuth' });
+						if (!provider) {
+							logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this3.provider, provider: _this3.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+							return Promise.reject({ message: 'Provider is not setup.' });
+						}
+						var providersConfig = {};
+						providersConfig[provider.name] = provider.clientId;
+						logger.warn({ description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth' });
+						return window.hello.init(providersConfig, { redirect_uri: _this3.redirectUri });
+					})['catch'](function (errRes) {
+						logger.error({ description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter' });
+						return Promise.reject(errRes);
 					});
-					return Promise.resolve();
 				});
 			}
 		}]);
@@ -580,11 +589,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function login(loginData) {
 				var _this4 = this;
 
-				if (!loginData || !loginData.password || !loginData.username) {
+				if (!loginData) {
 					logger.error({ description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter' });
-					return Promise.reject({ message: 'Username/Email and Password are required to login' });
+					return Promise.reject({ message: 'Login data is required to login.' });
 				}
 				if (_.isObject(loginData)) {
+					if (!loginData.password || !loginData.username) {
+						return Promise.reject({ message: 'Username/Email and Password are required to login' });
+					}
 					//Username/Email Login
 					return request.put(this.endpoint + '/login', loginData).then(function (response) {
 						if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
@@ -779,7 +791,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 						logger.info({ description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 					}
 				} else {
-					serverUrl = config.serverUrl + '/apps/' + this.name;
+					serverUrl = serverUrl + '/apps/' + this.name;
 					logger.log({ description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 				}
 				return serverUrl;
