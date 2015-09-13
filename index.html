@@ -3,7 +3,7 @@
 <head>
   <meta charset='utf-8'>
   <title>Matter Browser Example</title>
-  <script src='dist/matter.bundle.js'></script>
+  <script src='../../dist/matter.bundle.js'></script>
   <!-- Replace above script tag with this: -->
   <!-- <script src='http://cdn.kyper.io/js/matter/0.0.5/matter.bundle.js'></script> -->
   <style type="text/css">
@@ -19,7 +19,6 @@
 <body>
   <div style="text-align:center;">
     <h2>Matter Browser Example</h2>
-    <button id="authorize-button">Authorize</button>
       <h3 class="status-label">Logged In: <span id="status">False</span></h3>
       <button onclick="logout()" id="logout-btn">Logout</button>
     <div>
@@ -33,6 +32,9 @@
       </div>
       <div>
         <h3>Signup</h3>
+          <button onclick="signup('google')">Google Signup</button>
+          <button onclick="signup('facebook')">Facebook Signup</button>
+          <button onclick="signup('github')">Github Signup</button>
           <div class="inputBoxes">
             <input type="text" name="username" placeholder="username" id="signup-username"><br>
             <input type="text" name="name" placeholder="name" id="signup-name"><br>
@@ -43,5 +45,6 @@
       </div>
     </div>
   </div>
+  <script src="examples/browser/app.js"></script>
 </body>
 </html>

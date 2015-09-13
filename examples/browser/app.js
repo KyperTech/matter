@@ -39,16 +39,19 @@ function logout(){
     console.error('logout() : Error logging out:', err);
   });   
 }
-function signup(){
-  var name = document.getElementById('signup-name').value;
-  var username = document.getElementById('signup-username').value;
-  var email = document.getElementById('signup-email').value;
-  var password = document.getElementById('signup-password').value;
-
-  matter.signup().then(function(){
+function signup(signupData){
+  if(!signupData){
+    var signupData = {};
+    emailSignupData.name = document.getElementById('signup-name').value;
+    emailSignupData.username = document.getElementById('signup-username').value;
+    emailSignupData.email = document.getElementById('signup-email').value;
+    emailSignupData.password = document.getElementById('signup-password').value;
+  }
+  matter.signup(signupData).then(function(){
     console.log('successful logout');
     setStatus();
   }, function(err){
-    console.error('logout() : Error logging out:', err);
-  });   
+    console.error('logout() : Error signing up:', err);
+  });
+ 
 }

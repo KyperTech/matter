@@ -61,7 +61,7 @@ let domUtil = {
 			window.document.getElementsByTagName('head')[0].appendChild(js);
 			logger.log({description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom'});
 			return new Promise((resolve, reject) => {
-				window.setTimeout(resolve, 2);
+				window.setTimeout(resolve, 30);
 			});
 		}
 	}

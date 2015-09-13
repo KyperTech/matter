@@ -5,7 +5,7 @@ import request from './utils/request';
 import token from './utils/token';
 import envStorage from './utils/envStorage';
 import _ from 'lodash';
-import Google from './utils/google';
+import ProviderAuth from './utils/providerAuth';
 
 class Matter {
 	/* Constructor
@@ -39,7 +39,7 @@ class Matter {
 			}
 		} else {
 			serverUrl = config.serverUrl + '/apps/' + this.name;
-			logger.info({description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+			logger.log({description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 		}
 		return serverUrl;
 	}
@@ -64,8 +64,10 @@ class Matter {
 			});
 		} else {
 			//Handle 3rd Party signups
-			new Google().signup().then((res) => {
-				logger.warn('Signup successful:', res);
+			let auth = new ProviderAuth({provider: signupData, app: this});
+			return auth.signup().then((res) => {
+				logger.info({description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter'});
+				return Promise.resolve(res);
 			});
 		}
 
@@ -78,32 +80,43 @@ class Matter {
 			logger.error({description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter'});
 			return Promise.reject({message: 'Username/Email and Password are required to login'});
 		}
-		return request.put(this.endpoint + '/login', loginData)
-		.then((response) => {
-			if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
-				logger.warn({description: 'Account not found.', response: response, func: 'login', obj: 'Matter'});
-				return Promise.reject(response.data);
-			} else {
-				logger.log({description: 'Successful login.', response: response, func: 'login', obj: 'Matter'});
-				if (_.has(response, 'token')) {
-					this.token.string = response.token;
+		if (_.isObject(loginData)) {
+			//Username/Email Login
+			return request.put(this.endpoint + '/login', loginData)
+			.then((response) => {
+				if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
+					logger.warn({description: 'Account not found.', response: response, func: 'login', obj: 'Matter'});
+					return Promise.reject(response.data);
+				} else {
+					logger.log({description: 'Successful login.', response: response, func: 'login', obj: 'Matter'});
+					if (_.has(response, 'token')) {
+						this.token.string = response.token;
+					}
+					if (_.has(response, 'account')) {
+						this.storage.setItem(config.tokenUserDataName, response.account);
+					}
+					return response.account;
 				}
-				if (_.has(response, 'account')) {
-					this.storage.setItem(config.tokenUserDataName, response.account);
+			})['catch']((errRes) => {
+				logger.error({description: 'Error requesting login.', error: errRes, status: errRes.status,  func: 'login', obj: 'Matter'});
+				if (errRes.status == 409 || errRes.status == 400) {
+					errRes = errRes.response.text;
 				}
-				return response.account;
-			}
-		})['catch']((errRes) => {
-			logger.error({description: 'Error requesting login.', error: errRes, status: errRes.status,  func: 'login', obj: 'Matter'});
-			if (errRes.status == 409 || errRes.status == 400) {
-				errRes = errRes.response.text;
-			}
-			return Promise.reject(errRes);
-		});
+				return Promise.reject(errRes);
+			});
+		} else {
+			//Provider login
+			let auth = new ProviderAuth({provider: loginData, app: this});
+			return auth.login().then((res) => {
+				logger.info({description: 'Provider login successful.', provider: loginData, res: res, func: 'login', obj: 'Matter'});
+				return Promise.resolve(res);
+			});
+		}
 	}
 	/** Logout
 	 */
 	logout() {
+		//TODO: Handle logging out of providers
 		return request.put(this.endpoint + '/logout').then((response) => {
 			logger.log({description: 'Logout successful.', response: response, func: 'logout', obj: 'Matter'});
 			this.currentUser = null;
@@ -139,12 +152,6 @@ class Matter {
 				return Promise.resolve(null);
 			}
 		}
-	}
-	/* Signup with google
-	 *
-	 */
-	googleSignup() {
-		return new Google().signup();
 	}
 	set currentUser(userData) {
 		logger.log({description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter'});
@@ -186,7 +193,7 @@ class Matter {
 		return token;
 	}
 	get utils() {
-		return {logger: logger, request: request, storage: envStorage};
+		return {logger: logger, request: request, storage: envStorage, dom: dom};
 	}
 	get isLoggedIn() {
 		return this.token.string ? true : false;
