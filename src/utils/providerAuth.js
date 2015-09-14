@@ -13,7 +13,7 @@ class ProviderAuth {
 		this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
 		this.provider = actionData.provider ? actionData.provider : null;
 	}
-	get loadHello() {
+	loadHello() {
 		//Load hellojs script
 		//TODO: Replace this with es6ified version
 		if (window && !window.hello) {
@@ -22,7 +22,7 @@ class ProviderAuth {
 			return Promise.resolve();
 		}
 	}
-	get helloLoginListener() {
+	helloLoginListener() {
 		//Login Listener
 		window.hello.on('auth.login', (auth) => {
 		logger.info({description: 'User logged in to google.', func: 'loadHello', obj: 'Google'});
@@ -45,8 +45,8 @@ class ProviderAuth {
 			});
 		});
 	}
-	get initHello() {
-		return this.loadHello.then(() => {
+	initHello() {
+		return this.loadHello().then(() => {
 			return request.get(this.app.endpoint)
 		.then((response) => {
 			logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'ProviderAuth'});
@@ -69,7 +69,7 @@ class ProviderAuth {
 	}
 	login() {
 		//Initalize Hello
-		return this.initHello.then(() => {
+		return this.initHello().then(() => {
 			if (window) {
 				return window.hello.login(this.provider);
 			}
@@ -81,7 +81,7 @@ class ProviderAuth {
 			logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
 			return Promise.reject();
 		}
-		return this.initHello.then(() => {
+		return this.initHello().then(() => {
 			if (window) {
 				return window.hello.login(this.provider);
 			}

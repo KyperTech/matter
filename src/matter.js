@@ -33,7 +33,7 @@ class Matter {
 		}
 		if (this.name == 'tessellate') {
 			//Remove url if host is server
-			if (window && _.has(window, 'location') && window.location.host == serverUrl) {
+			if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host === serverUrl) {
 				serverUrl = '';
 				logger.info({description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 			}

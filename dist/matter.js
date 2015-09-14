@@ -438,36 +438,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 
 		_createClass(ProviderAuth, [{
-			key: 'login',
-			value: function login() {
-				var _this = this;
-
-				//Initalize Hello
-				return this.initHello.then(function () {
-					if (window) {
-						return window.hello.login(_this.provider);
-					}
-				});
-			}
-		}, {
-			key: 'signup',
-			value: function signup() {
-				var _this2 = this;
-
-				//Initalize Hello
-				if (!_.has(clientIds, this.provider)) {
-					logger.error({ description: this.provider + ' is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.', provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
-					return Promise.reject();
-				}
-				return this.initHello.then(function () {
-					if (window) {
-						return window.hello.login(_this2.provider);
-					}
-				});
-			}
-		}, {
 			key: 'loadHello',
-			get: function get() {
+			value: function loadHello() {
 				//Load hellojs script
 				//TODO: Replace this with es6ified version
 				if (window && !window.hello) {
@@ -478,7 +450,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}, {
 			key: 'helloLoginListener',
-			get: function get() {
+			value: function helloLoginListener() {
 				//Login Listener
 				window.hello.on('auth.login', function (auth) {
 					logger.info({ description: 'User logged in to google.', func: 'loadHello', obj: 'Google' });
@@ -501,26 +473,54 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}, {
 			key: 'initHello',
-			get: function get() {
-				var _this3 = this;
+			value: function initHello() {
+				var _this = this;
 
-				return this.loadHello.then(function () {
-					return request.get(_this3.app.endpoint).then(function (response) {
+				return this.loadHello().then(function () {
+					return request.get(_this.app.endpoint).then(function (response) {
 						logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'ProviderAuth' });
-						var provider = _.findWhere(response.providers, { name: _this3.provider });
+						var provider = _.findWhere(response.providers, { name: _this.provider });
 						logger.warn({ description: 'Provider found', findWhere: provider, func: 'login', obj: 'ProviderAuth' });
 						if (!provider) {
-							logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this3.provider, provider: _this3.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+							logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this.provider, provider: _this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
 							return Promise.reject({ message: 'Provider is not setup.' });
 						}
 						var providersConfig = {};
 						providersConfig[provider.name] = provider.clientId;
 						logger.warn({ description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth' });
-						return window.hello.init(providersConfig, { redirect_uri: _this3.redirectUri });
+						return window.hello.init(providersConfig, { redirect_uri: _this.redirectUri });
 					})['catch'](function (errRes) {
 						logger.error({ description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter' });
 						return Promise.reject(errRes);
 					});
+				});
+			}
+		}, {
+			key: 'login',
+			value: function login() {
+				var _this2 = this;
+
+				//Initalize Hello
+				return this.initHello().then(function () {
+					if (window) {
+						return window.hello.login(_this2.provider);
+					}
+				});
+			}
+		}, {
+			key: 'signup',
+			value: function signup() {
+				var _this3 = this;
+
+				//Initalize Hello
+				if (!_.has(clientIds, this.provider)) {
+					logger.error({ description: this.provider + ' is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.', provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+					return Promise.reject();
+				}
+				return this.initHello().then(function () {
+					if (window) {
+						return window.hello.login(_this3.provider);
+					}
 				});
 			}
 		}]);
@@ -786,7 +786,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 				if (this.name == 'tessellate') {
 					//Remove url if host is server
-					if (window && _.has(window, 'location') && window.location.host == serverUrl) {
+					if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host === serverUrl) {
 						serverUrl = '';
 						logger.info({ description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 					}
