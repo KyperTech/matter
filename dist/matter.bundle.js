@@ -13825,6 +13825,10 @@ var _utilsLogger = require('./utils/logger');
 
 var _utilsLogger2 = _interopRequireDefault(_utilsLogger);
 
+var _utilsDom = require('./utils/dom');
+
+var _utilsDom2 = _interopRequireDefault(_utilsDom);
+
 var _utilsRequest = require('./utils/request');
 
 var _utilsRequest2 = _interopRequireDefault(_utilsRequest);
@@ -13841,8 +13845,9 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var user = undefined;
-var endpoints = undefined;
+var _utilsProviderAuth = require('./utils/providerAuth');
+
+var _utilsProviderAuth2 = _interopRequireDefault(_utilsProviderAuth);
 
 var Matter = (function () {
 	/* Constructor
@@ -13874,18 +13879,27 @@ var Matter = (function () {
    *
    */
 		value: function signup(signupData) {
-			return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
-				_utilsLogger2['default'].log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-				if (_lodash2['default'].has(response, 'account')) {
-					return response.account;
-				} else {
-					_utilsLogger2['default'].warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-					return response;
-				}
-			})['catch'](function (errRes) {
-				_utilsLogger2['default'].error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
-				return Promise.reject(errRes);
-			});
+			if (_lodash2['default'].isObject(signupData)) {
+				return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
+					_utilsLogger2['default'].log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
+					if (_lodash2['default'].has(response, 'account')) {
+						return response.account;
+					} else {
+						_utilsLogger2['default'].warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
+						return response;
+					}
+				})['catch'](function (errRes) {
+					_utilsLogger2['default'].error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
+					return Promise.reject(errRes);
+				});
+			} else {
+				//Handle 3rd Party signups
+				var auth = new _utilsProviderAuth2['default']({ provider: signupData, app: this });
+				return auth.signup().then(function (res) {
+					_utilsLogger2['default'].info({ description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter' });
+					return Promise.resolve(res);
+				});
+			}
 		}
 
 		/** Login
@@ -13896,31 +13910,44 @@ var Matter = (function () {
 		value: function login(loginData) {
 			var _this = this;
 
-			if (!loginData || !loginData.password || !loginData.username) {
+			if (!loginData) {
 				_utilsLogger2['default'].error({ description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter' });
-				return Promise.reject({ message: 'Username/Email and Password are required to login' });
+				return Promise.reject({ message: 'Login data is required to login.' });
 			}
-			return _utilsRequest2['default'].put(this.endpoint + '/login', loginData).then(function (response) {
-				if (_lodash2['default'].has(response, 'data') && _lodash2['default'].has(response.data, 'status') && response.data.status == 409) {
-					_utilsLogger2['default'].warn({ description: 'Account not found.', response: response, func: 'login', obj: 'Matter' });
-					return Promise.reject(response.data);
-				} else {
-					_utilsLogger2['default'].log({ description: 'Successful login.', response: response, func: 'login', obj: 'Matter' });
-					if (_lodash2['default'].has(response, 'token')) {
-						_this.token.string = response.token;
-					}
-					if (_lodash2['default'].has(response, 'account')) {
-						_this.storage.setItem(_config2['default'].tokenUserDataName, response.account);
-					}
-					return response.account;
+			if (_lodash2['default'].isObject(loginData)) {
+				if (!loginData.password || !loginData.username) {
+					return Promise.reject({ message: 'Username/Email and Password are required to login' });
 				}
-			})['catch'](function (errRes) {
-				_utilsLogger2['default'].error({ description: 'Error requesting login.', error: errRes, status: errRes.status, func: 'login', obj: 'Matter' });
-				if (errRes.status == 409 || errRes.status == 400) {
-					errRes = errRes.response.text;
-				}
-				return Promise.reject(errRes);
-			});
+				//Username/Email Login
+				return _utilsRequest2['default'].put(this.endpoint + '/login', loginData).then(function (response) {
+					if (_lodash2['default'].has(response, 'data') && _lodash2['default'].has(response.data, 'status') && response.data.status == 409) {
+						_utilsLogger2['default'].warn({ description: 'Account not found.', response: response, func: 'login', obj: 'Matter' });
+						return Promise.reject(response.data);
+					} else {
+						_utilsLogger2['default'].log({ description: 'Successful login.', response: response, func: 'login', obj: 'Matter' });
+						if (_lodash2['default'].has(response, 'token')) {
+							_this.token.string = response.token;
+						}
+						if (_lodash2['default'].has(response, 'account')) {
+							_this.storage.setItem(_config2['default'].tokenUserDataName, response.account);
+						}
+						return response.account;
+					}
+				})['catch'](function (errRes) {
+					_utilsLogger2['default'].error({ description: 'Error requesting login.', error: errRes, status: errRes.status, func: 'login', obj: 'Matter' });
+					if (errRes.status == 409 || errRes.status == 400) {
+						errRes = errRes.response.text;
+					}
+					return Promise.reject(errRes);
+				});
+			} else {
+				//Provider login
+				var auth = new _utilsProviderAuth2['default']({ provider: loginData, app: this });
+				return auth.login().then(function (res) {
+					_utilsLogger2['default'].info({ description: 'Provider login successful.', provider: loginData, res: res, func: 'login', obj: 'Matter' });
+					return Promise.resolve(res);
+				});
+			}
 		}
 
 		/** Logout
@@ -13930,6 +13957,7 @@ var Matter = (function () {
 		value: function logout() {
 			var _this2 = this;
 
+			//TODO: Handle logging out of providers
 			return _utilsRequest2['default'].put(this.endpoint + '/logout').then(function (response) {
 				_utilsLogger2['default'].log({ description: 'Logout successful.', response: response, func: 'logout', obj: 'Matter' });
 				_this2.currentUser = null;
@@ -14084,8 +14112,8 @@ var Matter = (function () {
 					_utilsLogger2['default'].info({ description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 				}
 			} else {
-				serverUrl = _config2['default'].serverUrl + '/apps/' + this.name;
-				_utilsLogger2['default'].info({ description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter' });
+				serverUrl = serverUrl + '/apps/' + this.name;
+				_utilsLogger2['default'].log({ description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 			}
 			return serverUrl;
 		}
@@ -14118,7 +14146,7 @@ var Matter = (function () {
 	}, {
 		key: 'utils',
 		get: function get() {
-			return { logger: _utilsLogger2['default'], request: _utilsRequest2['default'], storage: _utilsEnvStorage2['default'] };
+			return { logger: _utilsLogger2['default'], request: _utilsRequest2['default'], storage: _utilsEnvStorage2['default'], dom: _utilsDom2['default'] };
 		}
 	}, {
 		key: 'isLoggedIn',
@@ -14134,7 +14162,90 @@ var Matter = (function () {
 exports['default'] = Matter;
 module.exports = exports['default'];
 
-},{"./config":9,"./utils/envStorage":11,"./utils/logger":12,"./utils/request":13,"./utils/token":14,"lodash":5}],11:[function(require,module,exports){
+},{"./config":9,"./utils/dom":11,"./utils/envStorage":12,"./utils/logger":13,"./utils/providerAuth":14,"./utils/request":15,"./utils/token":16,"lodash":5}],11:[function(require,module,exports){
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _logger = require('./logger');
+
+var _logger2 = _interopRequireDefault(_logger);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var domUtil = {
+	/**
+  * @description
+  * Appends given css source to DOM head.
+  *
+  * @param {String} src - url src for css to append
+  *
+  */
+	loadCss: function loadCss(src) {
+		if (!document) {
+			_logger2['default'].error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var css = document.createElement('link');
+			css.rel = 'stylesheet';
+			css.type = 'text/css';
+			css.href = src;
+			document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
+			_logger2['default'].log({ description: 'CSS was loaded into document.', element: css, func: 'loadCss', obj: 'dom' });
+			return css; //Return link element
+		}
+	},
+	/**
+  * @description
+  * Appends given javascript source to DOM head.
+  *
+  * @param {String} src - url src for javascript to append
+  *
+  */
+	loadJs: function loadJs(src) {
+		if (window && !_lodash2['default'].has(window, 'document')) {
+			_logger2['default'].error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var js = window.document.createElement('script');
+			js.src = src;
+			js.type = 'text/javascript';
+			window.document.getElementsByTagName('head')[0].appendChild(js);
+			_logger2['default'].log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
+			return js; //Return script element
+		}
+	},
+	/**
+  * @description
+  * Appends given javascript source to DOM head.
+  *
+  * @param {String} src - url src for javascript to append
+  *
+  */
+	asyncLoadJs: function asyncLoadJs(src) {
+		if (!_lodash2['default'].has(window, 'document')) {
+			_logger2['default'].error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var js = window.document.createElement('script');
+			js.src = src;
+			js.type = 'text/javascript';
+			window.document.getElementsByTagName('head')[0].appendChild(js);
+			_logger2['default'].log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
+			return new Promise(function (resolve, reject) {
+				window.setTimeout(resolve, 30);
+			});
+		}
+	}
+};
+exports['default'] = domUtil;
+module.exports = exports['default'];
+
+},{"./logger":13,"lodash":5}],12:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14288,7 +14399,7 @@ var storage = Object.defineProperties({
 exports['default'] = storage;
 module.exports = exports['default'];
 
-},{"../config":9,"./logger":12,"lodash":5}],12:[function(require,module,exports){
+},{"../config":9,"./logger":13,"lodash":5}],13:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14302,6 +14413,13 @@ var _config2 = _interopRequireDefault(_config);
 var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
+
+//Set default log level to debug
+var logLevel = 'debug';
+//Set log level from config
+if (_config2['default'].logLevel) {
+	logLevel = _config2['default'].logLevel;
+}
 
 var logger = {
 	log: function log(logData) {
@@ -14362,14 +14480,18 @@ function buildMessageArgs(logData) {
 	var msgStr = '';
 	var msgObj = {};
 	//TODO: Attach time stamp
+	//Attach location information to the beginning of message
 	if (_lodash2['default'].isObject(logData)) {
-		if (_lodash2['default'].has(logData, 'func')) {
-			if (_lodash2['default'].has(logData, 'obj')) {
-				msgStr += '[' + logData.obj + '.' + logData.func + '()] ';
-			} else if (_lodash2['default'].has(logData, 'file')) {
-				msgStr += '[' + logData.file + ' > ' + logData.func + '()] ';
-			} else {
-				msgStr += '[' + logData.func + '()] ';
+		if (logLevel == 'debug') {
+			if (_lodash2['default'].has(logData, 'func')) {
+				if (_lodash2['default'].has(logData, 'obj')) {
+					//Object and function provided
+					msgStr += '[' + logData.obj + '.' + logData.func + '()]\n ';
+				} else if (_lodash2['default'].has(logData, 'file')) {
+					msgStr += '[' + logData.file + ' > ' + logData.func + '()]\n ';
+				} else {
+					msgStr += '[' + logData.func + '()]\n ';
+				}
 			}
 		}
 		//Print each key and its value other than obj and func
@@ -14397,7 +14519,145 @@ function buildMessageArgs(logData) {
 }
 module.exports = exports['default'];
 
-},{"../config":9,"lodash":5}],13:[function(require,module,exports){
+},{"../config":9,"lodash":5}],14:[function(require,module,exports){
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _request = require('./request');
+
+var _request2 = _interopRequireDefault(_request);
+
+var _logger = require('./logger');
+
+var _logger2 = _interopRequireDefault(_logger);
+
+var _dom = require('./dom');
+
+var _dom2 = _interopRequireDefault(_dom);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+// import hello from 'hellojs'; //After es version of module is created
+//Private object containing clientIds
+var clientIds = {};
+
+var ProviderAuth = (function () {
+	function ProviderAuth(actionData) {
+		_classCallCheck(this, ProviderAuth);
+
+		this.app = actionData.app ? actionData.app : null;
+		this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
+		this.provider = actionData.provider ? actionData.provider : null;
+	}
+
+	_createClass(ProviderAuth, [{
+		key: 'login',
+		value: function login() {
+			var _this = this;
+
+			//Initalize Hello
+			return this.initHello.then(function () {
+				if (window) {
+					return window.hello.login(_this.provider);
+				}
+			});
+		}
+	}, {
+		key: 'signup',
+		value: function signup() {
+			var _this2 = this;
+
+			//Initalize Hello
+			if (!_lodash2['default'].has(clientIds, this.provider)) {
+				_logger2['default'].error({ description: this.provider + ' is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.', provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+				return Promise.reject();
+			}
+			return this.initHello.then(function () {
+				if (window) {
+					return window.hello.login(_this2.provider);
+				}
+			});
+		}
+	}, {
+		key: 'loadHello',
+		get: function get() {
+			//Load hellojs script
+			//TODO: Replace this with es6ified version
+			if (window && !window.hello) {
+				return _dom2['default'].asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
+			} else {
+				return Promise.resolve();
+			}
+		}
+	}, {
+		key: 'helloLoginListener',
+		get: function get() {
+			//Login Listener
+			window.hello.on('auth.login', function (auth) {
+				_logger2['default'].info({ description: 'User logged in to google.', func: 'loadHello', obj: 'Google' });
+				// Call user information, for the given network
+				window.hello(auth.network).api('/me').then(function (r) {
+					// Inject it into the container
+					//TODO:Send account informaiton to server
+					var userData = r;
+					userData.provider = auth.network;
+					//Login or Signup endpoint
+					return _request2['default'].post(this.endpoint + '/provider', userData).then(function (response) {
+						_logger2['default'].log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'GoogleUtil' });
+						return response;
+					})['catch'](function (errRes) {
+						_logger2['default'].error({ description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter' });
+						return Promise.reject(errRes);
+					});
+				});
+			});
+		}
+	}, {
+		key: 'initHello',
+		get: function get() {
+			var _this3 = this;
+
+			return this.loadHello.then(function () {
+				return _request2['default'].get(_this3.app.endpoint).then(function (response) {
+					_logger2['default'].log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'ProviderAuth' });
+					var provider = _lodash2['default'].findWhere(response.providers, { name: _this3.provider });
+					_logger2['default'].warn({ description: 'Provider found', findWhere: provider, func: 'login', obj: 'ProviderAuth' });
+					if (!provider) {
+						_logger2['default'].error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this3.provider, provider: _this3.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+						return Promise.reject({ message: 'Provider is not setup.' });
+					}
+					var providersConfig = {};
+					providersConfig[provider.name] = provider.clientId;
+					_logger2['default'].warn({ description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth' });
+					return window.hello.init(providersConfig, { redirect_uri: _this3.redirectUri });
+				})['catch'](function (errRes) {
+					_logger2['default'].error({ description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter' });
+					return Promise.reject(errRes);
+				});
+			});
+		}
+	}]);
+
+	return ProviderAuth;
+})();
+
+exports['default'] = ProviderAuth;
+module.exports = exports['default'];
+
+},{"../config":9,"./dom":11,"./logger":13,"./request":15,"lodash":5}],15:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14476,7 +14736,7 @@ function addAuthHeader(req) {
 }
 module.exports = exports['default'];
 
-},{"../config":9,"./envStorage":11,"./logger":12,"./token":14,"superagent":6}],14:[function(require,module,exports){
+},{"../config":9,"./envStorage":12,"./logger":13,"./token":16,"superagent":6}],16:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14563,5 +14823,5 @@ var token = Object.defineProperties({
 exports['default'] = token;
 module.exports = exports['default'];
 
-},{"../config":9,"./envStorage":11,"./logger":12,"jwt-decode":2,"lodash":5}]},{},[10])(10)
+},{"../config":9,"./envStorage":12,"./logger":13,"jwt-decode":2,"lodash":5}]},{},[10])(10)
 });

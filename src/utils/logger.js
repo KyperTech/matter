@@ -1,6 +1,13 @@
 import config from '../config';
 import _ from 'lodash';
 
+//Set default log level to debug
+let logLevel = 'debug';
+//Set log level from config
+if (config.logLevel) {
+	logLevel = config.logLevel;
+}
+
 let logger = {
 	log(logData) {
 		let msgArgs = buildMessageArgs(logData);
@@ -59,18 +66,22 @@ function buildMessageArgs(logData) {
 	var msgStr = '';
 	var msgObj = {};
 	//TODO: Attach time stamp
+	//Attach location information to the beginning of message
 	if (_.isObject(logData)) {
-		if (_.has(logData, 'func')) {
-			if (_.has(logData, 'obj')) {
-				msgStr += '[' + logData.obj + '.' + logData.func + '()] ';
-			} else if (_.has(logData, 'file')) {
-				msgStr += '[' + logData.file + ' > ' + logData.func + '()] ';
-			} else {
-				msgStr += '[' + logData.func + '()] ';
+		if (logLevel == 'debug') {
+			if (_.has(logData, 'func')) {
+				if (_.has(logData, 'obj')) {
+					//Object and function provided
+					msgStr += `[${logData.obj}.${logData.func}()]\n `;
+				} else if (_.has(logData, 'file')) {
+					msgStr += `[${logData.file} > ${logData.func}()]\n `;
+				} else {
+					msgStr += `[${logData.func}()]\n `;
+				}
 			}
 		}
 		//Print each key and its value other than obj and func
-		_.each(_.omit(_.keys(logData)), function(key, ind, list) {
+		_.each(_.omit(_.keys(logData)), (key, ind, list) => {
 			if (key != 'func' && key != 'obj') {
 				if (key == 'description' || key == 'message') {
 					msgStr += logData[key];

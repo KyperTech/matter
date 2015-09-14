@@ -44,7 +44,7 @@ Using Matter requires having created an application on [Tessellate](http://tesse
     
     ```HTML
     <!-- Matter Library Bundle -->
-    <script src="http://cdn.kyper.io/js/matter/0.0.7/matter.bundle.js"></script>
+    <script src="http://cdn.kyper.io/js/matter/0.0.8/matter.bundle.js"></script>
     ```
   #### Bower
   Run `bower install --save kyper-matter`
@@ -72,6 +72,7 @@ matter.login({username:"test", password:"test"}).then(function(user){
     console.log('User logged into exampleApp:', user);
 });
 ```
+
 ## Docs
 
 ### [API Documentation](https://github.com/KyperTech/matter/wiki/API-Documentation)
@@ -80,6 +81,12 @@ matter.login({username:"test", password:"test"}).then(function(user){
 
 ## More Information
 For more details please visit the [Matter Wiki](https://github.com/KyperTech/matter/wiki).
+
+## Testing
+
+Tests are locaed in test folder and can be run via `gulp test` or `gulp coverage` commanges.
+
+`index.html` has been added as a bare bones test page similar to browser example (`/examples/browser/index.html).
 
 ## TODO
 * 3rd Party provider logins (keys set on tessellate)

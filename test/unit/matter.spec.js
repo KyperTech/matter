@@ -1,29 +1,43 @@
 import Matter from '../../src/matter';
 import request from '../../src/utils/request';
 import config from '../../src/config';
+import logger from '../../src/utils/logger';
+
 let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);
 let mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
 let mockGet = sinon.stub(request, 'get', function() {
- console.log('mock get called with:', arguments);
+ // console.log('mock get called with:', arguments);
  return new Promise((resolve) => {
    resolve({body: {}});
  });
 });
 let mockPut = sinon.stub(request, 'put', function(putData) {
- console.log('mock put called with:', arguments);
+ // console.log('mock put called with:', arguments);
  return new Promise((resolve) => {
    resolve({body: {}});
  });
 });
 let mockPost = sinon.stub(request, 'post', function(url, postData) {
- console.log('mock post called with:', arguments);
+ // console.log('mock post called with:', arguments);
  return new Promise((resolve, reject) => {
    if (!postData || postData == {}) {
      reject({});
    }
    resolve({body: {}});
  });
+});
+let mockLog = sinon.stub(logger, 'log', function() {
+
+});
+let mockWarn = sinon.stub(logger, 'warn', function() {
+
+});
+let mockInfo = sinon.stub(logger, 'info', function() {
+
+});
+let mockError = sinon.stub(logger, 'error', function() {
+
 });
 // TODO: Test options functionality
 describe('Matter', () => {
