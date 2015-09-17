@@ -2,6 +2,7 @@ import Matter from '../../src/matter';
 import request from '../../src/utils/request';
 import config from '../../src/config';
 import logger from '../../src/utils/logger';
+import sinon from 'sinon';
 
 let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);

@@ -47,6 +47,7 @@ class Matter {
 	 *
 	 */
 	signup(signupData) {
+		logger.log({description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter'});
 		if (_.isObject(signupData)) {
 			return request.post(this.endpoint + '/signup', signupData)
 			.then((response) => {
@@ -65,7 +66,7 @@ class Matter {
 		} else {
 			//Handle 3rd Party signups
 			let auth = new ProviderAuth({provider: signupData, app: this});
-			return auth.signup().then((res) => {
+			return auth.signup(signupData).then((res) => {
 				logger.info({description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter'});
 				return Promise.resolve(res);
 			});

@@ -424,6 +424,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		return req;
 	}
 
+	// import hello from 'hellojs'; //Modifies objects to have id parameter?
+
 	// import hello from 'hellojs'; //After es version of module is created
 	//Private object containing clientIds
 	var clientIds = {};
@@ -477,18 +479,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				var _this = this;
 
 				return this.loadHello().then(function () {
-					return request.get(_this.app.endpoint).then(function (response) {
+					return request.get(_this.app.endpoint + '/providers').then(function (response) {
 						logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'ProviderAuth' });
-						var provider = _.findWhere(response.providers, { name: _this.provider });
-						logger.warn({ description: 'Provider found', findWhere: provider, func: 'login', obj: 'ProviderAuth' });
+						var provider = response[_this.provider];
+						logger.warn({ description: 'Provider found', provider: provider, func: 'login', obj: 'ProviderAuth' });
 						if (!provider) {
 							logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this.provider, provider: _this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
 							return Promise.reject({ message: 'Provider is not setup.' });
 						}
-						var providersConfig = {};
-						providersConfig[provider.name] = provider.clientId;
-						logger.warn({ description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth' });
-						return window.hello.init(providersConfig, { redirect_uri: _this.redirectUri });
+						logger.warn({ description: 'Providers config built', providersConfig: response, func: 'login', obj: 'ProviderAuth' });
+						return window.hello.init(response, { redirect_uri: 'redirect.html' });
 					})['catch'](function (errRes) {
 						logger.error({ description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter' });
 						return Promise.reject(errRes);
@@ -502,9 +502,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 				//Initalize Hello
 				return this.initHello().then(function () {
-					if (window) {
-						return window.hello.login(_this2.provider);
-					}
+					return window.hello.login(_this2.provider);
 				});
 			}
 		}, {
@@ -513,14 +511,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				var _this3 = this;
 
 				//Initalize Hello
-				if (!_.has(clientIds, this.provider)) {
-					logger.error({ description: this.provider + ' is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.', provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
-					return Promise.reject();
-				}
+				// if (!_.has(clientIds, this.provider)) {
+				// 	logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
+				// 	return Promise.reject();
+				// }
 				return this.initHello().then(function () {
-					if (window) {
-						return window.hello.login(_this3.provider);
-					}
+					return window.hello.login(_this3.provider);
+				}, function () {
+					logger.error({ description: 'Error signing up.', error: errRes, func: 'signup', obj: 'Matter' });
+					return Promise.reject({ message: 'Error signing up.' });
 				});
 			}
 		}]);
@@ -558,6 +557,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     *
     */
 			value: function signup(signupData) {
+				logger.log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
 				if (_.isObject(signupData)) {
 					return request.post(this.endpoint + '/signup', signupData).then(function (response) {
 						logger.log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
@@ -574,7 +574,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				} else {
 					//Handle 3rd Party signups
 					var auth = new ProviderAuth({ provider: signupData, app: this });
-					return auth.signup().then(function (res) {
+					return auth.signup(signupData).then(function (res) {
 						logger.info({ description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter' });
 						return Promise.resolve(res);
 					});

@@ -143,10 +143,10 @@ function getTestBundler() {
   var bundler = browserify(allFiles, watchify.args);
 
   // Watch the bundler, and re-bundle it whenever files change
-  bundler = watchify(bundler);
-  bundler.on('update', function() {
-    bundle(bundler);
-  });
+  // bundler = watchify(bundler);
+  // bundler.on('update', function() {
+  //   bundle(bundler);
+  // });
 
   // Set up Babelify so that ES6 works in the tests
   bundler.transform(babelify.configure({
@@ -171,7 +171,7 @@ gulp.task('browserify', function() {
 });
 
 function test() {
-  return gulp.src(['test/setup/node.js', 'test/unit/**/*.js'], {read: false})
+  return gulp.src(['test/setup/browser.js', 'test/unit/**/*.js'], {read: false})
     .pipe($.mocha({reporter: 'dot', globals: config.mochaGlobals}));
 }
 
@@ -208,7 +208,7 @@ const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
 // Run the headless unit tests as you make changes.
 gulp.task('watch', function() {
   const watchFiles = jsWatchFiles.concat(otherWatchFiles);
-  gulp.watch(watchFiles, ['test', 'build-bundle']);
+  gulp.watch(watchFiles, ['build-bundle']);
 });
 
 // Set up a livereload environment for our spec runner

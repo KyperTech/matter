@@ -3,6 +3,8 @@ import request from './request';
 import logger from './logger';
 import dom from './dom';
 import _ from 'lodash';
+// import hello from 'hellojs'; //Modifies objects to have id parameter?
+
 // import hello from 'hellojs'; //After es version of module is created
 //Private object containing clientIds
 let clientIds = {};
@@ -25,7 +27,7 @@ class ProviderAuth {
 	helloLoginListener() {
 		//Login Listener
 		window.hello.on('auth.login', (auth) => {
-		logger.info({description: 'User logged in to google.', func: 'loadHello', obj: 'Google'});
+			logger.info({description: 'User logged in to google.', func: 'loadHello', obj: 'Google'});
 			// Call user information, for the given network
 			window.hello(auth.network).api('/me').then(function(r) {
 				// Inject it into the container
@@ -47,19 +49,17 @@ class ProviderAuth {
 	}
 	initHello() {
 		return this.loadHello().then(() => {
-			return request.get(this.app.endpoint)
-		.then((response) => {
-			logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'ProviderAuth'});
-			var provider = _.findWhere(response.providers, {name: this.provider});
-			logger.warn({description: 'Provider found', findWhere: provider , func: 'login', obj: 'ProviderAuth'});
-			if (!provider) {
-				logger.error({description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + this.provider, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
-				return Promise.reject({message: 'Provider is not setup.'});
-			}
-			var providersConfig = {};
-			providersConfig[provider.name] = provider.clientId;
-			logger.warn({description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth'});
-				return window.hello.init(providersConfig, {redirect_uri: this.redirectUri});
+			return request.get(`${this.app.endpoint}/providers`)
+			.then((response) => {
+				logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'ProviderAuth'});
+				let provider = response[this.provider];
+				logger.warn({description: 'Provider found', provider: provider , func: 'login', obj: 'ProviderAuth'});
+				if (!provider) {
+					logger.error({description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + this.provider, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
+					return Promise.reject({message: 'Provider is not setup.'});
+				}
+				logger.warn({description: 'Providers config built', providersConfig: response, func: 'login', obj: 'ProviderAuth'});
+				return window.hello.init(response, {redirect_uri: 'redirect.html'});
 			})
 			['catch']((errRes) => {
 				logger.error({description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter'});
@@ -70,21 +70,20 @@ class ProviderAuth {
 	login() {
 		//Initalize Hello
 		return this.initHello().then(() => {
-			if (window) {
-				return window.hello.login(this.provider);
-			}
+			return window.hello.login(this.provider);
 		});
 	}
 	signup() {
 		//Initalize Hello
-		if (!_.has(clientIds, this.provider)) {
-			logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
-			return Promise.reject();
-		}
+		// if (!_.has(clientIds, this.provider)) {
+		// 	logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
+		// 	return Promise.reject();
+		// }
 		return this.initHello().then(() => {
-			if (window) {
-				return window.hello.login(this.provider);
-			}
+			return window.hello.login(this.provider);
+		}, () => {
+			logger.error({description: 'Error signing up.', error: errRes, func: 'signup', obj: 'Matter'});
+			return Promise.reject({message: 'Error signing up.'});
 		});
 	}
 }

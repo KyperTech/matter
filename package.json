@@ -70,7 +70,9 @@
     "mochaGlobals": [
       "stub",
       "spy",
-      "expect"
+      "expect",
+      "window",
+      "sinon"
     ]
   },
   "dependencies": {

@@ -13879,6 +13879,7 @@ var Matter = (function () {
    *
    */
 		value: function signup(signupData) {
+			_utilsLogger2['default'].log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
 			if (_lodash2['default'].isObject(signupData)) {
 				return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
 					_utilsLogger2['default'].log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
@@ -13895,7 +13896,7 @@ var Matter = (function () {
 			} else {
 				//Handle 3rd Party signups
 				var auth = new _utilsProviderAuth2['default']({ provider: signupData, app: this });
-				return auth.signup().then(function (res) {
+				return auth.signup(signupData).then(function (res) {
 					_utilsLogger2['default'].info({ description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter' });
 					return Promise.resolve(res);
 				});
@@ -14550,6 +14551,8 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
+// import hello from 'hellojs'; //Modifies objects to have id parameter?
+
 // import hello from 'hellojs'; //After es version of module is created
 //Private object containing clientIds
 var clientIds = {};
@@ -14603,18 +14606,16 @@ var ProviderAuth = (function () {
 			var _this = this;
 
 			return this.loadHello().then(function () {
-				return _request2['default'].get(_this.app.endpoint).then(function (response) {
+				return _request2['default'].get(_this.app.endpoint + '/providers').then(function (response) {
 					_logger2['default'].log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'ProviderAuth' });
-					var provider = _lodash2['default'].findWhere(response.providers, { name: _this.provider });
-					_logger2['default'].warn({ description: 'Provider found', findWhere: provider, func: 'login', obj: 'ProviderAuth' });
+					var provider = response[_this.provider];
+					_logger2['default'].warn({ description: 'Provider found', provider: provider, func: 'login', obj: 'ProviderAuth' });
 					if (!provider) {
 						_logger2['default'].error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this.provider, provider: _this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
 						return Promise.reject({ message: 'Provider is not setup.' });
 					}
-					var providersConfig = {};
-					providersConfig[provider.name] = provider.clientId;
-					_logger2['default'].warn({ description: 'Providers config built', providersConfig: providersConfig, func: 'login', obj: 'ProviderAuth' });
-					return window.hello.init(providersConfig, { redirect_uri: _this.redirectUri });
+					_logger2['default'].warn({ description: 'Providers config built', providersConfig: response, func: 'login', obj: 'ProviderAuth' });
+					return window.hello.init(response, { redirect_uri: 'redirect.html' });
 				})['catch'](function (errRes) {
 					_logger2['default'].error({ description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter' });
 					return Promise.reject(errRes);
@@ -14628,9 +14629,7 @@ var ProviderAuth = (function () {
 
 			//Initalize Hello
 			return this.initHello().then(function () {
-				if (window) {
-					return window.hello.login(_this2.provider);
-				}
+				return window.hello.login(_this2.provider);
 			});
 		}
 	}, {
@@ -14639,14 +14638,15 @@ var ProviderAuth = (function () {
 			var _this3 = this;
 
 			//Initalize Hello
-			if (!_lodash2['default'].has(clientIds, this.provider)) {
-				_logger2['default'].error({ description: this.provider + ' is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.', provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
-				return Promise.reject();
-			}
+			// if (!_.has(clientIds, this.provider)) {
+			// 	logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
+			// 	return Promise.reject();
+			// }
 			return this.initHello().then(function () {
-				if (window) {
-					return window.hello.login(_this3.provider);
-				}
+				return window.hello.login(_this3.provider);
+			}, function () {
+				_logger2['default'].error({ description: 'Error signing up.', error: errRes, func: 'signup', obj: 'Matter' });
+				return Promise.reject({ message: 'Error signing up.' });
 			});
 		}
 	}]);
