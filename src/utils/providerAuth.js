@@ -79,9 +79,10 @@ class ProviderAuth {
 		// 	logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
 		// 	return Promise.reject();
 		// }
+		//TODO: send info to server
 		return this.initHello().then(() => {
 			return window.hello.login(this.provider);
-		}, () => {
+		}, (errRes) => {
 			logger.error({description: 'Error signing up.', error: errRes, func: 'signup', obj: 'Matter'});
 			return Promise.reject({message: 'Error signing up.'});
 		});
