@@ -1,6 +1,6 @@
 {
   "name": "kyper-matter",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "dist/matter.js",
   "jsnext:main": "src/matter.js",
@@ -8,7 +8,7 @@
     "test": "gulp",
     "test-browser": "gulp test-browser",
     "build": "gulp build",
-    "coverage": "gulp coverage"
+    "coverage": "gulp test"
   },
   "repository": {
     "type": "git",
@@ -55,7 +55,15 @@
     "gulp-sourcemaps": "^1.3.0",
     "gulp-uglify": "^1.2.0",
     "isparta": "^3.0.3",
+    "karma": "^0.13.9",
+    "karma-browserify": "^4.3.0",
+    "karma-chai-plugins": "^0.6.0",
+    "karma-chai-sinon": "^0.1.5",
+    "karma-coverage": "^0.5.2",
+    "karma-mocha": "^0.2.0",
+    "karma-phantomjs-launcher": "^0.2.1",
     "mocha": "^2.1.0",
+    "phantomjs": "^1.9.18",
     "rollup": "^0.14.1",
     "run-sequence": "^1.0.2",
     "sinon": "^1.12.2",
@@ -70,14 +78,15 @@
     "mochaGlobals": [
       "stub",
       "spy",
-      "expect",
-      "window",
-      "sinon"
+      "expect"
     ]
   },
   "dependencies": {
+    "es5-shim": "^4.1.13",
+    "es6-shim": "^0.28.1",
     "hellojs": "^1.8.2",
     "jwt-decode": "^1.4.0",
+    "karma-es6-shim": "^0.1.3",
     "lodash": "^3.10.1",
     "superagent": "^1.3.0"
   }

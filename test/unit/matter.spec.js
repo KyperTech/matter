@@ -2,7 +2,6 @@ import Matter from '../../src/matter';
 import request from '../../src/utils/request';
 import config from '../../src/config';
 import logger from '../../src/utils/logger';
-import sinon from 'sinon';
 
 let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);
@@ -49,7 +48,10 @@ describe('Matter', () => {
   });
   describe('Login method', () => {
     beforeEach(() => {
-      spy(matter, 'login');
+      sinon.spy(matter, 'login');
+    });
+    afterEach(() => {
+      matter.login.restore();
     });
     it('accepts username and password', () => {
       matter.login({username: 'test', password: 'test'});
@@ -77,9 +79,11 @@ describe('Matter', () => {
   });
   describe('Signup method', () => {
     beforeEach(() => {
-      spy(matter, 'signup');
+      sinon.spy(matter, 'signup');
     });
-
+    afterEach(() => {
+      matter.signup.restore();
+    });
     it('calls signup endpoint', () => {
       matter.signup({username: 'test', password: 'test'}).then(() => {
         expect(mockPut).to.have.been.calledOnce;
@@ -104,8 +108,11 @@ describe('Matter', () => {
   });
   describe('Logout method', () => {
     beforeEach(() => {
-      spy(matter, 'logout');
+      sinon.spy(matter, 'logout');
       matter.token.string = mockToken;
+    });
+    afterEach(() => {
+      matter.logout.restore();
     });
     it('should call logout endpoint', () => {
       matter.logout().then(() =>  {

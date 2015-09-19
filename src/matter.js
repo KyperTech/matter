@@ -48,7 +48,7 @@ class Matter {
 	 */
 	signup(signupData) {
 		logger.log({description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter'});
-		if (!loginData) {
+		if (!signupData) {
 			logger.error({description: 'Signup information is required to signup.', func: 'signup', obj: 'Matter'});
 			return Promise.reject({message: 'Login data is required to login.'});
 		}
@@ -130,7 +130,7 @@ class Matter {
 	 */
 	logout() {
 		//TODO: Handle logging out of providers
-		if (!isLoggedIn) {
+		if (!this.isLoggedIn) {
 			logger.warn({description: 'No logged in account to log out.', func: 'logout', obj: 'Matter'});
 			return Promise.reject({message: 'No logged in account to log out.'});
 		}
