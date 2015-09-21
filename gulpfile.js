@@ -6,7 +6,6 @@ const $ = require('gulp-load-plugins')();
 const del = require('del');
 const glob = require('glob');
 const path = require('path');
-const isparta = require('isparta');
 const babelify = require('babelify');
 const watchify = require('watchify');
 const buffer = require('vinyl-buffer');
@@ -15,6 +14,12 @@ const browserify = require('browserify');
 const runSequence = require('run-sequence');
 const source = require('vinyl-source-stream');
 const awspublish = require('gulp-awspublish');
+const browserSync = require('browser-sync').create();
+const KarmaServer = require('karma').Server;
+const shell = require('gulp-shell');
+const bump = require('gulp-bump');
+const _ = require('lodash');
+
 // Gather the library data from `package.json`
 const manifest = require('./package.json');
 const config = manifest.babelBoilerplateOptions;
@@ -22,11 +27,7 @@ const mainFile = manifest.main;
 const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
 const conf = require('./config.json');
-const browserSync = require('browser-sync').create();
-const KarmaServer = require('karma').Server;
-const shell = require('gulp-shell');
-const bump = require('gulp-bump');
-const _ = require('lodash');
+
 
 // JS files that should be watched
 const jsWatchFiles = ['src/**/*', 'test/**/*'];
@@ -193,18 +194,20 @@ function buildLinkCommands(linkAction){
   const messageCommand = 'echo ' + linkAction + 'ing local modules';
   var commands = [messageCommand];
   //Each type of packages to link
-  _.each(linkTypes, function (type){
+  _.each(linkTypes, function (packageType){
     //Check that package link patter is supported
-    // if(!_.contains(allowedPackageLinkTypes, type)){
-    //   console.error('Invalid package link type');
+    // if(!_.contains(allowedPackageLinkTypes, packageType)){
+    //   console.error('Invalid package link packageType');
     //   return;
     // }
-    //Each package of that type
-    _.each(config.linkedModules[type], function (packageName){
-      commands.push(type + ' ' + linkAction  + ' ' + packageName);
+    //Each package of that packageType
+    _.each(conf.linkedModules[packageType], function (packageName){
+      commands.push(packageType + ' ' + linkAction  + ' ' + packageName);
+      if(linkAction === 'unlink'){
+        commands.push(packageType + ' install ' + packageName);
+      }
     });
   });
-  console.log('Returning link commands:', commands);
   return commands;
 }
 

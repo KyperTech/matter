@@ -4,9 +4,18 @@
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "dist/matter.js",
   "jsnext:main": "src/matter.js",
+  "babelBoilerplateOptions": {
+    "entryFileName": "src/matter.js",
+    "mainVarName": "Matter",
+    "mochaGlobals": [
+      "stub",
+      "spy",
+      "expect",
+      "window"
+    ]
+  },
   "scripts": {
-    "test": "gulp",
-    "test-browser": "gulp test-browser",
+    "test": "gulp test",
     "build": "gulp build",
     "coverage": "gulp test"
   },
@@ -73,16 +82,7 @@
     "vinyl-source-stream": "^1.0.0",
     "watchify": "^3.3.1"
   },
-  "babelBoilerplateOptions": {
-    "entryFileName": "src/matter.js",
-    "mainVarName": "Matter",
-    "mochaGlobals": [
-      "stub",
-      "spy",
-      "expect",
-      "window"
-    ]
-  },
+
   "dependencies": {
     "es5-shim": "^4.1.13",
     "es6-shim": "^0.28.1",
