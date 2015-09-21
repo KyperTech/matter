@@ -22,51 +22,31 @@ const mainFile = manifest.main;
 const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
 const conf = require('./config.json');
+const browserSync = require('browser-sync').create();
+const KarmaServer = require('karma').Server;
+const shell = require('gulp-shell');
+const bump = require('gulp-bump');
+const _ = require('lodash');
 
-const Server = require('karma').Server;
+// JS files that should be watched
+const jsWatchFiles = ['src/**/*', 'test/**/*'];
 
-// Remove the built files
-gulp.task('clean', function(cb) {
-  del([destinationFolder], cb);
-});
+// These are files other than JS files which are to be watched.
+const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
 
-// Remove our temporary files
-gulp.task('clean-tmp', function(cb) {
-  del(['tmp'], cb);
-});
+//Create CDN Publisher
+var publisher = CDNPublisher();
 
-// Send a notification when JSCS fails,
-// so that you know your changes didn't build
-function jscsNotify(file) {
-  if (!file.jscs) { return; }
-  return file.jscs.success ? false : 'JSCS failed';
-}
+//Package Link/Unlink commands
+var linkCommandArray = buildLinkCommands('link');
+var unlinkCommandArray = buildLinkCommands('unlink');
 
-function createLintTask(taskName, files) {
-  gulp.task(taskName, function() {
-    return gulp.src(files)
-      .pipe($.plumber())
-      .pipe($.eslint())
-      .pipe($.eslint.format())
-      .pipe($.eslint.failOnError())
-      .pipe($.jscs())
-      .pipe($.notify(jscsNotify));
-  });
-}
-
-
-// Lint our source code
-createLintTask('lint-src', ['src/**/*.js']);
-
-// Lint our test code
-createLintTask('lint-test', ['test/**/*.js']);
-
-// Build two versions of the library
-gulp.task('build', ['lint-src', 'clean'], function(done) {
+// Build main and minified versions of the library
+gulp.task('build:main', ['lint-src', 'clean'], function (done) {
   rollup.rollup({
     entry: config.entryFileName,
     external:['lodash','superagent', 'jwt-decode'],
-  }).then(function(bundle) {
+  }).then(function (bundle) {
     var res = bundle.generate({
       // Don't worry about the fact that the source map is inlined at this step.
       // `gulp-sourcemaps`, which comes next, will externalize them.
@@ -88,9 +68,156 @@ gulp.task('build', ['lint-src', 'clean'], function(done) {
       .pipe(gulp.dest(destinationFolder))
       .on('end', done);
   })
-  
   .catch(done);
 });
+//Build bundle version
+gulp.task('build:bundle', function (callback) {
+  runSequence('addExternals', callback);
+});
+
+// Ensure that linting occurs before browserify runs. This prevents
+// the build from breaking due to poorly formatted code.
+gulp.task('build', function (callback) {
+  runSequence(['lint-src', 'lint-test'], 'test', 'build:main', 'build:bundle', 'watch', callback);
+});
+
+//Browserify with external modules included
+gulp.task('addExternals', function() {
+  return bundle(browserifyAndWatchBundler());
+});
+
+//Run test once using Karma and exit
+gulp.task('test', function (done) {
+  require('babel-core/register');
+  new KarmaServer({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, done).start();
+});
+
+// Release a new version of the package
+gulp.task('release', function(callback) {
+  const tagCreate = 'git tag -a v' + manifest.version + ' -m ' + 'Version v' + manifest.version;
+  const tagPush = 'git push --tags';
+  //Bump package version
+  //Unlink local modules
+  //Build (test/build:main/build:bundle)
+  //Upload to CDN locations
+  //Create a git tag and push the tag
+  //TODO: Look into what should be moved to happening after travis build
+  //TODO: Include 'npm publish', 'git commit' and 'git push'?
+  runSequence('bump', 'unlink', 'build', 'upload',  shell.task([tagCreate, tagPush]), callback);
+});
+
+// Basic usage: 
+// Will patch the version 
+gulp.task('bump', function(){
+  gulp.src('./component.json')
+  .pipe(bump())
+  .pipe(gulp.dest('./'));
+});
+
+//Watch files and trigger a rebuild on change
+gulp.task('watch', function() {
+  const watchFiles = jsWatchFiles.concat(otherWatchFiles);
+  gulp.watch(watchFiles, ['build']);
+});
+
+//Upload to both locations of CDN
+gulp.task('upload', function (callback) {
+  runSequence('upload:version', 'upload:latest', callback);
+});
+
+//Upload to CDN under version
+gulp.task('upload:version', function() {
+  return gulp.src('./' + conf.distFolder + '/**')
+    .pipe($.rename(function (path) {
+      path.dirname = conf.cdn.path + '/' + manifest.version + '/' + path.dirname;
+    }))
+    .pipe(publisher.publish())
+    .pipe(awspublish.reporter());
+});
+//Upload to CDN under "/latest"
+gulp.task('upload:latest', function() {
+  return gulp.src('./' + conf.distFolder + '/**')
+    .pipe($.rename(function (path) {
+      path.dirname = conf.cdn.path + '/latest/' + path.dirname;
+    }))
+    .pipe(publisher.publish())
+    .pipe(awspublish.reporter());
+});
+
+// Static server
+gulp.task('browser-sync', function() {
+  browserSync.init({
+    server: {
+      baseDir: "./"
+    }
+  });
+});
+
+// Remove the built files
+gulp.task('clean', function(cb) {
+  del([destinationFolder], cb);
+});
+
+// Remove our temporary files
+gulp.task('clean-tmp', function(cb) {
+  del(['tmp'], cb);
+});
+
+// Lint our source code
+createLintTask('lint-src', ['src/**/*.js']);
+
+// Lint our test code
+createLintTask('lint-test', ['test/**/*.js', '!test/coverage/**']);
+
+//Link list of modules
+gulp.task('link', shell.task(linkCommandArray));
+
+//Unlink list of modules
+gulp.task('unlink', shell.task(unlinkCommandArray));
+
+// An alias of test
+gulp.task('default', ['coverage', 'build-bundle']);
+
+//----------------------- Utility Functions -------------------------------\\
+//Build an array of commands to link/unlink modules
+function buildLinkCommands(linkAction){
+  //TODO: Don't allow package types that don't follow standard link/unlink pattern
+  // const allowedPackageLinkTypes = ['bower', 'npm'];
+  if(!linkAction){
+    linkAction = 'link';
+  }
+  const linkTypes = _.keys(config.linkedModules);
+  const messageCommand = 'echo ' + linkAction + 'ing local modules';
+  var commands = [messageCommand];
+  //Each type of packages to link
+  _.each(linkTypes, function (type){
+    //Check that package link patter is supported
+    // if(!_.contains(allowedPackageLinkTypes, type)){
+    //   console.error('Invalid package link type');
+    //   return;
+    // }
+    //Each package of that type
+    _.each(config.linkedModules[type], function (packageName){
+      commands.push(type + ' ' + linkAction  + ' ' + packageName);
+    });
+  });
+  console.log('Returning link commands:', commands);
+  return commands;
+}
+
+function CDNPublisher () {
+  var s3Config = {
+    accessKeyId:process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY,
+    params:{
+      Bucket:conf.cdn.bucketName
+    }
+  };
+  return awspublish.create(s3Config);
+}
 
 function bundle(bundler) {
   return bundler.bundle()
@@ -105,15 +232,15 @@ function bundle(bundler) {
     .pipe(gulp.dest(destinationFolder))
     .pipe($.livereload());
 }
-function addExternalModules(code) {
+function browserifyAndWatchBundler(code) {
   // Create our bundler, passing in the arguments required for watchify
   var bundler = browserify('src/' + exportFileName + '.js', {standalone:'Matter'});
 
   // Watch the bundler, and re-bundle it whenever files change
-  // bundler = watchify(bundler);
-  // bundler.on('update', function() {
-  //   bundle(bundler);
-  // });
+  bundler = watchify(bundler);
+  bundler.on('update', function() {
+    bundle(bundler);
+  });
 
   // // Set up Babelify so that ES6 works in the tests
   bundler.transform(babelify.configure({
@@ -125,123 +252,21 @@ function addExternalModules(code) {
   return bundler;
 };
 
-gulp.task('addExternals', function() {
-  return bundle(addExternalModules());
-});
-gulp.task('build-bundle', function(callback) {
-  runSequence(['build'], 'addExternals', 'watch', callback);
-});
-// Build the unit test suite for running tests
-// in the browser
-gulp.task('browserify', function() {
-  return bundleTest(getTestBundler());
-});
-
-function test() {
-  return gulp.src(['test/setup/browser.js', 'test/unit/**/*.js'], {read: false})
-    .pipe($.mocha({reporter: 'dot', globals: config.mochaGlobals}));
+// Send a notification when JSCS fails,
+// so that you know your changes didn't build
+function jscsNotify(file) {
+  if (!file.jscs) { return; }
+  return file.jscs.success ? false : 'JSCS failed';
 }
 
-// gulp.task('coverage', ['lint-src', 'lint-test'], function(done) {
-//   require('babel-core/register');
-//   gulp.src(['src/**/*.js', '!gulpfile.js', '!dist/**/*.js'])
-//     .pipe($.istanbul({ instrumenter: isparta.Instrumenter }))
-//     .pipe($.istanbul.hookRequire())
-//     .on('finish', function() {
-//       return test()
-//         .pipe($.istanbul.writeReports())
-//         .on('end', done);
-//     });
-// });
-
-// Lint and run our tests
-gulp.task('test-old', ['lint-src', 'lint-test'], function() {
-  
-});
-/**
- * Run test once and exit
- */
-gulp.task('test', function (done) {
-  require('babel-core/register');
-  new Server({
-    configFile: __dirname + '/karma.conf.js',
-    singleRun: true
-  }, done).start();
-});
-// Ensure that linting occurs before browserify runs. This prevents
-// the build from breaking due to poorly formatted code.
-gulp.task('build-in-sequence', function(callback) {
-  runSequence(['lint-src', 'lint-test'], 'browserify', callback);
-});
-
-// These are JS files that should be watched by Gulp. When running tests in the browser,
-// watchify is used instead, so these aren't included.
-const jsWatchFiles = ['src/**/*', 'test/**/*'];
-// These are files other than JS files which are to be watched. They are always watched.
-const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
-
-// Run the headless unit tests as you make changes.
-gulp.task('watch', function() {
-  const watchFiles = jsWatchFiles.concat(otherWatchFiles);
-  gulp.watch(watchFiles, ['build-bundle']);
-});
-
-// Set up a livereload environment for our spec runner
-gulp.task('test-browser', ['build-in-sequence'], function() {
-  $.livereload.listen({port: 35729, host: 'localhost', start: true});
-  return gulp.watch(otherWatchFiles, ['build-in-sequence']);
-});
-
-// Bump to a new version and release to npm and api
-gulp.task('release', function() {
-  //Bump version
-  //git tag -a v0.0.1 -m ""
-  //git push origin v0.0.1
-  //Upload to cdn (kyper-api /js/matter/v0.0.1/)
-  //npm publish
-});
-gulp.task('upload', function() {
-  var s3Config = {
-    accessKeyId:process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY,
-    params:{
-      Bucket:conf.cdn.bucketName
-    }
-  };
-  var publisher = awspublish.create(s3Config);
-  return gulp.src('./' + conf.distFolder + '/**')
-    .pipe($.rename(function (path) {
-      path.dirname = conf.cdn.path + '/' + manifest.version + '/' + path.dirname;
-    }))
-    .pipe(publisher.publish())
-    .pipe(awspublish.reporter());
-});
-gulp.task('upload-latest', function() {
-  var s3Config = {
-    accessKeyId:process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey:process.env.AWS_SECRET_ACCESS_KEY,
-    params:{
-      Bucket:conf.cdn.bucketName
-    }
-  };
-  var publisher = awspublish.create(s3Config);
-  return gulp.src('./' + conf.distFolder + '/**')
-    .pipe($.rename(function (path) {
-      path.dirname = conf.cdn.path + '/latest/' + path.dirname;
-    }))
-    .pipe(publisher.publish())
-    .pipe(awspublish.reporter());
-});
-var browserSync = require('browser-sync').create();
-
-// Static server
-gulp.task('browser-sync', function() {
-  browserSync.init({
-    server: {
-      baseDir: "./"
-    }
+function createLintTask(taskName, files) {
+  gulp.task(taskName, function() {
+    return gulp.src(files)
+      .pipe($.plumber())
+      .pipe($.eslint())
+      .pipe($.eslint.format())
+      .pipe($.eslint.failOnError())
+      .pipe($.jscs())
+      .pipe($.notify(jscsNotify));
   });
-});
-
-// An alias of test
-gulp.task('default', ['coverage', 'build-bundle']);
+}

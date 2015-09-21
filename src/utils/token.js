@@ -37,10 +37,21 @@ let token = {
 			storage.setItem(config.tokenDataName, tokenData);
 		}
 	},
-	set string(tokenStr) {
+	set string(tokenData) {
+		let tokenStr = tokenData;
+		//Handle object being passed
+		if (!_.isString(tokenData)) {
+			//Token is included in object
+			if (_.isObject(tokenData) && _.has(tokenData, 'token')) {
+				tokenStr = tokenData.token;
+			} else {
+				//Input is either not an string or object that contains nessesary info
+				logger.error({description: 'Invalid value set to token.', token: tokenData, func: 'string', obj: 'token'});
+			}
+		}
 		logger.log({description: 'Token was set.', token: tokenStr, func: 'string', obj: 'token'});
-		this.data = jwtDecode(tokenStr);
 		storage.setItem(config.tokenName, tokenStr);
+		this.data = jwtDecode(tokenStr);
 	},
 	save(tokenStr) {
 		this.string = tokenStr;
