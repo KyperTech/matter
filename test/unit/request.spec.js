@@ -2,7 +2,6 @@ import Matter from '../../src/matter';
 import request from '../../src/utils/request';
 import superagent from 'superagent';
 
-let matter = new Matter('exampleApp');
 let mockGet = sinon.stub(superagent, 'get', (url) => {
  console.log('mock get called with:', arguments);
  if (url == '/testQuery') {
@@ -34,12 +33,14 @@ let mockPost = sinon.stub(superagent, 'post', (url, postData) => {
    resolve({body: {}});
  });
 });
-describe('Matter', () => {
+describe('Request Util', () => {
   describe('get', () => {
+    it('exists', () => {
+      console.log('request get exists');
+      expect(request).to.respondTo('get');
+    });
     it('makes get request', () => {
-      request.get('').then(() => {
-        expect(mockGet).to.have.been.calledOnce;
-      });
+      expect(request.get('')).to.eventually.have.property('response');
     });
     // it('accepts query data', () => {
     //   request.get('', {some: 'data'}).then(() => {
@@ -48,6 +49,9 @@ describe('Matter', () => {
     // });
   });
   describe('put', () => {
+    it('exists', () => {
+      expect(request).to.respondTo('put');
+    });
     it('makes put request', () => {
       request.put('/endpoint', {}).then(() => {
         expect(mockPut).to.have.been.calledOnce;
@@ -55,6 +59,9 @@ describe('Matter', () => {
     });
   });
   describe('post', () => {
+    it('exists', () => {
+      expect(request).to.respondTo('post');
+    });
     it('makes post request', () => {
       request.post('/endpoint', {}).then(() => {
         expect(mockPost).to.have.been.calledOnce;

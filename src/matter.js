@@ -48,7 +48,7 @@ class Matter {
 	 */
 	signup(signupData) {
 		logger.log({description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter'});
-		if (!signupData) {
+		if (!signupData || (!_.isObject(signupData) && !_.isString(signupData))) {
 			logger.error({description: 'Signup information is required to signup.', func: 'signup', obj: 'Matter'});
 			return Promise.reject({message: 'Login data is required to login.'});
 		}
@@ -67,23 +67,20 @@ class Matter {
 				logger.error({description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter'});
 				return Promise.reject(errRes);
 			});
-		} else if (_.isString(signupData)) {
+		} else {
 			//Handle 3rd Party signups
 			let auth = new ProviderAuth({provider: signupData, app: this});
 			return auth.signup(signupData).then((res) => {
 				logger.info({description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter'});
 				return Promise.resolve(res);
 			});
-		} else {
-			logger.error({description: 'Incorrectly formatted signup information.', signupData: signupData, func: 'signup', obj: 'Matter'});
-			return Promise.reject({message: 'Signup requires an object or a string.'});
 		}
 	}
 	/** Login
 	 *
 	 */
 	login(loginData) {
-		if (!loginData) {
+		if (!loginData || (!_.isObject(loginData) && !_.isString(loginData))) {
 			logger.error({description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter'});
 			return Promise.reject({message: 'Login data is required to login.'});
 		}
@@ -114,16 +111,13 @@ class Matter {
 				}
 				return Promise.reject(errRes);
 			});
-		} else if (_.isString(loginData)) {
+		} else {
 			//Provider login
 			let auth = new ProviderAuth({provider: loginData, app: this});
 			return auth.login().then((res) => {
 				logger.info({description: 'Provider login successful.', provider: loginData, res: res, func: 'login', obj: 'Matter'});
 				return Promise.resolve(res);
 			});
-		} else {
-			logger.error({description: 'Incorrectly fomatted login information.', signupData: signupData, func: 'login', obj: 'Matter'});
-			return Promise.reject({message: 'Login requires an object or a string.'});
 		}
 	}
 	/** Logout
@@ -147,8 +141,8 @@ class Matter {
 		});
 	}
 	getCurrentUser() {
-		if (this.storage.item(config.tokenUserDataName)) {
-			return Promise.resove(this.storage.getItem(config.tokenUserDataName));
+		if (this.currentUser) {
+			return Promise.resolve(this.currentUser);
 		} else {
 			if (this.isLoggedIn) {
 				return request.get(this.endpoint + '/user').then((response) => {
@@ -289,17 +283,26 @@ class Matter {
 		//TODO: Handle string and array inputs
 	}
 	isInGroups(checkGroups) {
+		if (!this.isLoggedIn) {
+			logger.log({description: 'No logged in user to check.', func: 'isInGroups', obj: 'Matter'});
+			return false;
+		}
 		//Check if user is in any of the provided groups
 		if (checkGroups && _.isArray(checkGroups)) {
-			return _.map(checkGroups, (group) =>  {
+			return _.every(_.map(checkGroups, (group) =>  {
 				if (_.isString(group)) {
 					//Group is string
 					return this.isInGroup(group);
 				} else {
 					//Group is object
-					return this.isInGroup(group.name);
+					if (_.has(group, 'name')) {
+						return this.isInGroup(group.name);
+					} else {
+						logger.error({description: 'Invalid group object.', group: group, func: 'isInGroups', obj: 'Matter'});
+						return false;
+					}
 				}
-			});
+			}), true);
 		} else if (checkGroups && _.isString(checkGroups)) {
 			//TODO: Handle spaces within string list
 			let groupsArray = checkGroups.split(',');
@@ -309,6 +312,7 @@ class Matter {
 			return this.isInGroup(groupsArray[0]);
 		} else {
 			logger.error({description: 'Invalid groups list.', func: 'isInGroups', obj: 'Matter'});
+			return false;
 		}
 	}
 };

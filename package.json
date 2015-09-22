@@ -45,6 +45,7 @@
     "browser-sync": "^2.9.3",
     "browserify": "^11.0.1",
     "chai": "^3.2.0",
+    "chai-as-promised": "^5.1.0",
     "del": "^1.1.1",
     "glob": "^5.0.14",
     "gulp": "^3.8.10",
@@ -67,6 +68,8 @@
     "isparta": "^3.0.3",
     "karma": "^0.13.9",
     "karma-browserify": "^4.3.0",
+    "karma-chai": "^0.1.0",
+    "karma-chai-as-promised": "^0.1.2",
     "karma-chai-plugins": "^0.6.0",
     "karma-chai-sinon": "^0.1.5",
     "karma-coverage": "^0.5.2",
@@ -82,7 +85,6 @@
     "vinyl-source-stream": "^1.0.0",
     "watchify": "^3.3.1"
   },
-
   "dependencies": {
     "es5-shim": "^4.1.13",
     "es6-shim": "^0.28.1",
