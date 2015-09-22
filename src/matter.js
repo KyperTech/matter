@@ -171,17 +171,7 @@ class Matter {
 			}
 		}
 	}
-	set currentUser(userData) {
-		logger.log({description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter'});
-		this.storage.setItem(config.tokenUserDataName, userData);
-	}
-	get currentUser() {
-		if (this.storage.getItem(config.tokenUserDataName)) {
-			return this.storage.getItem(config.tokenUserDataName);
-		} else {
-			return null;
-		}
-	}
+
 	/** updateProfile
 	 */
 	updateProfile(updateData) {
@@ -200,12 +190,61 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-	/** updateProfile
+	changePassword(updateData) {
+		if (!this.isLoggedIn) {
+			logger.error({description: 'No current user profile for which to change password.', func: 'changePassword', obj: 'Matter'});
+			return Promise.reject({message: 'Must be logged in to change password.'});
+		}
+		//Send update request
+		logger.log({description: 'Calling update endpoint to change password.', endpoint: `${this.endpoint}/user/${this.token.data.username}` , func: 'changePassword', obj: 'Matter'});
+		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
+			logger.log({description: 'Update password request responded.', responseData: response, func: 'changePassword', obj: 'Matter'});
+			return response;
+		})['catch']((errRes) => {
+			logger.error({description: 'Error requesting password change.', error: errRes, func: 'changePassword', obj: 'Matter'});
+			return Promise.reject(errRes);
+		});
+	}
+	recoverPassword() {
+		if (!this.isLoggedIn) {
+			logger.error({description: 'No current user for which to recover password.', func: 'recoverPassword', obj: 'Matter'});
+			return Promise.reject({message: 'Must be logged in to recover password.'});
+		}
+		//Send update request
+		logger.log({description: 'Calling recover password endpoint.', endpoint: `${this.endpoint}/accounts/${this.token.data.username}/recover` , func: 'recoverPassword', obj: 'Matter'});
+		return request.post(`${this.endpoint}/accounts/${this.token.data.username}/recover`).then((response) => {
+			logger.log({description: 'Recover password request responded.', responseData: response, func: 'recoverPassword', obj: 'Matter'});
+			return response;
+		})['catch']((errRes) => {
+			logger.error({description: 'Error requesting password recovery.', error: errRes, func: 'recoverPassword', obj: 'Matter'});
+			return Promise.reject(errRes);
+		});
+	}
+
+	/* set currentUser
+	 * @description Sets currently user data
+	 */
+	set currentUser(userData) {
+		logger.log({description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter'});
+		this.storage.setItem(config.tokenUserDataName, userData);
+	}
+	/* get currentUser
+	 * @description Gets currently logged in user or returns null
+	 */
+	get currentUser() {
+		if (this.storage.getItem(config.tokenUserDataName)) {
+			return this.storage.getItem(config.tokenUserDataName);
+		} else {
+			return null;
+		}
+	}
+	/* Storage
+	 *
 	 */
 	get storage() {
 		return envStorage;
 	}
-	/** updateProfile
+	/** Token
 	 */
 	get token() {
 		return token;

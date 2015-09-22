@@ -145,6 +145,22 @@ describe('Matter', () => {
       });
     });
   });
+  describe('changePassword method', () => {
+    it('requests recover endpoint', () => {
+      matter.token.string = mockToken;
+      matter.changePassword().then((user) =>  {
+        expect(mockPut).to.have.been.calledOnce;
+      });
+    });
+  });
+  describe('recoverPassword method', () => {
+    it('requests recover endpoint', () => {
+      matter.token.string = mockToken;
+      matter.recoverPassword().then((user) =>  {
+        expect(mockPut).to.have.been.calledOnce;
+      });
+    });
+  });
   describe('utils', () => {
     it('exists', () => {
       expect(matter.utils).to.be.an('object');

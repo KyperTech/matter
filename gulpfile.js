@@ -6,6 +6,7 @@ const $ = require('gulp-load-plugins')();
 const del = require('del');
 const glob = require('glob');
 const path = require('path');
+const isparta = require('isparta');
 const babelify = require('babelify');
 const watchify = require('watchify');
 const buffer = require('vinyl-buffer');
@@ -28,7 +29,6 @@ const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
 const conf = require('./config.json');
 
-
 // JS files that should be watched
 const jsWatchFiles = ['src/**/*', 'test/**/*'];
 
@@ -37,10 +37,6 @@ const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
 
 //Create CDN Publisher
 var publisher = CDNPublisher();
-
-//Package Link/Unlink commands
-var linkCommandArray = buildLinkCommands('link');
-var unlinkCommandArray = buildLinkCommands('unlink');
 
 // Build main and minified versions of the library
 gulp.task('build:main', ['lint-src', 'clean'], function (done) {
@@ -95,6 +91,20 @@ gulp.task('test', function (done) {
     singleRun: true
   }, done).start();
 });
+
+//Run test with mocha and generate code coverage with istanbul
+gulp.task('coverage', ['lint-src', 'lint-test'], function(done) {
+  require('babel-core/register');
+  gulp.src(['src/**/*.js', '!gulpfile.js', '!dist/**/*.js', '!examples/**', '!node_modules/**'])
+    .pipe($.istanbul({ instrumenter: isparta.Instrumenter }))
+    .pipe($.istanbul.hookRequire())
+    .on('finish', function() {
+      return test()
+        .pipe($.istanbul.writeReports())
+        .on('end', done);
+    });
+});
+
 
 // Release a new version of the package
 gulp.task('release', function(callback) {
@@ -174,10 +184,10 @@ createLintTask('lint-src', ['src/**/*.js']);
 createLintTask('lint-test', ['test/**/*.js', '!test/coverage/**']);
 
 //Link list of modules
-gulp.task('link', shell.task(linkCommandArray));
+gulp.task('link', shell.task(buildLinkCommands('link')));
 
 //Unlink list of modules
-gulp.task('unlink', shell.task(unlinkCommandArray));
+gulp.task('unlink', shell.task(buildLinkCommands('unlink')));
 
 // An alias of test
 gulp.task('default', ['coverage', 'build-bundle']);
@@ -272,4 +282,10 @@ function createLintTask(taskName, files) {
       .pipe($.jscs())
       .pipe($.notify(jscsNotify));
   });
+}
+
+//Run tests sepeartley with mocha (for coverage)
+function test() {
+  return gulp.src(['test/setup/node.js', 'test/unit/**/*.js'], {read: false})
+    .pipe($.mocha({reporter: 'dot', globals: config.mochaGlobals}));
 }
