@@ -315,5 +315,5 @@ class Matter {
 			return false;
 		}
 	}
-};
+}
 export default Matter;
