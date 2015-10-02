@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <title>React-Matter Example</title>
+  <!-- REMOVE THE SCRIPT BELOW IF COPYING OUT OF PROJECT FOLDER -->
+  <script src='../../dist/matter.bundle.js'></script>
+  <!-- Replace above script tag with the following: -->
+  <!-- <script src='http://cdn.kyper.io/js/matter/0.1.1/grout.bundle.js'></script> -->
+
+  <script src="node_modules/babel-core/browser.js"></script>
+  <script src="node_modules/react/dist/react-with-addons.js"></script>
+  <script src="node_modules/react/dist/react-dom.js"></script>
+  <script type="text/babel">
+    class HelloWorld extends React.Component {
+        render() {
+            return (<div>Hello, world</div>);
+        }
+    }
+    let rootElement = document.getElementById('content');
+    ReactDOM.render(<HelloWorld />, rootElement);
+  </script>
+</head>
+  <body>
+    <div id="content"></div>
+  </body>
+</html>

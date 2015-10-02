@@ -34,3 +34,5 @@ tmp
 **/.DS_Store
 wiki
 wiki/**
+
+examples/**/node_modules

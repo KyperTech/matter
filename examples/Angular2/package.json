@@ -1,0 +1,19 @@
+{
+  "name": "kyper-matter-angular2-example",
+  "version": "1.0.0",
+  "description": "Matter example with Angular 2.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Prescott Prue <sprue.dev@gmail.com> (http://prescottprue.com/)",
+  "license": "ISC",
+  "devDependencies": {
+    "browser-sync": "^2.9.8",
+    "gulp": "^3.9.0",
+    "gulp-typescript": "^2.9.0"
+  },
+  "dependencies": {
+    "angular2": "^2.0.0-alpha.32"
+  }
+}
