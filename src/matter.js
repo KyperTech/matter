@@ -174,7 +174,6 @@ class Matter {
 			return Promise.reject({message: 'Must be logged in to update profile.'});
 		}
 		//Send update request
-		logger.warn({description: 'Calling update endpoint.', endpoint: `${this.endpoint}/user/${this.token.data.username}` , func: 'updateProfile', obj: 'Matter'});
 		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
 			logger.log({description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter'});
 			this.currentUser = response;
@@ -190,7 +189,6 @@ class Matter {
 			return Promise.reject({message: 'Must be logged in to change password.'});
 		}
 		//Send update request
-		logger.log({description: 'Calling update endpoint to change password.', endpoint: `${this.endpoint}/user/${this.token.data.username}` , func: 'changePassword', obj: 'Matter'});
 		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
 			logger.log({description: 'Update password request responded.', responseData: response, func: 'changePassword', obj: 'Matter'});
 			return response;
@@ -205,7 +203,6 @@ class Matter {
 			return Promise.reject({message: 'Must be logged in to recover password.'});
 		}
 		//Send update request
-		logger.log({description: 'Calling recover password endpoint.', endpoint: `${this.endpoint}/accounts/${this.token.data.username}/recover` , func: 'recoverPassword', obj: 'Matter'});
 		return request.post(`${this.endpoint}/accounts/${this.token.data.username}/recover`).then((response) => {
 			logger.log({description: 'Recover password request responded.', responseData: response, func: 'recoverPassword', obj: 'Matter'});
 			return response;
