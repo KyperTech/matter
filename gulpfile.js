@@ -92,20 +92,6 @@ gulp.task('test', function (done) {
   }, done).start();
 });
 
-//Run test with mocha and generate code coverage with istanbul
-gulp.task('coverage', ['lint-src', 'lint-test'], function(done) {
-  require('babel-core/register');
-  gulp.src(['src/**/*.js', '!gulpfile.js', '!dist/**/*.js', '!examples/**', '!node_modules/**'])
-    .pipe($.istanbul({ instrumenter: isparta.Instrumenter }))
-    .pipe($.istanbul.hookRequire())
-    .on('finish', function() {
-      return test()
-        .pipe($.istanbul.writeReports())
-        .on('end', done);
-    });
-});
-
-
 // Release a new version of the package
 gulp.task('release', function(callback) {
   const tagCreate = 'git tag -a v' + manifest.version + ' -m ' + 'Version v' + manifest.version;
@@ -120,8 +106,8 @@ gulp.task('release', function(callback) {
   runSequence('bump', 'unlink', 'build', 'upload',  shell.task([tagCreate, tagPush]), callback);
 });
 
-// Basic usage: 
-// Will patch the version 
+// Basic usage:
+// Will patch the version
 gulp.task('bump', function(){
   gulp.src('./component.json')
   .pipe(bump())
@@ -190,7 +176,7 @@ gulp.task('link', shell.task(buildLinkCommands('link')));
 gulp.task('unlink', shell.task(buildLinkCommands('unlink')));
 
 // An alias of test
-gulp.task('default', ['coverage', 'build-bundle']);
+gulp.task('default', ['test', 'build-bundle']);
 
 //----------------------- Utility Functions -------------------------------\\
 //Build an array of commands to link/unlink modules
@@ -247,7 +233,7 @@ function bundle(bundler) {
 }
 function browserifyAndWatchBundler(code) {
   // Create our bundler, passing in the arguments required for watchify
-  var bundler = browserify('src/' + exportFileName + '.js', {standalone:'Matter'});
+  var bundler = browserify('src/' + exportFileName + '.js', {standalone: config.mainVarName});
 
   // Watch the bundler, and re-bundle it whenever files change
   bundler = watchify(bundler);
@@ -282,10 +268,4 @@ function createLintTask(taskName, files) {
       .pipe($.jscs())
       .pipe($.notify(jscsNotify));
   });
-}
-
-//Run tests sepeartley with mocha (for coverage)
-function test() {
-  return gulp.src(['test/setup/node.js', 'test/unit/**/*.js'], {read: false})
-    .pipe($.mocha({reporter: 'dot', globals: config.mochaGlobals}));
 }
