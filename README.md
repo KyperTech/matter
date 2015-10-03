@@ -37,14 +37,14 @@ Using Matter requires having created an application on [Tessellate](http://tesse
 
 ### Browser
 1. Include the Matter library using one of the following:
-  
+
   #### CDN
 
   To use the CDN, add the following script tag to your `index.html`:
-    
+
     ```HTML
     <!-- Matter Library Bundle -->
-    <script src="http://cdn.kyper.io/js/matter/0.1.0/matter.bundle.js"></script>
+    <script src="http://cdn.kyper.io/js/matter/0.1.1/matter.bundle.js"></script>
     ```
   #### Bower
   Run `bower install --save kyper-matter`
@@ -54,7 +54,7 @@ Using Matter requires having created an application on [Tessellate](http://tesse
   ```javascript
   //New Matter object with the application name 'exampleApp'
   var matter = new Matter('exampleApp');
-  
+
   //Login to account with username "test" and password "test"
   matter.login({username:"test", password:"test"}).then(function(user){
       console.log('User logged into exampleApp:', user);
@@ -94,4 +94,3 @@ Tests are locaed in test folder and can be run via `gulp test` or `gulp coverage
 * Run tests git pre-push
 * More local storage capabilities
 * Version release gulp task
-

@@ -32,10 +32,10 @@ class Matter {
 			logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 		}
 		if (this.name == 'tessellate') {
-			//Remove url if host is server
-			if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host === serverUrl) {
+			//Remove url if host is a tessellate server
+			if (typeof window !== 'undefined' && _.has(window, 'location') && (window.location.host.indexOf('tessellate-') !== -1)) {
 				serverUrl = '';
-				logger.info({description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+				logger.info({description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 			}
 		} else {
 			serverUrl = serverUrl + '/apps/' + this.name;
