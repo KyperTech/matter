@@ -1,5 +1,5 @@
-import dom from '../../src/utils/dom';
-
+import cookiesUtil from '../../src/utils/cookies';
+import lodash from 'lodash';
 // let mockGet = sinon.stub(superagent, 'get', (url) => {
 //  console.log('mock get called with:', arguments);
 //  if (url == '/testQuery') {
@@ -32,16 +32,32 @@ import dom from '../../src/utils/dom';
 //  });
 // });
 
-describe('Dom Util', () => {
+describe('Cookies Util', () => {
   describe('loadCss', () => {
     it('exists', () => {
-      expect(dom).to.respondTo('loadCss');
+      expect(cookiesUtil).to.respondTo('getCookie');
     });
-    it('handles no document', () => {
+    it('gets cookie', () => {
       if (typeof window !== 'undefined') {
         let error;
         try {
-          dom.loadCss('sasdf');
+          cookiesUtil.getCookie('sasdf');
+        } catch (err) {
+          error = err;
+        }
+        // expect(error).to.be.undefined;
+      }
+    });
+  });
+  describe('setCookie method', () => {
+    it('exists', () => {
+      expect(cookiesUtil).to.respondTo('setCookie');
+    });
+    it('sets cookie', () => {
+      if (typeof window !== 'undefined') {
+        let error;
+        try {
+          cookiesUtil.setCookie('sasdf', 'cookie value');
         } catch (err) {
           error = err;
         }
@@ -49,35 +65,20 @@ describe('Dom Util', () => {
       }
     });
   });
-  describe('loadJs', () => {
+  describe('deleteCookie method', () => {
     it('exists', () => {
-      expect(dom).to.respondTo('loadJs');
+      expect(cookiesUtil).to.respondTo('deleteCookie');
     });
-    it('handles no document', () => {
+    it('removes cookie', () => {
+      cookiesUtil.setCookie('sasdf', 'testvalue');
       if (typeof window !== 'undefined') {
         let error;
         try {
-          dom.loadJs('sasdf');
+          cookiesUtil.deleteCookie('sasdf');
         } catch (err) {
           error = err;
         }
-        expect(error).to.be.undefined;
-      }
-    });
-  });
-  describe('asyncLoadJs', () => {
-    it('exists', () => {
-      expect(dom).to.respondTo('asyncLoadJs');
-    });
-    it('handles no document', () => {
-      if (typeof window !== 'undefined') {
-        let error;
-        try {
-          dom.asyncLoadJs('sasdf');
-        } catch (err) {
-          error = err;
-        }
-        expect(error).to.be.undefined;
+        // expect(error).to.be.undefined;
       }
     });
   });

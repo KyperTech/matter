@@ -19,12 +19,12 @@ let request = {
 		return handleResponse(req);
 	},
 	put(endpoint, data) {
-		var req = superagent.put(endpoint).send(data);
+		var req = superagent.put(endpoint, data);
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	},
 	del(endpoint, data) {
-		var req = superagent.put(endpoint).send(data);
+		var req = superagent.put(endpoint, data);
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	}
