@@ -6,7 +6,7 @@
   </a>
   <!-- Build Status -->
   <a href="https://travis-ci.org/KyperTech/matter">
-    <img src="http://img.shields.io/travis/KyperTech/matter.svg" alt="build status">
+    <img title="Build Status" src="https://travis-ci.org/KyperTech/matter.svg">
   </a>
   <!-- Dependency Status -->
   <a href="https://david-dm.org/KyperTech/matter">
@@ -25,7 +25,7 @@
     <img src="https://img.shields.io/npm/l/kyper-matter.svg" alt="license">
   </a>
 </p>
-> *What are the minimal tools I need to make an app* **matter***?*
+> *What are the minimal tools I need to make an app* **matter**?
 
 Matter is a Javascript library that provides common web application functionality such as user authentication and local/session/token storage. This library communicates with [Tessellate](https://github.com/KyperTech/tessellate) for application data, but custom server setups are on the roadmap.
 
