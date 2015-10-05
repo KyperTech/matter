@@ -69,6 +69,19 @@ let mockProviderAuthLogin = sinon.stub(auth, 'login', function() {
     }
   });
 });
+
+mockLog = sinon.stub(logger, 'log', function() {
+
+});
+mockWarn = sinon.stub(logger, 'warn', function() {
+
+});
+mockInfo = sinon.stub(logger, 'info', function() {
+
+});
+mockError = sinon.stub(logger, 'error', function() {
+
+});
 // TODO: Test options functionality
 describe('Matter', () => {
   describe('Config', () => {
