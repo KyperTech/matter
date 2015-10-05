@@ -68,11 +68,11 @@ describe('Request Util', () => {
       });
     });
   });
-  // describe('del', () => {
-  //   it('makes put request', () => {
-  //     request.del('/endpoint', {}).then(() => {
-  //       expect(mockPut).to.have.been.calledOnce;
-  //     });
-  //   });
-  // });
+  describe('del', () => {
+    it('makes put request', () => {
+      request.del('/endpoint', {}).then(() => {
+        expect(mockPut).to.have.been.calledOnce;
+      });
+    });
+  });
 });

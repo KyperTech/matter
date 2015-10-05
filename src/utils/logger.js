@@ -7,7 +7,6 @@ let logLevel = 'debug';
 if (config.logLevel) {
 	logLevel = config.logLevel;
 }
-
 let logger = {
 	log(logData) {
 		let msgArgs = buildMessageArgs(logData);
