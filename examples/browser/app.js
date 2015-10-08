@@ -1,7 +1,7 @@
-var matter = new Matter('cloudbrain', {localServer:false});
+var matter = new Matter('exampleApp', {localServer:true});
 console.log('matter:', matter);
 //Set logged in status when dom is loaded
-document.addEventListener("DOMContentLoaded", function(event) { 
+document.addEventListener("DOMContentLoaded", function(event) {
   setStatus();
 });
 //Set status styles
@@ -32,7 +32,7 @@ function login(loginData){
     setStatus();
   }, function(err){
     console.error('login() : Error logging in:', err);
-  });   
+  });
 }
 function logout(){
   matter.logout().then(function(){
@@ -40,7 +40,7 @@ function logout(){
     setStatus();
   }, function(err){
     console.error('logout() : Error logging out:', err);
-  });   
+  });
 }
 function signup(signupData){
   if(!signupData){
@@ -56,5 +56,5 @@ function signup(signupData){
   }, function(err){
     console.error('logout() : Error signing up:', err);
   });
- 
+
 }
