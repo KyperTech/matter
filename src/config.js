@@ -1,4 +1,6 @@
 import merge from 'lodash/object/merge';
+import has from 'lodash/object/has';
+
 let defaultConfig = {
 	envs: {
 		local: {
@@ -34,21 +36,25 @@ class Config {
 	}
 	get serverUrl() {
 		console.log('defaultConfig:', defaultConfig);
-		return defaultConfig.envs[envName].serverUrl;
+		let url = defaultConfig.envs[envName].serverUrl
+		if (typeof window !== 'undefined' && has(window, 'location') && window.location.host === url) {
+			url = '';
+		}
+		return url;
 	}
 	get logLevel() {
 		return defaultConfig.envs[envName].logLevel;
 	}
 	set envName(newEnv) {
 		envName = newEnv;
-		this.envName = newEnv;
+		// this.envName = newEnv;
+		console.log('Environment name set:', envName);
 	}
 	get env() {
 		return defaultConfig.envs[envName];
 	}
 }
 let config = new Config();
-
 
 config.serverUrl
 export default config;

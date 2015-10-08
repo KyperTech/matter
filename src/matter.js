@@ -26,30 +26,28 @@ class Matter {
 	 *
 	 */
 	get endpoint() {
-		let serverUrl = config.serverUrl;
 		//Handle options
 		if (_.has(this, 'options')) {
 			if (this.options.localServer) {
-				serverUrl = 'http://localhost:4000';
-				logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+				config.envName = 'local';
+				logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: config.serverUrl, func: 'endpoint', obj: 'Matter'});
 			}
 			if (this.options.env) {
-				serverUrl = this.options.env.toLowerCase() == 'local' ? serverUrl : '';
-				logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+				config.envName = this.options.env;
+				logger.info({description: 'Environment set based on provided environment.', config: config, func: 'endpoint', obj: 'Matter'});
 			}
 		}
+		let appEndpoint = `${config.serverUrl}/apps/${this.name}`;
 		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
-			if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
-				serverUrl = '';
+			if (typeof window !== 'undefined' && _.has(window, 'location') && (window.location.host.indexOf('tessellate') !== -1 || window.location.host.indexOf('localhost') !== -1)) {
+				appEndpoint = serverUrl;
 				logger.info({description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 			}
-		} else {
-			serverUrl = serverUrl + '/apps/' + this.name;
-			logger.log({description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
 		}
-		return serverUrl;
+		logger.log({description: 'Endpoint created.', url: appEndpoint, func: 'endpoint', obj: 'Matter'});
+		return appEndpoint;
 	}
 	/* Signup
 	 *
