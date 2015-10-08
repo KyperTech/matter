@@ -27,10 +27,18 @@ class Matter {
 	 */
 	get endpoint() {
 		let serverUrl = config.serverUrl;
-		if (_.has(this, 'options') && this.options.localServer) {
-			serverUrl = 'http://localhost:4000';
-			logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+		//Handle options
+		if (_.has(this, 'options')) {
+			if (this.options.localServer) {
+				serverUrl = 'http://localhost:4000';
+				logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+			}
+			if (this.options.env) {
+				serverUrl = this.options.env.toLowerCase() == 'local' ? serverUrl : '';
+				logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+			}
 		}
+		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
 			if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {

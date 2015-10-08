@@ -15,7 +15,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		serverUrl: 'http://tessellate.elasticbeanstalk.com',
 		tokenName: 'tessellate',
 		tokenDataName: 'tessellate-tokenData',
-		tokenUserDataName: 'tessellate-currentUser'
+		tokenUserDataName: 'tessellate-currentUser',
+		logLevel: 'debug'
 	};
 
 	//Set default log level to debug
@@ -24,7 +25,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	if (config.logLevel) {
 		logLevel = config.logLevel;
 	}
-
 	var logger = {
 		log: function log(logData) {
 			var msgArgs = buildMessageArgs(logData);
@@ -129,7 +129,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		loadCss: function loadCss(src) {
-			if (!document) {
+			if (typeof document == 'undefined') {
 				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
 				throw new Error('Document object is required to load assets.');
 			} else {
@@ -150,7 +150,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		loadJs: function loadJs(src) {
-			if (window && !_.has(window, 'document')) {
+			if (typeof window == 'undefined' || !_.has(window, 'document')) {
 				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
 				throw new Error('Document object is required to load assets.');
 			} else {
@@ -170,7 +170,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		asyncLoadJs: function asyncLoadJs(src) {
-			if (!_.has(window, 'document')) {
+			if (typeof window == 'undefined' || !_.has(window, 'document')) {
 				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
 				throw new Error('Document object is required to load assets.');
 			} else {
@@ -187,6 +187,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	};
 
 	var data = {};
+
 	var storage = Object.defineProperties({
 		/**
    * @description
@@ -217,13 +218,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				window.sessionStorage.setItem(itemName, itemValue);
 			}
 		},
-
 		/**
    * @description
    * Safley gets an item from session storage. Alias: item()
    *
    * @param {String} itemName The items name
-   *
    * @return {String}
    *
    */
@@ -291,13 +290,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					//Clear session storage
 					window.sessionStorage.clear();
 				} catch (err) {
-					logger.warn('Session storage could not be cleared.', err);
+					logger.warn({ description: 'Session storage could not be cleared.', error: err });
 				}
 			}
 		}
-
 	}, {
 		localExists: {
+			/**
+    * @description
+    * Gets whether or not local storage exists.
+    *
+    * @param {String} itemName The items name
+    * @param {String} itemValue The items value
+    *
+    */
+
 			get: function get() {
 				var testKey = 'test';
 				if (typeof window != 'undefined' && typeof window.sessionStorage != 'undefined') {
@@ -408,12 +415,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			return handleResponse(req);
 		},
 		put: function put(endpoint, data) {
-			var req = superagent.put(endpoint).send(data);
+			var req = superagent.put(endpoint, data);
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		},
 		del: function del(endpoint, data) {
-			var req = superagent.put(endpoint).send(data);
+			var req = superagent.put(endpoint, data);
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		}
@@ -466,10 +473,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			value: function loadHello() {
 				//Load hellojs script
 				//TODO: Replace this with es6ified version
-				if (window && !window.hello) {
+				if (typeof window != 'undefined' && !window.hello) {
 					return domUtil.asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
 				} else {
-					return Promise.resolve();
+					return Promise.reject();
 				}
 			}
 		}, {
@@ -502,18 +509,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 				return this.loadHello().then(function () {
 					return request.get(_this.app.endpoint + '/providers').then(function (response) {
-						logger.log({ description: 'Provider request successful.', response: response, func: 'signup', obj: 'ProviderAuth' });
+						logger.log({ description: 'Provider request successful.', response: response, func: 'initHello', obj: 'ProviderAuth' });
 						var provider = response[_this.provider];
-						logger.warn({ description: 'Provider found', provider: provider, func: 'login', obj: 'ProviderAuth' });
 						if (!provider) {
 							logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this.provider, provider: _this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
 							return Promise.reject({ message: 'Provider is not setup.' });
 						}
-						logger.warn({ description: 'Providers config built', providersConfig: response, func: 'login', obj: 'ProviderAuth' });
+						logger.log({ description: 'Providers config built', providersConfig: response, func: 'initHello', obj: 'ProviderAuth' });
 						return window.hello.init(response, { redirect_uri: 'redirect.html' });
+					}, function (err) {
+						logger.error({ description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth' });
+						return Promise.reject({ message: 'Error requesting application third party providers.' });
 					})['catch'](function (errRes) {
-						logger.error({ description: 'Getting application data.', error: errRes, func: 'signup', obj: 'Matter' });
-						return Promise.reject(errRes);
+						logger.error({ description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth' });
+						return Promise.reject({ message: 'Error loading third party login capability.' });
 					});
 				});
 			}
@@ -525,25 +534,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				//Initalize Hello
 				return this.initHello().then(function () {
 					return window.hello.login(_this2.provider);
+				}, function (err) {
+					logger.error({ description: 'Error initalizing hellojs.', error: err, func: 'login', obj: 'Matter' });
+					return Promise.reject({ message: 'Error with third party login.' });
 				});
 			}
 		}, {
 			key: 'signup',
 			value: function signup() {
-				var _this3 = this;
-
-				//Initalize Hello
-				// if (!_.has(clientIds, this.provider)) {
-				// 	logger.error({description: `${this.provider} is not setup as a provider on Tessellate. Please visit tessellate.kyper.io to enter your provider information.`, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
-				// 	return Promise.reject();
-				// }
 				//TODO: send info to server
-				return this.initHello().then(function () {
-					return window.hello.login(_this3.provider);
-				}, function (errRes) {
-					logger.error({ description: 'Error signing up.', error: errRes, func: 'signup', obj: 'Matter' });
-					return Promise.reject({ message: 'Error signing up.' });
-				});
+				return this.login();
 			}
 		}]);
 
@@ -581,7 +581,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     */
 			value: function signup(signupData) {
 				logger.log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
-				if (!signupData) {
+				if (!signupData || !_.isObject(signupData) && !_.isString(signupData)) {
 					logger.error({ description: 'Signup information is required to signup.', func: 'signup', obj: 'Matter' });
 					return Promise.reject({ message: 'Login data is required to login.' });
 				}
@@ -598,16 +598,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 						logger.error({ description: 'Error requesting signup.', signupData: signupData, error: errRes, func: 'signup', obj: 'Matter' });
 						return Promise.reject(errRes);
 					});
-				} else if (_.isString(signupData)) {
+				} else {
 					//Handle 3rd Party signups
 					var auth = new ProviderAuth({ provider: signupData, app: this });
 					return auth.signup(signupData).then(function (res) {
 						logger.info({ description: 'Provider signup successful.', provider: signupData, res: res, func: 'signup', obj: 'Matter' });
 						return Promise.resolve(res);
 					});
-				} else {
-					logger.error({ description: 'Incorrectly formatted signup information.', signupData: signupData, func: 'signup', obj: 'Matter' });
-					return Promise.reject({ message: 'Signup requires an object or a string.' });
 				}
 			}
 
@@ -617,9 +614,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'login',
 			value: function login(loginData) {
-				var _this4 = this;
+				var _this3 = this;
 
-				if (!loginData) {
+				if (!loginData || !_.isObject(loginData) && !_.isString(loginData)) {
 					logger.error({ description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter' });
 					return Promise.reject({ message: 'Login data is required to login.' });
 				}
@@ -635,10 +632,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 						} else {
 							logger.log({ description: 'Successful login.', response: response, func: 'login', obj: 'Matter' });
 							if (_.has(response, 'token')) {
-								_this4.token.string = response.token;
+								_this3.token.string = response.token;
 							}
 							if (_.has(response, 'account')) {
-								_this4.storage.setItem(config.tokenUserDataName, response.account);
+								_this3.storage.setItem(config.tokenUserDataName, response.account);
 							}
 							return response.account;
 						}
@@ -649,16 +646,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 						}
 						return Promise.reject(errRes);
 					});
-				} else if (_.isString(loginData)) {
+				} else {
 					//Provider login
 					var auth = new ProviderAuth({ provider: loginData, app: this });
 					return auth.login().then(function (res) {
 						logger.info({ description: 'Provider login successful.', provider: loginData, res: res, func: 'login', obj: 'Matter' });
 						return Promise.resolve(res);
 					});
-				} else {
-					logger.error({ description: 'Incorrectly fomatted login information.', signupData: signupData, func: 'login', obj: 'Matter' });
-					return Promise.reject({ message: 'Login requires an object or a string.' });
 				}
 			}
 
@@ -667,7 +661,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'logout',
 			value: function logout() {
-				var _this5 = this;
+				var _this4 = this;
 
 				//TODO: Handle logging out of providers
 				if (!this.isLoggedIn) {
@@ -676,29 +670,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 				return request.put(this.endpoint + '/logout').then(function (response) {
 					logger.log({ description: 'Logout successful.', response: response, func: 'logout', obj: 'Matter' });
-					_this5.currentUser = null;
-					_this5.token['delete']();
+					_this4.currentUser = null;
+					_this4.token['delete']();
 					return response;
 				})['catch'](function (errRes) {
 					logger.error({ description: 'Error requesting log out: ', error: errRes, func: 'logout', obj: 'Matter' });
-					_this5.storage.removeItem(config.tokenUserDataName);
-					_this5.token['delete']();
+					_this4.storage.removeItem(config.tokenUserDataName);
+					_this4.token['delete']();
 					return Promise.reject(errRes);
 				});
 			}
 		}, {
 			key: 'getCurrentUser',
 			value: function getCurrentUser() {
-				var _this6 = this;
+				var _this5 = this;
 
-				if (this.storage.item(config.tokenUserDataName)) {
-					return Promise.resove(this.storage.getItem(config.tokenUserDataName));
+				if (this.currentUser) {
+					return Promise.resolve(this.currentUser);
 				} else {
 					if (this.isLoggedIn) {
 						return request.get(this.endpoint + '/user').then(function (response) {
 							//TODO: Save user information locally
 							logger.log({ description: 'Current User Request responded.', responseData: response, func: 'currentUser', obj: 'Matter' });
-							_this6.currentUser = response;
+							_this5.currentUser = response;
 							return response;
 						})['catch'](function (errRes) {
 							if (errRes.status == 401) {
@@ -721,17 +715,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'updateProfile',
 			value: function updateProfile(updateData) {
-				var _this7 = this;
+				var _this6 = this;
 
 				if (!this.isLoggedIn) {
 					logger.error({ description: 'No current user profile to update.', func: 'updateProfile', obj: 'Matter' });
 					return Promise.reject({ message: 'Must be logged in to update profile.' });
 				}
 				//Send update request
-				logger.warn({ description: 'Calling update endpoint.', endpoint: this.endpoint + '/user/' + this.token.data.username, func: 'updateProfile', obj: 'Matter' });
 				return request.put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
 					logger.log({ description: 'Update profile request responded.', responseData: response, func: 'updateProfile', obj: 'Matter' });
-					_this7.currentUser = response;
+					_this6.currentUser = response;
 					return response;
 				})['catch'](function (errRes) {
 					logger.error({ description: 'Error requesting current user.', error: errRes, func: 'updateProfile', obj: 'Matter' });
@@ -740,18 +733,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		}, {
 			key: 'changePassword',
-			value: function changePassword() {
-				var _this8 = this;
-
+			value: function changePassword(updateData) {
 				if (!this.isLoggedIn) {
 					logger.error({ description: 'No current user profile for which to change password.', func: 'changePassword', obj: 'Matter' });
 					return Promise.reject({ message: 'Must be logged in to change password.' });
 				}
 				//Send update request
-				logger.log({ description: 'Calling update endpoint to change password.', endpoint: this.endpoint + '/user/' + this.token.data.username, func: 'changePassword', obj: 'Matter' });
 				return request.put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
 					logger.log({ description: 'Update password request responded.', responseData: response, func: 'changePassword', obj: 'Matter' });
-					_this8.currentUser = response;
 					return response;
 				})['catch'](function (errRes) {
 					logger.error({ description: 'Error requesting password change.', error: errRes, func: 'changePassword', obj: 'Matter' });
@@ -761,17 +750,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'recoverPassword',
 			value: function recoverPassword() {
-				var _this9 = this;
-
 				if (!this.isLoggedIn) {
 					logger.error({ description: 'No current user for which to recover password.', func: 'recoverPassword', obj: 'Matter' });
 					return Promise.reject({ message: 'Must be logged in to recover password.' });
 				}
 				//Send update request
-				logger.log({ description: 'Calling recover password endpoint.', endpoint: this.endpoint + '/user/' + this.token.data.username, func: 'recoverPassword', obj: 'Matter' });
-				return request.put(this.endpoint + '/account/' + this.token.data.username + '/recover', updateData).then(function (response) {
+				return request.post(this.endpoint + '/accounts/' + this.token.data.username + '/recover').then(function (response) {
 					logger.log({ description: 'Recover password request responded.', responseData: response, func: 'recoverPassword', obj: 'Matter' });
-					_this9.currentUser = response;
 					return response;
 				})['catch'](function (errRes) {
 					logger.error({ description: 'Error requesting password recovery.', error: errRes, func: 'recoverPassword', obj: 'Matter' });
@@ -787,7 +772,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 			//Check that user is in a single group or in all of a list of groups
 			value: function isInGroup(checkGroups) {
-				var _this10 = this;
+				var _this7 = this;
 
 				if (!this.isLoggedIn) {
 					logger.log({ description: 'No logged in user to check.', func: 'isInGroup', obj: 'Matter' });
@@ -803,12 +788,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 							//String list of groupts
 							logger.info({ description: 'String list of groups.', list: groupsArray, func: 'isInGroup', obj: 'Matter' });
 							return {
-								v: _this10.isInGroups(groupsArray)
+								v: _this7.isInGroups(groupsArray)
 							};
 						} else {
 							//Single group
-							var groups = _this10.token.data.groups || [];
-							logger.log({ description: 'Checking if user is in group.', group: groupName, userGroups: _this10.token.data.groups || [], func: 'isInGroup', obj: 'Matter' });
+							var groups = _this7.token.data.groups || [];
+							logger.log({ description: 'Checking if user is in group.', group: groupName, userGroups: _this7.token.data.groups || [], func: 'isInGroup', obj: 'Matter' });
 							return {
 								v: _.any(groups, function (group) {
 									return groupName == group.name;
@@ -831,19 +816,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'isInGroups',
 			value: function isInGroups(checkGroups) {
-				var _this11 = this;
+				var _this8 = this;
 
+				if (!this.isLoggedIn) {
+					logger.log({ description: 'No logged in user to check.', func: 'isInGroups', obj: 'Matter' });
+					return false;
+				}
 				//Check if user is in any of the provided groups
 				if (checkGroups && _.isArray(checkGroups)) {
-					return _.map(checkGroups, function (group) {
+					return _.every(_.map(checkGroups, function (group) {
 						if (_.isString(group)) {
 							//Group is string
-							return _this11.isInGroup(group);
+							return _this8.isInGroup(group);
 						} else {
 							//Group is object
-							return _this11.isInGroup(group.name);
+							if (_.has(group, 'name')) {
+								return _this8.isInGroup(group.name);
+							} else {
+								logger.error({ description: 'Invalid group object.', group: group, func: 'isInGroups', obj: 'Matter' });
+								return false;
+							}
 						}
-					});
+					}), true);
 				} else if (checkGroups && _.isString(checkGroups)) {
 					//TODO: Handle spaces within string list
 					var groupsArray = checkGroups.split(',');
@@ -853,6 +847,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return this.isInGroup(groupsArray[0]);
 				} else {
 					logger.error({ description: 'Invalid groups list.', func: 'isInGroups', obj: 'Matter' });
+					return false;
 				}
 			}
 		}, {
@@ -864,10 +859,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					logger.info({ description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 				}
 				if (this.name == 'tessellate') {
-					//Remove url if host is server
-					if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host === serverUrl) {
+					//Remove url if host is a tessellate server
+					if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
 						serverUrl = '';
-						logger.info({ description: 'Host is Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
+						logger.info({ description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 					}
 				} else {
 					serverUrl = serverUrl + '/apps/' + this.name;
@@ -923,8 +918,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 		return Matter;
 	})();
-
-	;
 
 	return Matter;
 });
