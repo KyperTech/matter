@@ -5,12 +5,10 @@ import _ from 'lodash';
 let data = {};
 
 let storage = {
-	/**
-	 * @description
-	 * Gets whether or not local storage exists.
-	 *
+	/** Gets whether or not local storage exists.
 	 * @param {String} itemName The items name
 	 * @param {String} itemValue The items value
+	 * @return {Boolean}
 	 *
 	 */
 	get localExists() {
@@ -93,8 +91,7 @@ let storage = {
 		}
 	},
 	/**
-	 * @description
-	 * Safley removes item from session storage.
+	 * @description Safley removes item from session storage.
 	 *
 	 * @param {String} itemName - The items name
 	 *

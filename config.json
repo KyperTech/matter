@@ -1,5 +1,10 @@
 {
 	"distFolder":"dist",
+	"folders": {
+		"dist": "dist",
+		"dev": "dev",
+		"docs": "docs"
+	},
 	"cdn":{
 		"bucketName":"kyper-cdn",
 		"path":"js/matter"

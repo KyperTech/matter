@@ -4,7 +4,6 @@ import logger from './logger';
 import dom from './dom';
 import _ from 'lodash';
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
-
 // import hello from 'hellojs'; //After es version of module is created
 //Private object containing clientIds
 let clientIds = {};
@@ -15,6 +14,8 @@ class ProviderAuth {
 		this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
 		this.provider = actionData.provider ? actionData.provider : null;
 	}
+	/** Load hellojs library script into DOM
+	 */
 	loadHello() {
 		//Load hellojs script
 		//TODO: Replace this with es6ified version
@@ -47,6 +48,8 @@ class ProviderAuth {
 			});
 		});
 	}
+	/** Initialize hellojs library and request app providers
+	 */
 	initHello() {
 		return this.loadHello().then(() => {
 			return request.get(`${this.app.endpoint}/providers`)
@@ -69,8 +72,16 @@ class ProviderAuth {
 			});
 		});
 	}
+  /** External provider login
+   * @example
+   * //Login to account that was started through external account signup (Google, Facebook, Github)
+   * ProviderAuth('google').login().then(function(loginRes){
+   * 		console.log('Successful login:', loginRes)
+   * }, function(err){
+   * 		console.error('Error with provider login:', err);
+   * });
+   */
 	login() {
-		//Initalize Hello
 		return this.initHello().then(() => {
 			return window.hello.login(this.provider);
 		}, (err) => {
@@ -78,9 +89,18 @@ class ProviderAuth {
 			return Promise.reject({message: 'Error with third party login.'});
 		});
 	}
+	/** Signup using external provider account (Google, Facebook, Github)
+   * @example
+   * //Signup using external account (Google, Facebook, Github)
+   * ProviderAuth('google').signup().then(function(signupRes){
+   * 		console.log('Successful signup:', signupRes)
+   * }, function(err){
+   * 		console.error('Error with provider signup:', err);
+   * });
+	 */
 	signup() {
 		//TODO: send info to server
-		return this.login();
+		return this.login;
 	}
 }
 export default ProviderAuth;

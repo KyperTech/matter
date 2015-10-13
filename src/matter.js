@@ -8,8 +8,8 @@ import _ from 'lodash';
 import ProviderAuth from './utils/providerAuth';
 
 class Matter {
-	/* Constructor
-	 * @param {string} appName Name of application
+	/** Constructor
+	 * @param {String} appName Name of application
 	 */
 	constructor(appName, opts) {
 		if (!appName) {
@@ -22,8 +22,8 @@ class Matter {
 			this.options = opts;
 		}
 	}
-	/* Endpoint getter
-	 *
+	/** Endpoint generation that handles default/provided settings and environment
+	 * @return {String} endpoint - endpoint for tessellate application
 	 */
 	get endpoint() {
 		//Handle options
@@ -49,9 +49,21 @@ class Matter {
 		logger.log({description: 'Endpoint created.', url: appEndpoint, func: 'endpoint', obj: 'Matter'});
 		return appEndpoint;
 	}
-	/* Signup
-	 *
-	 */
+	/** Signup a new user
+   * @param {Object} signupData - Object containing data to use while signing up to application.
+   * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+   * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+	 * @param {String} signupData.password - Password to be used with account (will be encrypted).
+   * @return {Promise}
+   * @example
+   * //Signup a new user
+   * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
+   * matter.signup(signupData).then(function(signupRes){
+   *  console.log('New user signed up successfully. New account: ', signupRes.account);
+   * }, function(err){
+   *  console.error('Error signing up:', err);
+   * });
+   */
 	signup(signupData) {
 		logger.log({description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter'});
 		if (!signupData || (!_.isObject(signupData) && !_.isString(signupData))) {
@@ -82,9 +94,21 @@ class Matter {
 			});
 		}
 	}
-	/** Login
-	 *
-	 */
+  /** Login by username/email or external provider
+   * @param {Object} loginData - Object containing data to use while logging in to application.
+   * @param {String} loginData.username - Username of user to login as
+   * @param {String} loginData.email - Email of new user (Optional instead of username)
+   * @param {String} loginData.password - Password to be used with account (will be encrypted).
+   * @return {Promise}
+   * @example
+   * //Login as 'testuser1'
+   * var loginData = {username: 'testuser1', password: 'testpassword'};
+   * matter.login(loginData).then(function(loginRes){
+   *  console.log('New user logged in succesfully. Account: ', loginRes.account);
+   * }, function(err){
+   *  console.error('Error logging in:', err);
+   * });
+   */
 	login(loginData) {
 		if (!loginData || (!_.isObject(loginData) && !_.isString(loginData))) {
 			logger.error({description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter'});
@@ -127,6 +151,14 @@ class Matter {
 		}
 	}
 	/** Logout
+	 * @return {Promise}
+	 * @example
+	 * //Logout of currently logged in account
+	 * matter.logout().then(function(loginRes){
+	 *  console.log('Logged out successfully');
+	 * }, function(err){
+	 *  console.error('Error logging out:', err);
+	 * });
 	 */
 	logout() {
 		//TODO: Handle logging out of providers
@@ -146,6 +178,16 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+	/** getCurrentUser
+	 * @return {Promise}
+	 * @example
+	 * //Logout of currently logged in account
+	 * matter.getCurrentUser().then(function(currentAccount){
+	 *  console.log('Currently logged in account:', currentAccount);
+	 * }, function(err){
+	 *  console.error('Error logging out:', err);
+	 * });
+	 */
 	getCurrentUser() {
 		if (this.currentUser) {
 			return Promise.resolve(this.currentUser);
@@ -173,6 +215,15 @@ class Matter {
 	}
 
 	/** updateProfile
+	 * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+	 * @return {Promise}
+	 * @example
+	 * //Update current account's profile
+	 * matter.updateProfile().then(function(updatedAccount){
+	 *  console.log('Currently logged in account:', updatedAccount);
+	 * }, function(err){
+	 *  console.error('Error updating profile:', err);
+	 * });
 	 */
 	updateProfile(updateData) {
 		if (!this.isLoggedIn) {
@@ -189,6 +240,17 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+	/** changePassword
+	 * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+	 * @return {Promise}
+	 * @example
+	 * //Update current account's profile
+	 * matter.changePassword().then(function(updatedAccount){
+	 *  console.log('Currently logged in account:', updatedAccount);
+	 * }, function(err){
+	 *  console.error('Error updating profile:', err);
+	 * });
+	 */
 	changePassword(updateData) {
 		if (!this.isLoggedIn) {
 			logger.error({description: 'No current user profile for which to change password.', func: 'changePassword', obj: 'Matter'});
@@ -217,17 +279,42 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-
-	/* set currentUser
-	 * @description Sets currently user data
+	/** Get current logged in status
+	 * @return {Boolean}
+	 * @example
+	 * //Check if there is an account currently logged in
+	 * if(matter.isLoggedIn){
+	 * console.log('There is currently an account logged in.');
+	 * } else {
+	 * console.warn('There is no account currently logged in.');
+	 * }
+	 */
+	get isLoggedIn() {
+		return this.token.string ? true : false;
+	}
+	/** Save current user (handled automatically by default)
+	 * @param {Object} userData - Account data to set for current user
+	 * @example
+	 * //Save account response to current user
+	 * matter.currentUser = {username: 'testuser1', email: 'test@email.com'};
+	 * console.log('New current user set:', matter.currentUser);
 	 */
 	set currentUser(userData) {
 		logger.log({description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter'});
 		this.storage.setItem(config.tokenUserDataName, userData);
 	}
-	/* get currentUser
-	 * @description Gets currently logged in user or returns null
-	 */
+  /** Get currently logged in user or returns null
+   * @return {Object|null}
+   * @example
+   * //Return account if logged in
+   * if(matter.isLoggedIn){
+   * console.log('Current user account: ', matter.currentUser);
+   * } else {
+   * console.log('No current user. Current user: ', matter.currentUser)
+   * }
+   * matter.currentUser
+   * console.log('New current user set:', matter.currentUser);
+   */
 	get currentUser() {
 		if (this.storage.getItem(config.tokenUserDataName)) {
 			return this.storage.getItem(config.tokenUserDataName);
@@ -235,24 +322,36 @@ class Matter {
 			return null;
 		}
 	}
-	/* Storage
+	/* Storage Utility
 	 *
 	 */
 	get storage() {
 		return envStorage;
 	}
-	/** Token
+	/** Token Utility
 	 */
 	get token() {
 		return token;
 	}
+	/** Utils placed in base library
+	 */
 	get utils() {
 		return {logger: logger, request: request, storage: envStorage, dom: dom};
 	}
-	get isLoggedIn() {
-		return this.token.string ? true : false;
-	}
-	//Check that user is in a single group or in all of a list of groups
+
+	/** Check that user is in a single group or in all of a list of groups
+	 * @param {Array} checkGroups - List of groups to check for account membership
+	 * @return {Boolean}
+	 * @example
+	 * //Check for group membership
+	 * var isBoth = ;
+	 * if(matter.isInGroup('admins')){
+	 * console.log('Current account is an admin!');
+	 * } else {
+	 * console.warn('Current account is not an admin.');
+	 * }
+	 *
+	 */
 	isInGroup(checkGroups) {
 		if (!this.isLoggedIn) {
 			logger.log({description: 'No logged in user to check.', func: 'isInGroup', obj: 'Matter'});
@@ -285,6 +384,19 @@ class Matter {
 		}
 		//TODO: Handle string and array inputs
 	}
+  /** Check that user is in all of a list of groups
+   * @param {Array|String} checkGroups - List of groups to check for account membership
+   * @return {Boolean}
+   * @example
+   * //Check for group membership
+   * var isBoth = matter.isInGroups(['admins', 'users']);
+   * if(isBoth){
+   * console.log('Current account is both an admin and a user');
+   * } else {
+   * console.warn('Current account is not both an admin and a user')
+   * }
+   *
+   */
 	isInGroups(checkGroups) {
 		if (!this.isLoggedIn) {
 			logger.log({description: 'No logged in user to check.', func: 'isInGroups', obj: 'Matter'});

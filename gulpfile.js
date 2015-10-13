@@ -20,6 +20,7 @@ const KarmaServer = require('karma').Server;
 const shell = require('gulp-shell');
 const bump = require('gulp-bump');
 const _ = require('lodash');
+const esdoc = require("gulp-esdoc");
 
 // Gather the library data from `package.json`
 const manifest = require('./package.json');
@@ -142,6 +143,21 @@ gulp.task('upload:latest', function() {
     }))
     .pipe(publisher.publish())
     .pipe(awspublish.reporter());
+});
+//Upload to CDN under "/latest"
+gulp.task('upload:docs', function() {
+  return gulp.src('./' + conf.folders.docs + '/**')
+    .pipe($.rename(function (path) {
+      path.dirname = conf.cdn.path + '/latest/' + path.dirname + '/docs';
+    }))
+    .pipe(publisher.publish())
+    .pipe(awspublish.reporter());
+});
+// Generate docs based on comments
+const esdocConfig = require('./esdoc.json');
+gulp.task('docs', function() {
+  gulp.src('./src')
+  .pipe(esdoc(esdocConfig));
 });
 
 // Static server

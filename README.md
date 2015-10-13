@@ -18,7 +18,11 @@
   </a>
   <!-- Coverage -->
   <a href="https://codeclimate.com/github/KyperTech/matter">
-    <img src="https://codeclimate.com/github/KyperTech/matter/badges/coverage.svg" alt="coverage">
+    <img src="https://codeclimate.com/github/KyperTech/matter/badges/coverage.svg" alt="Coverage">
+  </a>
+  <!-- Documentation Coverage -->
+  <a href="http://cdn.kyper.io/js/matter/latest/docs/class/src/matter.js~Matter.html">
+    <img src="http://cdn.kyper.io/js/matter/latest/docs/badge.svg" alt="Docs Coverage"
   </a>
   <!-- License -->
   <a href="https://github.com/KyperTech/matter/blob/master/LICENSE.md">
@@ -42,7 +46,7 @@ Using Matter requires having created an application on [Tessellate](http://tesse
 
   To use the CDN, add the following script tag to your `index.html`:
 
-    ```HTML
+    ```html
     <!-- Matter Library Bundle -->
     <script src="http://cdn.kyper.io/js/matter/0.1.1/matter.bundle.js"></script>
     ```
@@ -75,22 +79,20 @@ matter.login({username:"test", password:"test"}).then(function(user){
 
 ## Docs
 
-### [API Documentation](https://github.com/KyperTech/matter/wiki/API-Documentation)
+### [API Documentation](http://cdn.kyper.io/js/matter/latest/docs/class/src/matter.js~Matter.html)
 
 ### [Examples](https://github.com/KyperTech/matter/tree/master/examples)
 
 ## More Information
 For more details please visit the [Matter Wiki](https://github.com/KyperTech/matter/wiki).
 
-## Testing
+## Test
 
-Tests are locaed in test folder and can be run via `gulp test` or `gulp coverage` commanges.
+Tests are located in test folder and can be run via `gulp test` or `gulp coverage` commands.
 
 `index.html` has been added as a bare bones test page similar to browser example (`/examples/browser/index.html).
 
 ## TODO
-* 3rd Party provider logins (keys set on tessellate)
-* Improve Documentation
 * Run tests git pre-push
 * More local storage capabilities
 * Version release gulp task

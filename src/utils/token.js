@@ -17,9 +17,19 @@ function decodeToken(tokenStr) {
 	return tokenData;
 }
 let token = {
+	/** Get string value of token
+	 * @return {String}
+	 * @example
+	 * console.log('String value of current token', token.string);
+	 */
 	get string() {
 		return storage.getItem(config.tokenName);
 	},
+	/** Get decoded data within token (unencrypted data only)
+	 * @return {Object}
+	 * @example
+	 * console.log('Data of current token:', token.data);
+	 */
 	get data() {
 		if (storage.getItem(config.tokenDataName)) {
 			return storage.getItem(config.tokenDataName);
@@ -27,6 +37,8 @@ let token = {
 			return decodeToken(this.string);
 		}
 	},
+	/** Set token data
+	 */
 	set data(tokenData) {
 		if (_.isString(tokenData)) {
 			let tokenStr = tokenData;
@@ -37,6 +49,8 @@ let token = {
 			storage.setItem(config.tokenDataName, tokenData);
 		}
 	},
+	/** Set token value as a string
+	 */
 	set string(tokenData) {
 		let tokenStr;
 		//Handle object being passed
@@ -58,9 +72,13 @@ let token = {
 		storage.setItem(config.tokenName, tokenStr);
 		this.data = jwtDecode(tokenStr);
 	},
+	/** Save token data
+	 */
 	save(tokenStr) {
 		this.string = tokenStr;
 	},
+	/** Delete token data
+	 */
 	delete() {
 		//Remove string token
 		storage.removeItem(config.tokenName);
