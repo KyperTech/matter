@@ -100,7 +100,7 @@ class ProviderAuth {
 	 */
 	signup() {
 		//TODO: send info to server
-		return this.login;
+		return this.login();
 	}
 }
 export default ProviderAuth;

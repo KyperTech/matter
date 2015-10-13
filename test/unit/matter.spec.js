@@ -180,7 +180,7 @@ describe('Matter', () => {
     it('handles incorrectly formatted signup data', () => {
       expect(matter.signup([''])).to.eventually.have.property('message');
     });
-     it('accepts third party logins', () => {
+     it('accepts third party signup/login', () => {
       matter.signup('google').then(() => {
         expect(mockProviderAuthSignup).to.have.been.calledOnce;
       });

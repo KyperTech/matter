@@ -48,7 +48,7 @@ Using Matter requires having created an application on [Tessellate](http://tesse
 
     ```html
     <!-- Matter Library Bundle -->
-    <script src="http://cdn.kyper.io/js/matter/0.1.1/matter.bundle.js"></script>
+    <script src="http://cdn.kyper.io/js/matter/0.1.2/matter.bundle.js"></script>
     ```
   #### Bower
   Run `bower install --save kyper-matter`

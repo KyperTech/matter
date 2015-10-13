@@ -1,9 +1,9 @@
 {
   "name": "kyper-matter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "dist/matter.js",
-  "jsnext:main": "src/matter.js",
+  "jsnext:main": "dist/matter.js",
   "babelBoilerplateOptions": {
     "entryFileName": "src/matter.js",
     "mainVarName": "Matter",
