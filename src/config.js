@@ -31,11 +31,10 @@ class Config {
 		if (!instance) {
       instance = this;
     }
-		console.warn({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
+		// console.log({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
 		return merge(instance, defaultConfig);
 	}
 	get serverUrl() {
-		console.log('defaultConfig:', defaultConfig);
 		let url = defaultConfig.envs[envName].serverUrl
 		if (typeof window !== 'undefined' && has(window, 'location') && window.location.host === url) {
 			url = '';
@@ -48,7 +47,7 @@ class Config {
 	set envName(newEnv) {
 		envName = newEnv;
 		// this.envName = newEnv;
-		console.log('Environment name set:', envName);
+		// console.log('Environment name set:', envName);
 	}
 	get env() {
 		return defaultConfig.envs[envName];
