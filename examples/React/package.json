@@ -6,6 +6,11 @@
   "license": "ISC",
   "dependencies": {
     "babel-core": "^5.8.25",
+    "kyper-matter": "^0.1.2",
     "react": "^0.14.0-rc1"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.9.11",
+    "gulp": "^3.9.0"
   }
 }
