@@ -148,7 +148,7 @@ gulp.task('upload:latest', function() {
 gulp.task('upload:docs', function() {
   return gulp.src('./' + conf.folders.docs + '/**')
     .pipe($.rename(function (path) {
-      path.dirname = conf.cdn.path + '/latest/' + path.dirname + '/docs';
+      path.dirname = conf.cdn.path + '/latest/docs/' + path.dirname;
     }))
     .pipe(publisher.publish())
     .pipe(awspublish.reporter());
