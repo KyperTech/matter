@@ -1,4 +1,4 @@
-var matter = new Matter('exampleApp', {env: 'local'});
+var matter = new Matter('cloudbrain');
 console.log('matter:', matter);
 //Set logged in status when dom is loaded
 document.addEventListener("DOMContentLoaded", function(event) {

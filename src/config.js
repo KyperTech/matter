@@ -55,5 +55,4 @@ class Config {
 }
 let config = new Config();
 
-config.serverUrl
 export default config;
