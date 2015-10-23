@@ -4,9 +4,7 @@ import _ from 'lodash';
 //Set default log level to debug
 let logLevel = 'debug';
 //Set log level from config
-if (config.logLevel) {
-	logLevel = config.logLevel;
-}
+
 let logger = {
 	log(logData) {
 		let msgArgs = buildMessageArgs(logData);

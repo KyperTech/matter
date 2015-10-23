@@ -21,6 +21,7 @@ class Matter {
 		if (opts) {
 			this.options = opts;
 		}
+		this.config = config;
 	}
 	/** Endpoint generation that handles default/provided settings and environment
 	 * @return {String} endpoint - endpoint for tessellate application

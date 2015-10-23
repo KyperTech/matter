@@ -7,24 +7,89 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 })(this, function (_, jwtDecode, superagent) {
 	'use strict';
 
-	_ = 'default' in _ ? _['default'] : _;
+	var ___default = 'default' in _ ? _['default'] : _;
 	jwtDecode = 'default' in jwtDecode ? jwtDecode['default'] : jwtDecode;
 	superagent = 'default' in superagent ? superagent['default'] : superagent;
 
-	var config = {
-		serverUrl: 'http://tessellate.elasticbeanstalk.com',
+	var defaultConfig = {
+		envs: {
+			local: {
+				serverUrl: 'http://localhost:4000',
+				logLevel: 'trace'
+			},
+			dev: {
+				serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
+				logLevel: 'debug'
+			},
+			stage: {
+				serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
+				logLevel: 'info'
+			},
+			prod: {
+				serverUrl: 'http://tessellate.elasticbeanstalk.com',
+				logLevel: 'warn'
+			}
+		},
 		tokenName: 'tessellate',
 		tokenDataName: 'tessellate-tokenData',
-		tokenUserDataName: 'tessellate-currentUser',
-		logLevel: 'debug'
+		tokenUserDataName: 'tessellate-currentUser'
 	};
+	var instance = null;
+	var envName = 'prod';
+
+	var Config = (function () {
+		function Config() {
+			_classCallCheck(this, Config);
+
+			if (!instance) {
+				instance = this;
+			}
+			// console.log({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
+			return _.merge(instance, defaultConfig);
+		}
+
+		_createClass(Config, [{
+			key: 'applySettings',
+			value: function applySettings(settings) {
+				_.merge(instance, settings);
+			}
+		}, {
+			key: 'serverUrl',
+			get: function get() {
+				var url = defaultConfig.envs[envName].serverUrl;
+				if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host === url) {
+					url = '';
+				}
+				return url;
+			}
+		}, {
+			key: 'logLevel',
+			get: function get() {
+				return defaultConfig.envs[envName].logLevel;
+			}
+		}, {
+			key: 'envName',
+			set: function set(newEnv) {
+				envName = newEnv;
+				// this.envName = newEnv;
+				// console.log('Environment name set:', envName);
+			}
+		}, {
+			key: 'env',
+			get: function get() {
+				return defaultConfig.envs[envName];
+			}
+		}]);
+
+		return Config;
+	})();
+
+	var config = new Config();
 
 	//Set default log level to debug
 	var logLevel = 'debug';
 	//Set log level from config
-	if (config.logLevel) {
-		logLevel = config.logLevel;
-	}
+
 	var logger = {
 		log: function log(logData) {
 			var msgArgs = buildMessageArgs(logData);
@@ -83,13 +148,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		var msgObj = {};
 		//TODO: Attach time stamp
 		//Attach location information to the beginning of message
-		if (_.isObject(logData)) {
+		if (___default.isObject(logData)) {
 			if (logLevel == 'debug') {
-				if (_.has(logData, 'func')) {
-					if (_.has(logData, 'obj')) {
+				if (___default.has(logData, 'func')) {
+					if (___default.has(logData, 'obj')) {
 						//Object and function provided
 						msgStr += '[' + logData.obj + '.' + logData.func + '()]\n ';
-					} else if (_.has(logData, 'file')) {
+					} else if (___default.has(logData, 'file')) {
 						msgStr += '[' + logData.file + ' > ' + logData.func + '()]\n ';
 					} else {
 						msgStr += '[' + logData.func + '()]\n ';
@@ -97,11 +162,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 			}
 			//Print each key and its value other than obj and func
-			_.each(_.omit(_.keys(logData)), function (key, ind, list) {
+			___default.each(___default.omit(___default.keys(logData)), function (key, ind, list) {
 				if (key != 'func' && key != 'obj') {
 					if (key == 'description' || key == 'message') {
 						msgStr += logData[key];
-					} else if (_.isString(logData[key])) {
+					} else if (___default.isString(logData[key])) {
 						// msgStr += key + ': ' + logData[key] + ', ';
 						msgObj[key] = logData[key];
 					} else {
@@ -112,7 +177,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 			});
 			msgStr += '\n';
-		} else if (_.isString(logData)) {
+		} else if (___default.isString(logData)) {
 			msgStr = logData;
 		}
 		var msg = [msgStr, msgObj];
@@ -150,7 +215,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		loadJs: function loadJs(src) {
-			if (typeof window == 'undefined' || !_.has(window, 'document')) {
+			if (typeof window == 'undefined' || !___default.has(window, 'document')) {
 				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
 				throw new Error('Document object is required to load assets.');
 			} else {
@@ -170,7 +235,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    */
 		asyncLoadJs: function asyncLoadJs(src) {
-			if (typeof window == 'undefined' || !_.has(window, 'document')) {
+			if (typeof window == 'undefined' || !___default.has(window, 'document')) {
 				logger.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
 				throw new Error('Document object is required to load assets.');
 			} else {
@@ -212,7 +277,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			data[itemName] = itemValue;
 			if (this.localExists) {
 				//Convert object to string
-				if (_.isObject(itemValue)) {
+				if (___default.isObject(itemValue)) {
 					itemValue = JSON.stringify(itemValue);
 				}
 				window.sessionStorage.setItem(itemName, itemValue);
@@ -254,8 +319,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 		},
 		/**
-   * @description
-   * Safley removes item from session storage.
+   * @description Safley removes item from session storage.
    *
    * @param {String} itemName - The items name
    *
@@ -296,12 +360,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 	}, {
 		localExists: {
-			/**
-    * @description
-    * Gets whether or not local storage exists.
-    *
+			/** Gets whether or not local storage exists.
     * @param {String} itemName The items name
     * @param {String} itemValue The items value
+    * @return {Boolean}
     *
     */
 
@@ -338,9 +400,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		return tokenData;
 	}
 	var token = Object.defineProperties({
+		/** Save token data
+   */
 		save: function save(tokenStr) {
 			this.string = tokenStr;
 		},
+		/** Delete token data
+   */
 		'delete': function _delete() {
 			//Remove string token
 			storage.removeItem(config.tokenName);
@@ -350,17 +416,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 	}, {
 		string: {
+			/** Get string value of token
+    * @return {String}
+    * @example
+    * console.log('String value of current token', token.string);
+    */
+
 			get: function get() {
 				return storage.getItem(config.tokenName);
 			},
+
+			/** Set token value as a string
+    */
 			set: function set(tokenData) {
 				var tokenStr = undefined;
 				//Handle object being passed
-				if (!_.isString(tokenData)) {
+				if (!___default.isString(tokenData)) {
 					//Token is included in object
 					logger.log({ description: 'Token data is not string.', token: tokenData, func: 'string', obj: 'token' });
 
-					if (_.isObject(tokenData) && _.has(tokenData, 'token')) {
+					if (___default.isObject(tokenData) && ___default.has(tokenData, 'token')) {
 						tokenStr = tokenData.token;
 					} else {
 						//Input is either not an string or object that contains nessesary info
@@ -378,6 +453,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			enumerable: true
 		},
 		data: {
+			/** Get decoded data within token (unencrypted data only)
+    * @return {Object}
+    * @example
+    * console.log('Data of current token:', token.data);
+    */
+
 			get: function get() {
 				if (storage.getItem(config.tokenDataName)) {
 					return storage.getItem(config.tokenDataName);
@@ -385,8 +466,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return decodeToken(this.string);
 				}
 			},
+
+			/** Set token data
+    */
 			set: function set(tokenData) {
-				if (_.isString(tokenData)) {
+				if (___default.isString(tokenData)) {
 					var tokenStr = tokenData;
 					tokenData = decodeToken(tokenStr);
 					logger.info({ description: 'Token data was set as string. Decoding token.', token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token' });
@@ -454,7 +538,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	}
 
 	// import hello from 'hellojs'; //Modifies objects to have id parameter?
-
 	// import hello from 'hellojs'; //After es version of module is created
 	//Private object containing clientIds
 	var clientIds = {};
@@ -467,6 +550,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
 			this.provider = actionData.provider ? actionData.provider : null;
 		}
+
+		/** Load hellojs library script into DOM
+   */
 
 		_createClass(ProviderAuth, [{
 			key: 'loadHello',
@@ -502,6 +588,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					});
 				});
 			}
+
+			/** Initialize hellojs library and request app providers
+    */
 		}, {
 			key: 'initHello',
 			value: function initHello() {
@@ -526,12 +615,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					});
 				});
 			}
+
+			/** External provider login
+    * @example
+    * //Login to account that was started through external account signup (Google, Facebook, Github)
+    * ProviderAuth('google').login().then(function(loginRes){
+    * 		console.log('Successful login:', loginRes)
+    * }, function(err){
+    * 		console.error('Error with provider login:', err);
+    * });
+    */
 		}, {
 			key: 'login',
 			value: function login() {
 				var _this2 = this;
 
-				//Initalize Hello
 				return this.initHello().then(function () {
 					return window.hello.login(_this2.provider);
 				}, function (err) {
@@ -539,6 +637,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject({ message: 'Error with third party login.' });
 				});
 			}
+
+			/** Signup using external provider account (Google, Facebook, Github)
+     * @example
+     * //Signup using external account (Google, Facebook, Github)
+     * ProviderAuth('google').signup().then(function(signupRes){
+     * 		console.log('Successful signup:', signupRes)
+     * }, function(err){
+     * 		console.error('Error with provider signup:', err);
+     * });
+    */
 		}, {
 			key: 'signup',
 			value: function signup() {
@@ -551,8 +659,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	})();
 
 	var Matter = (function () {
-		/* Constructor
-   * @param {string} appName Name of application
+		/** Constructor
+   * @param {String} appName Name of application
    */
 
 		function Matter(appName, opts) {
@@ -567,28 +675,41 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			if (opts) {
 				this.options = opts;
 			}
+			this.config = config;
 		}
 
-		/* Endpoint getter
-   *
+		/** Endpoint generation that handles default/provided settings and environment
+   * @return {String} endpoint - endpoint for tessellate application
    */
 
 		_createClass(Matter, [{
 			key: 'signup',
 
-			/* Signup
-    *
-    */
+			/** Signup a new user
+     * @param {Object} signupData - Object containing data to use while signing up to application.
+     * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+     * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+    * @param {String} signupData.password - Password to be used with account (will be encrypted).
+     * @return {Promise}
+     * @example
+     * //Signup a new user
+     * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
+     * matter.signup(signupData).then(function(signupRes){
+     *  console.log('New user signed up successfully. New account: ', signupRes.account);
+     * }, function(err){
+     *  console.error('Error signing up:', err);
+     * });
+     */
 			value: function signup(signupData) {
 				logger.log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
-				if (!signupData || !_.isObject(signupData) && !_.isString(signupData)) {
+				if (!signupData || !___default.isObject(signupData) && !___default.isString(signupData)) {
 					logger.error({ description: 'Signup information is required to signup.', func: 'signup', obj: 'Matter' });
 					return Promise.reject({ message: 'Login data is required to login.' });
 				}
-				if (_.isObject(signupData)) {
+				if (___default.isObject(signupData)) {
 					return request.post(this.endpoint + '/signup', signupData).then(function (response) {
 						logger.log({ description: 'Account request successful.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
-						if (_.has(response, 'account')) {
+						if (___default.has(response, 'account')) {
 							return response.account;
 						} else {
 							logger.warn({ description: 'Account was not contained in signup response.', signupData: signupData, response: response, func: 'signup', obj: 'Matter' });
@@ -608,33 +729,45 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 			}
 
-			/** Login
-    *
+			/** Login by username/email or external provider
+    * @param {Object} loginData - Object containing data to use while logging in to application.
+    * @param {String} loginData.username - Username of user to login as
+    * @param {String} loginData.email - Email of new user (Optional instead of username)
+    * @param {String} loginData.password - Password to be used with account (will be encrypted).
+    * @return {Promise}
+    * @example
+    * //Login as 'testuser1'
+    * var loginData = {username: 'testuser1', password: 'testpassword'};
+    * matter.login(loginData).then(function(loginRes){
+    *  console.log('New user logged in succesfully. Account: ', loginRes.account);
+    * }, function(err){
+    *  console.error('Error logging in:', err);
+    * });
     */
 		}, {
 			key: 'login',
 			value: function login(loginData) {
 				var _this3 = this;
 
-				if (!loginData || !_.isObject(loginData) && !_.isString(loginData)) {
+				if (!loginData || !___default.isObject(loginData) && !___default.isString(loginData)) {
 					logger.error({ description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter' });
 					return Promise.reject({ message: 'Login data is required to login.' });
 				}
-				if (_.isObject(loginData)) {
+				if (___default.isObject(loginData)) {
 					if (!loginData.password || !loginData.username) {
 						return Promise.reject({ message: 'Username/Email and Password are required to login' });
 					}
 					//Username/Email Login
 					return request.put(this.endpoint + '/login', loginData).then(function (response) {
-						if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
+						if (___default.has(response, 'data') && ___default.has(response.data, 'status') && response.data.status == 409) {
 							logger.warn({ description: 'Account not found.', response: response, func: 'login', obj: 'Matter' });
 							return Promise.reject(response.data);
 						} else {
 							logger.log({ description: 'Successful login.', response: response, func: 'login', obj: 'Matter' });
-							if (_.has(response, 'token')) {
+							if (___default.has(response, 'token')) {
 								_this3.token.string = response.token;
 							}
-							if (_.has(response, 'account')) {
+							if (___default.has(response, 'account')) {
 								_this3.storage.setItem(config.tokenUserDataName, response.account);
 							}
 							return response.account;
@@ -657,6 +790,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 
 			/** Logout
+    * @return {Promise}
+    * @example
+    * //Logout of currently logged in account
+    * matter.logout().then(function(loginRes){
+    *  console.log('Logged out successfully');
+    * }, function(err){
+    *  console.error('Error logging out:', err);
+    * });
     */
 		}, {
 			key: 'logout',
@@ -680,6 +821,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject(errRes);
 				});
 			}
+
+			/** getCurrentUser
+    * @return {Promise}
+    * @example
+    * //Logout of currently logged in account
+    * matter.getCurrentUser().then(function(currentAccount){
+    *  console.log('Currently logged in account:', currentAccount);
+    * }, function(err){
+    *  console.error('Error logging out:', err);
+    * });
+    */
 		}, {
 			key: 'getCurrentUser',
 			value: function getCurrentUser() {
@@ -711,6 +863,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			}
 
 			/** updateProfile
+    * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+    * @return {Promise}
+    * @example
+    * //Update current account's profile
+    * matter.updateProfile().then(function(updatedAccount){
+    *  console.log('Currently logged in account:', updatedAccount);
+    * }, function(err){
+    *  console.error('Error updating profile:', err);
+    * });
     */
 		}, {
 			key: 'updateProfile',
@@ -731,6 +892,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return Promise.reject(errRes);
 				});
 			}
+
+			/** changePassword
+    * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+    * @return {Promise}
+    * @example
+    * //Update current account's profile
+    * matter.changePassword().then(function(updatedAccount){
+    *  console.log('Currently logged in account:', updatedAccount);
+    * }, function(err){
+    *  console.error('Error updating profile:', err);
+    * });
+    */
 		}, {
 			key: 'changePassword',
 			value: function changePassword(updateData) {
@@ -764,13 +937,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				});
 			}
 
-			/* set currentUser
-    * @description Sets currently user data
+			/** Get current logged in status
+    * @return {Boolean}
+    * @example
+    * //Check if there is an account currently logged in
+    * if(matter.isLoggedIn){
+    * console.log('There is currently an account logged in.');
+    * } else {
+    * console.warn('There is no account currently logged in.');
+    * }
     */
 		}, {
 			key: 'isInGroup',
 
-			//Check that user is in a single group or in all of a list of groups
+			/** Check that user is in a single group or in all of a list of groups
+    * @param {Array} checkGroups - List of groups to check for account membership
+    * @return {Boolean}
+    * @example
+    * //Check for group membership
+    * var isBoth = ;
+    * if(matter.isInGroup('admins')){
+    * console.log('Current account is an admin!');
+    * } else {
+    * console.warn('Current account is not an admin.');
+    * }
+    *
+    */
 			value: function isInGroup(checkGroups) {
 				var _this7 = this;
 
@@ -779,7 +971,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return false;
 				}
 				//Check if user is
-				if (checkGroups && _.isString(checkGroups)) {
+				if (checkGroups && ___default.isString(checkGroups)) {
 					var _ret = (function () {
 						var groupName = checkGroups;
 						//Single role or string list of roles
@@ -795,7 +987,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 							var groups = _this7.token.data.groups || [];
 							logger.log({ description: 'Checking if user is in group.', group: groupName, userGroups: _this7.token.data.groups || [], func: 'isInGroup', obj: 'Matter' });
 							return {
-								v: _.any(groups, function (group) {
+								v: ___default.any(groups, function (group) {
 									return groupName == group.name;
 								})
 							};
@@ -803,7 +995,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					})();
 
 					if (typeof _ret === 'object') return _ret.v;
-				} else if (checkGroups && _.isArray(checkGroups)) {
+				} else if (checkGroups && ___default.isArray(checkGroups)) {
 					//Array of roles
 					//Check that user is in every group
 					logger.info({ description: 'Array of groups.', list: checkGroups, func: 'isInGroup', obj: 'Matter' });
@@ -813,6 +1005,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 				//TODO: Handle string and array inputs
 			}
+
+			/** Check that user is in all of a list of groups
+    * @param {Array|String} checkGroups - List of groups to check for account membership
+    * @return {Boolean}
+    * @example
+    * //Check for group membership
+    * var isBoth = matter.isInGroups(['admins', 'users']);
+    * if(isBoth){
+    * console.log('Current account is both an admin and a user');
+    * } else {
+    * console.warn('Current account is not both an admin and a user')
+    * }
+    *
+    */
 		}, {
 			key: 'isInGroups',
 			value: function isInGroups(checkGroups) {
@@ -823,14 +1029,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					return false;
 				}
 				//Check if user is in any of the provided groups
-				if (checkGroups && _.isArray(checkGroups)) {
-					return _.every(_.map(checkGroups, function (group) {
-						if (_.isString(group)) {
+				if (checkGroups && ___default.isArray(checkGroups)) {
+					return ___default.every(___default.map(checkGroups, function (group) {
+						if (___default.isString(group)) {
 							//Group is string
 							return _this8.isInGroup(group);
 						} else {
 							//Group is object
-							if (_.has(group, 'name')) {
+							if (___default.has(group, 'name')) {
 								return _this8.isInGroup(group.name);
 							} else {
 								logger.error({ description: 'Invalid group object.', group: group, func: 'isInGroups', obj: 'Matter' });
@@ -838,7 +1044,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 							}
 						}
 					}), true);
-				} else if (checkGroups && _.isString(checkGroups)) {
+				} else if (checkGroups && ___default.isString(checkGroups)) {
 					//TODO: Handle spaces within string list
 					var groupsArray = checkGroups.split(',');
 					if (groupsArray.length > 1) {
@@ -853,23 +1059,42 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}, {
 			key: 'endpoint',
 			get: function get() {
-				var serverUrl = config.serverUrl;
-				if (_.has(this, 'options') && this.options.localServer) {
-					serverUrl = 'http://localhost:4000';
-					logger.info({ description: 'LocalServer option was set to true. Now server url is local server.', url: serverUrl, func: 'endpoint', obj: 'Matter' });
+				//Handle options
+				if (___default.has(this, 'options')) {
+					if (this.options.localServer) {
+						config.envName = 'local';
+						logger.info({ description: 'LocalServer option was set to true. Now server url is local server.', url: config.serverUrl, func: 'endpoint', obj: 'Matter' });
+					}
+					if (this.options.env) {
+						config.envName = this.options.env;
+						logger.info({ description: 'Environment set based on provided environment.', config: config, func: 'endpoint', obj: 'Matter' });
+					}
 				}
+				var appEndpoint = config.serverUrl + '/apps/' + this.name;
+				//Handle tessellate as name
 				if (this.name == 'tessellate') {
 					//Remove url if host is a tessellate server
-					if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
-						serverUrl = '';
+					if (typeof window !== 'undefined' && ___default.has(window, 'location') && (window.location.host.indexOf('tessellate') !== -1 || window.location.host.indexOf('localhost') !== -1)) {
+						appEndpoint = serverUrl;
 						logger.info({ description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 					}
-				} else {
-					serverUrl = serverUrl + '/apps/' + this.name;
-					logger.log({ description: 'Server url set.', url: serverUrl, func: 'endpoint', obj: 'Matter' });
 				}
-				return serverUrl;
+				logger.log({ description: 'Endpoint created.', url: appEndpoint, func: 'endpoint', obj: 'Matter' });
+				return appEndpoint;
 			}
+		}, {
+			key: 'isLoggedIn',
+			get: function get() {
+				return this.token.string ? true : false;
+			}
+
+			/** Save current user (handled automatically by default)
+    * @param {Object} userData - Account data to set for current user
+    * @example
+    * //Save account response to current user
+    * matter.currentUser = {username: 'testuser1', email: 'test@email.com'};
+    * console.log('New current user set:', matter.currentUser);
+    */
 		}, {
 			key: 'currentUser',
 			set: function set(userData) {
@@ -877,8 +1102,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				this.storage.setItem(config.tokenUserDataName, userData);
 			},
 
-			/* get currentUser
-    * @description Gets currently logged in user or returns null
+			/** Get currently logged in user or returns null
+    * @return {Object|null}
+    * @example
+    * //Return account if logged in
+    * if(matter.isLoggedIn){
+    * console.log('Current user account: ', matter.currentUser);
+    * } else {
+    * console.log('No current user. Current user: ', matter.currentUser)
+    * }
+    * matter.currentUser
+    * console.log('New current user set:', matter.currentUser);
     */
 			get: function get() {
 				if (this.storage.getItem(config.tokenUserDataName)) {
@@ -888,7 +1122,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 			}
 
-			/* Storage
+			/* Storage Utility
     *
     */
 		}, {
@@ -897,22 +1131,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				return storage;
 			}
 
-			/** Token
+			/** Token Utility
     */
 		}, {
 			key: 'token',
 			get: function get() {
 				return token;
 			}
+
+			/** Utils placed in base library
+    */
 		}, {
 			key: 'utils',
 			get: function get() {
 				return { logger: logger, request: request, storage: storage, dom: domUtil };
-			}
-		}, {
-			key: 'isLoggedIn',
-			get: function get() {
-				return this.token.string ? true : false;
 			}
 		}]);
 

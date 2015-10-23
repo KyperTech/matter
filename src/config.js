@@ -1,5 +1,4 @@
-import merge from 'lodash/object/merge';
-import has from 'lodash/object/has';
+import {merge, has} from 'lodash';
 
 let defaultConfig = {
 	envs: {
@@ -35,7 +34,7 @@ class Config {
 		return merge(instance, defaultConfig);
 	}
 	get serverUrl() {
-		let url = defaultConfig.envs[envName].serverUrl
+		let url = defaultConfig.envs[envName].serverUrl;
 		if (typeof window !== 'undefined' && has(window, 'location') && window.location.host === url) {
 			url = '';
 		}
@@ -52,6 +51,10 @@ class Config {
 	get env() {
 		return defaultConfig.envs[envName];
 	}
+	applySettings(settings) {
+		merge(instance, settings);
+	}
+
 }
 let config = new Config();
 

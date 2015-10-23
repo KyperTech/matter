@@ -108,87 +108,6 @@ module.exports = function (str) {
 }());
 
 },{}],5:[function(require,module,exports){
-/**
- * Gets the last element of `array`.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to query.
- * @returns {*} Returns the last element of `array`.
- * @example
- *
- * _.last([1, 2, 3]);
- * // => 3
- */
-function last(array) {
-  var length = array ? array.length : 0;
-  return length ? array[length - 1] : undefined;
-}
-
-module.exports = last;
-
-},{}],6:[function(require,module,exports){
-/** Used as the `TypeError` message for "Functions" methods. */
-var FUNC_ERROR_TEXT = 'Expected a function';
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max;
-
-/**
- * Creates a function that invokes `func` with the `this` binding of the
- * created function and arguments from `start` and beyond provided as an array.
- *
- * **Note:** This method is based on the [rest parameter](https://developer.mozilla.org/Web/JavaScript/Reference/Functions/rest_parameters).
- *
- * @static
- * @memberOf _
- * @category Function
- * @param {Function} func The function to apply a rest parameter to.
- * @param {number} [start=func.length-1] The start position of the rest parameter.
- * @returns {Function} Returns the new function.
- * @example
- *
- * var say = _.restParam(function(what, names) {
- *   return what + ' ' + _.initial(names).join(', ') +
- *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
- * });
- *
- * say('hello', 'fred', 'barney', 'pebbles');
- * // => 'hello fred, barney, & pebbles'
- */
-function restParam(func, start) {
-  if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT);
-  }
-  start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
-  return function() {
-    var args = arguments,
-        index = -1,
-        length = nativeMax(args.length - start, 0),
-        rest = Array(length);
-
-    while (++index < length) {
-      rest[index] = args[start + index];
-    }
-    switch (start) {
-      case 0: return func.call(this, rest);
-      case 1: return func.call(this, args[0], rest);
-      case 2: return func.call(this, args[0], args[1], rest);
-    }
-    var otherArgs = Array(start + 1);
-    index = -1;
-    while (++index < start) {
-      otherArgs[index] = args[index];
-    }
-    otherArgs[start] = rest;
-    return func.apply(this, otherArgs);
-  };
-}
-
-module.exports = restParam;
-
-},{}],7:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -12543,1345 +12462,7 @@ module.exports = restParam;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],8:[function(require,module,exports){
-/**
- * Copies the values of `source` to `array`.
- *
- * @private
- * @param {Array} source The array to copy values from.
- * @param {Array} [array=[]] The array to copy values to.
- * @returns {Array} Returns `array`.
- */
-function arrayCopy(source, array) {
-  var index = -1,
-      length = source.length;
-
-  array || (array = Array(length));
-  while (++index < length) {
-    array[index] = source[index];
-  }
-  return array;
-}
-
-module.exports = arrayCopy;
-
-},{}],9:[function(require,module,exports){
-/**
- * A specialized version of `_.forEach` for arrays without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns `array`.
- */
-function arrayEach(array, iteratee) {
-  var index = -1,
-      length = array.length;
-
-  while (++index < length) {
-    if (iteratee(array[index], index, array) === false) {
-      break;
-    }
-  }
-  return array;
-}
-
-module.exports = arrayEach;
-
-},{}],10:[function(require,module,exports){
-/**
- * Copies properties of `source` to `object`.
- *
- * @private
- * @param {Object} source The object to copy properties from.
- * @param {Array} props The property names to copy.
- * @param {Object} [object={}] The object to copy properties to.
- * @returns {Object} Returns `object`.
- */
-function baseCopy(source, props, object) {
-  object || (object = {});
-
-  var index = -1,
-      length = props.length;
-
-  while (++index < length) {
-    var key = props[index];
-    object[key] = source[key];
-  }
-  return object;
-}
-
-module.exports = baseCopy;
-
-},{}],11:[function(require,module,exports){
-var createBaseFor = require('./createBaseFor');
-
-/**
- * The base implementation of `baseForIn` and `baseForOwn` which iterates
- * over `object` properties returned by `keysFunc` invoking `iteratee` for
- * each property. Iteratee functions may exit iteration early by explicitly
- * returning `false`.
- *
- * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {Function} keysFunc The function to get the keys of `object`.
- * @returns {Object} Returns `object`.
- */
-var baseFor = createBaseFor();
-
-module.exports = baseFor;
-
-},{"./createBaseFor":21}],12:[function(require,module,exports){
-var baseFor = require('./baseFor'),
-    keysIn = require('../object/keysIn');
-
-/**
- * The base implementation of `_.forIn` without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Object} Returns `object`.
- */
-function baseForIn(object, iteratee) {
-  return baseFor(object, iteratee, keysIn);
-}
-
-module.exports = baseForIn;
-
-},{"../object/keysIn":43,"./baseFor":11}],13:[function(require,module,exports){
-var toObject = require('./toObject');
-
-/**
- * The base implementation of `get` without support for string paths
- * and default values.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array} path The path of the property to get.
- * @param {string} [pathKey] The key representation of path.
- * @returns {*} Returns the resolved value.
- */
-function baseGet(object, path, pathKey) {
-  if (object == null) {
-    return;
-  }
-  if (pathKey !== undefined && pathKey in toObject(object)) {
-    path = [pathKey];
-  }
-  var index = 0,
-      length = path.length;
-
-  while (object != null && index < length) {
-    object = object[path[index++]];
-  }
-  return (index && index == length) ? object : undefined;
-}
-
-module.exports = baseGet;
-
-},{"./toObject":31}],14:[function(require,module,exports){
-var arrayEach = require('./arrayEach'),
-    baseMergeDeep = require('./baseMergeDeep'),
-    isArray = require('../lang/isArray'),
-    isArrayLike = require('./isArrayLike'),
-    isObject = require('../lang/isObject'),
-    isObjectLike = require('./isObjectLike'),
-    isTypedArray = require('../lang/isTypedArray'),
-    keys = require('../object/keys');
-
-/**
- * The base implementation of `_.merge` without support for argument juggling,
- * multiple sources, and `this` binding `customizer` functions.
- *
- * @private
- * @param {Object} object The destination object.
- * @param {Object} source The source object.
- * @param {Function} [customizer] The function to customize merged values.
- * @param {Array} [stackA=[]] Tracks traversed source objects.
- * @param {Array} [stackB=[]] Associates values with source counterparts.
- * @returns {Object} Returns `object`.
- */
-function baseMerge(object, source, customizer, stackA, stackB) {
-  if (!isObject(object)) {
-    return object;
-  }
-  var isSrcArr = isArrayLike(source) && (isArray(source) || isTypedArray(source)),
-      props = isSrcArr ? undefined : keys(source);
-
-  arrayEach(props || source, function(srcValue, key) {
-    if (props) {
-      key = srcValue;
-      srcValue = source[key];
-    }
-    if (isObjectLike(srcValue)) {
-      stackA || (stackA = []);
-      stackB || (stackB = []);
-      baseMergeDeep(object, source, key, baseMerge, customizer, stackA, stackB);
-    }
-    else {
-      var value = object[key],
-          result = customizer ? customizer(value, srcValue, key, object, source) : undefined,
-          isCommon = result === undefined;
-
-      if (isCommon) {
-        result = srcValue;
-      }
-      if ((result !== undefined || (isSrcArr && !(key in object))) &&
-          (isCommon || (result === result ? (result !== value) : (value === value)))) {
-        object[key] = result;
-      }
-    }
-  });
-  return object;
-}
-
-module.exports = baseMerge;
-
-},{"../lang/isArray":34,"../lang/isObject":37,"../lang/isTypedArray":39,"../object/keys":42,"./arrayEach":9,"./baseMergeDeep":15,"./isArrayLike":24,"./isObjectLike":29}],15:[function(require,module,exports){
-var arrayCopy = require('./arrayCopy'),
-    isArguments = require('../lang/isArguments'),
-    isArray = require('../lang/isArray'),
-    isArrayLike = require('./isArrayLike'),
-    isPlainObject = require('../lang/isPlainObject'),
-    isTypedArray = require('../lang/isTypedArray'),
-    toPlainObject = require('../lang/toPlainObject');
-
-/**
- * A specialized version of `baseMerge` for arrays and objects which performs
- * deep merges and tracks traversed objects enabling objects with circular
- * references to be merged.
- *
- * @private
- * @param {Object} object The destination object.
- * @param {Object} source The source object.
- * @param {string} key The key of the value to merge.
- * @param {Function} mergeFunc The function to merge values.
- * @param {Function} [customizer] The function to customize merged values.
- * @param {Array} [stackA=[]] Tracks traversed source objects.
- * @param {Array} [stackB=[]] Associates values with source counterparts.
- * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
- */
-function baseMergeDeep(object, source, key, mergeFunc, customizer, stackA, stackB) {
-  var length = stackA.length,
-      srcValue = source[key];
-
-  while (length--) {
-    if (stackA[length] == srcValue) {
-      object[key] = stackB[length];
-      return;
-    }
-  }
-  var value = object[key],
-      result = customizer ? customizer(value, srcValue, key, object, source) : undefined,
-      isCommon = result === undefined;
-
-  if (isCommon) {
-    result = srcValue;
-    if (isArrayLike(srcValue) && (isArray(srcValue) || isTypedArray(srcValue))) {
-      result = isArray(value)
-        ? value
-        : (isArrayLike(value) ? arrayCopy(value) : []);
-    }
-    else if (isPlainObject(srcValue) || isArguments(srcValue)) {
-      result = isArguments(value)
-        ? toPlainObject(value)
-        : (isPlainObject(value) ? value : {});
-    }
-    else {
-      isCommon = false;
-    }
-  }
-  // Add the source value to the stack of traversed objects and associate
-  // it with its merged value.
-  stackA.push(srcValue);
-  stackB.push(result);
-
-  if (isCommon) {
-    // Recursively merge objects and arrays (susceptible to call stack limits).
-    object[key] = mergeFunc(result, srcValue, customizer, stackA, stackB);
-  } else if (result === result ? (result !== value) : (value === value)) {
-    object[key] = result;
-  }
-}
-
-module.exports = baseMergeDeep;
-
-},{"../lang/isArguments":33,"../lang/isArray":34,"../lang/isPlainObject":38,"../lang/isTypedArray":39,"../lang/toPlainObject":40,"./arrayCopy":8,"./isArrayLike":24}],16:[function(require,module,exports){
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-module.exports = baseProperty;
-
-},{}],17:[function(require,module,exports){
-/**
- * The base implementation of `_.slice` without an iteratee call guard.
- *
- * @private
- * @param {Array} array The array to slice.
- * @param {number} [start=0] The start position.
- * @param {number} [end=array.length] The end position.
- * @returns {Array} Returns the slice of `array`.
- */
-function baseSlice(array, start, end) {
-  var index = -1,
-      length = array.length;
-
-  start = start == null ? 0 : (+start || 0);
-  if (start < 0) {
-    start = -start > length ? 0 : (length + start);
-  }
-  end = (end === undefined || end > length) ? length : (+end || 0);
-  if (end < 0) {
-    end += length;
-  }
-  length = start > end ? 0 : ((end - start) >>> 0);
-  start >>>= 0;
-
-  var result = Array(length);
-  while (++index < length) {
-    result[index] = array[index + start];
-  }
-  return result;
-}
-
-module.exports = baseSlice;
-
-},{}],18:[function(require,module,exports){
-/**
- * Converts `value` to a string if it's not one. An empty string is returned
- * for `null` or `undefined` values.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {string} Returns the string.
- */
-function baseToString(value) {
-  return value == null ? '' : (value + '');
-}
-
-module.exports = baseToString;
-
-},{}],19:[function(require,module,exports){
-var identity = require('../utility/identity');
-
-/**
- * A specialized version of `baseCallback` which only supports `this` binding
- * and specifying the number of arguments to provide to `func`.
- *
- * @private
- * @param {Function} func The function to bind.
- * @param {*} thisArg The `this` binding of `func`.
- * @param {number} [argCount] The number of arguments to provide to `func`.
- * @returns {Function} Returns the callback.
- */
-function bindCallback(func, thisArg, argCount) {
-  if (typeof func != 'function') {
-    return identity;
-  }
-  if (thisArg === undefined) {
-    return func;
-  }
-  switch (argCount) {
-    case 1: return function(value) {
-      return func.call(thisArg, value);
-    };
-    case 3: return function(value, index, collection) {
-      return func.call(thisArg, value, index, collection);
-    };
-    case 4: return function(accumulator, value, index, collection) {
-      return func.call(thisArg, accumulator, value, index, collection);
-    };
-    case 5: return function(value, other, key, object, source) {
-      return func.call(thisArg, value, other, key, object, source);
-    };
-  }
-  return function() {
-    return func.apply(thisArg, arguments);
-  };
-}
-
-module.exports = bindCallback;
-
-},{"../utility/identity":45}],20:[function(require,module,exports){
-var bindCallback = require('./bindCallback'),
-    isIterateeCall = require('./isIterateeCall'),
-    restParam = require('../function/restParam');
-
-/**
- * Creates a `_.assign`, `_.defaults`, or `_.merge` function.
- *
- * @private
- * @param {Function} assigner The function to assign values.
- * @returns {Function} Returns the new assigner function.
- */
-function createAssigner(assigner) {
-  return restParam(function(object, sources) {
-    var index = -1,
-        length = object == null ? 0 : sources.length,
-        customizer = length > 2 ? sources[length - 2] : undefined,
-        guard = length > 2 ? sources[2] : undefined,
-        thisArg = length > 1 ? sources[length - 1] : undefined;
-
-    if (typeof customizer == 'function') {
-      customizer = bindCallback(customizer, thisArg, 5);
-      length -= 2;
-    } else {
-      customizer = typeof thisArg == 'function' ? thisArg : undefined;
-      length -= (customizer ? 1 : 0);
-    }
-    if (guard && isIterateeCall(sources[0], sources[1], guard)) {
-      customizer = length < 3 ? undefined : customizer;
-      length = 1;
-    }
-    while (++index < length) {
-      var source = sources[index];
-      if (source) {
-        assigner(object, source, customizer);
-      }
-    }
-    return object;
-  });
-}
-
-module.exports = createAssigner;
-
-},{"../function/restParam":6,"./bindCallback":19,"./isIterateeCall":26}],21:[function(require,module,exports){
-var toObject = require('./toObject');
-
-/**
- * Creates a base function for `_.forIn` or `_.forInRight`.
- *
- * @private
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new base function.
- */
-function createBaseFor(fromRight) {
-  return function(object, iteratee, keysFunc) {
-    var iterable = toObject(object),
-        props = keysFunc(object),
-        length = props.length,
-        index = fromRight ? length : -1;
-
-    while ((fromRight ? index-- : ++index < length)) {
-      var key = props[index];
-      if (iteratee(iterable[key], key, iterable) === false) {
-        break;
-      }
-    }
-    return object;
-  };
-}
-
-module.exports = createBaseFor;
-
-},{"./toObject":31}],22:[function(require,module,exports){
-var baseProperty = require('./baseProperty');
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-module.exports = getLength;
-
-},{"./baseProperty":16}],23:[function(require,module,exports){
-var isNative = require('../lang/isNative');
-
-/**
- * Gets the native function at `key` of `object`.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {string} key The key of the method to get.
- * @returns {*} Returns the function if it's native, else `undefined`.
- */
-function getNative(object, key) {
-  var value = object == null ? undefined : object[key];
-  return isNative(value) ? value : undefined;
-}
-
-module.exports = getNative;
-
-},{"../lang/isNative":36}],24:[function(require,module,exports){
-var getLength = require('./getLength'),
-    isLength = require('./isLength');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-module.exports = isArrayLike;
-
-},{"./getLength":22,"./isLength":28}],25:[function(require,module,exports){
-/** Used to detect unsigned integer values. */
-var reIsUint = /^\d+$/;
-
-/**
- * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = 9007199254740991;
-
-/**
- * Checks if `value` is a valid array-like index.
- *
- * @private
- * @param {*} value The value to check.
- * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
- * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
- */
-function isIndex(value, length) {
-  value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
-  length = length == null ? MAX_SAFE_INTEGER : length;
-  return value > -1 && value % 1 == 0 && value < length;
-}
-
-module.exports = isIndex;
-
-},{}],26:[function(require,module,exports){
-var isArrayLike = require('./isArrayLike'),
-    isIndex = require('./isIndex'),
-    isObject = require('../lang/isObject');
-
-/**
- * Checks if the provided arguments are from an iteratee call.
- *
- * @private
- * @param {*} value The potential iteratee value argument.
- * @param {*} index The potential iteratee index or key argument.
- * @param {*} object The potential iteratee object argument.
- * @returns {boolean} Returns `true` if the arguments are from an iteratee call, else `false`.
- */
-function isIterateeCall(value, index, object) {
-  if (!isObject(object)) {
-    return false;
-  }
-  var type = typeof index;
-  if (type == 'number'
-      ? (isArrayLike(object) && isIndex(index, object.length))
-      : (type == 'string' && index in object)) {
-    var other = object[index];
-    return value === value ? (value === other) : (other !== other);
-  }
-  return false;
-}
-
-module.exports = isIterateeCall;
-
-},{"../lang/isObject":37,"./isArrayLike":24,"./isIndex":25}],27:[function(require,module,exports){
-var isArray = require('../lang/isArray'),
-    toObject = require('./toObject');
-
-/** Used to match property names within property paths. */
-var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
-    reIsPlainProp = /^\w*$/;
-
-/**
- * Checks if `value` is a property name and not a property path.
- *
- * @private
- * @param {*} value The value to check.
- * @param {Object} [object] The object to query keys on.
- * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
- */
-function isKey(value, object) {
-  var type = typeof value;
-  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
-    return true;
-  }
-  if (isArray(value)) {
-    return false;
-  }
-  var result = !reIsDeepProp.test(value);
-  return result || (object != null && value in toObject(object));
-}
-
-module.exports = isKey;
-
-},{"../lang/isArray":34,"./toObject":31}],28:[function(require,module,exports){
-/**
- * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = 9007199254740991;
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-module.exports = isLength;
-
-},{}],29:[function(require,module,exports){
-/**
- * Checks if `value` is object-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-module.exports = isObjectLike;
-
-},{}],30:[function(require,module,exports){
-var isArguments = require('../lang/isArguments'),
-    isArray = require('../lang/isArray'),
-    isIndex = require('./isIndex'),
-    isLength = require('./isLength'),
-    keysIn = require('../object/keysIn');
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * A fallback implementation of `Object.keys` which creates an array of the
- * own enumerable property names of `object`.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property names.
- */
-function shimKeys(object) {
-  var props = keysIn(object),
-      propsLength = props.length,
-      length = propsLength && object.length;
-
-  var allowIndexes = !!length && isLength(length) &&
-    (isArray(object) || isArguments(object));
-
-  var index = -1,
-      result = [];
-
-  while (++index < propsLength) {
-    var key = props[index];
-    if ((allowIndexes && isIndex(key, length)) || hasOwnProperty.call(object, key)) {
-      result.push(key);
-    }
-  }
-  return result;
-}
-
-module.exports = shimKeys;
-
-},{"../lang/isArguments":33,"../lang/isArray":34,"../object/keysIn":43,"./isIndex":25,"./isLength":28}],31:[function(require,module,exports){
-var isObject = require('../lang/isObject');
-
-/**
- * Converts `value` to an object if it's not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-module.exports = toObject;
-
-},{"../lang/isObject":37}],32:[function(require,module,exports){
-var baseToString = require('./baseToString'),
-    isArray = require('../lang/isArray');
-
-/** Used to match property names within property paths. */
-var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\n\\]|\\.)*?)\2)\]/g;
-
-/** Used to match backslashes in property paths. */
-var reEscapeChar = /\\(\\)?/g;
-
-/**
- * Converts `value` to property path array if it's not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Array} Returns the property path array.
- */
-function toPath(value) {
-  if (isArray(value)) {
-    return value;
-  }
-  var result = [];
-  baseToString(value).replace(rePropName, function(match, number, quote, string) {
-    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
-  });
-  return result;
-}
-
-module.exports = toPath;
-
-},{"../lang/isArray":34,"./baseToString":18}],33:[function(require,module,exports){
-var isArrayLike = require('../internal/isArrayLike'),
-    isObjectLike = require('../internal/isObjectLike');
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/** Native method references. */
-var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-
-/**
- * Checks if `value` is classified as an `arguments` object.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
- * @example
- *
- * _.isArguments(function() { return arguments; }());
- * // => true
- *
- * _.isArguments([1, 2, 3]);
- * // => false
- */
-function isArguments(value) {
-  return isObjectLike(value) && isArrayLike(value) &&
-    hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee');
-}
-
-module.exports = isArguments;
-
-},{"../internal/isArrayLike":24,"../internal/isObjectLike":29}],34:[function(require,module,exports){
-var getNative = require('../internal/getNative'),
-    isLength = require('../internal/isLength'),
-    isObjectLike = require('../internal/isObjectLike');
-
-/** `Object#toString` result references. */
-var arrayTag = '[object Array]';
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeIsArray = getNative(Array, 'isArray');
-
-/**
- * Checks if `value` is classified as an `Array` object.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
- * @example
- *
- * _.isArray([1, 2, 3]);
- * // => true
- *
- * _.isArray(function() { return arguments; }());
- * // => false
- */
-var isArray = nativeIsArray || function(value) {
-  return isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag;
-};
-
-module.exports = isArray;
-
-},{"../internal/getNative":23,"../internal/isLength":28,"../internal/isObjectLike":29}],35:[function(require,module,exports){
-var isObject = require('./isObject');
-
-/** `Object#toString` result references. */
-var funcTag = '[object Function]';
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/**
- * Checks if `value` is classified as a `Function` object.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
- * @example
- *
- * _.isFunction(_);
- * // => true
- *
- * _.isFunction(/abc/);
- * // => false
- */
-function isFunction(value) {
-  // The use of `Object#toString` avoids issues with the `typeof` operator
-  // in older versions of Chrome and Safari which return 'function' for regexes
-  // and Safari 8 which returns 'object' for typed array constructors.
-  return isObject(value) && objToString.call(value) == funcTag;
-}
-
-module.exports = isFunction;
-
-},{"./isObject":37}],36:[function(require,module,exports){
-var isFunction = require('./isFunction'),
-    isObjectLike = require('../internal/isObjectLike');
-
-/** Used to detect host constructors (Safari > 5). */
-var reIsHostCtor = /^\[object .+?Constructor\]$/;
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to resolve the decompiled source of functions. */
-var fnToString = Function.prototype.toString;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/** Used to detect if a method is native. */
-var reIsNative = RegExp('^' +
-  fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
-  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
-);
-
-/**
- * Checks if `value` is a native function.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a native function, else `false`.
- * @example
- *
- * _.isNative(Array.prototype.push);
- * // => true
- *
- * _.isNative(_);
- * // => false
- */
-function isNative(value) {
-  if (value == null) {
-    return false;
-  }
-  if (isFunction(value)) {
-    return reIsNative.test(fnToString.call(value));
-  }
-  return isObjectLike(value) && reIsHostCtor.test(value);
-}
-
-module.exports = isNative;
-
-},{"../internal/isObjectLike":29,"./isFunction":35}],37:[function(require,module,exports){
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return !!value && (type == 'object' || type == 'function');
-}
-
-module.exports = isObject;
-
-},{}],38:[function(require,module,exports){
-var baseForIn = require('../internal/baseForIn'),
-    isArguments = require('./isArguments'),
-    isObjectLike = require('../internal/isObjectLike');
-
-/** `Object#toString` result references. */
-var objectTag = '[object Object]';
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/**
- * Checks if `value` is a plain object, that is, an object created by the
- * `Object` constructor or one with a `[[Prototype]]` of `null`.
- *
- * **Note:** This method assumes objects created by the `Object` constructor
- * have no inherited enumerable properties.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a plain object, else `false`.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- * }
- *
- * _.isPlainObject(new Foo);
- * // => false
- *
- * _.isPlainObject([1, 2, 3]);
- * // => false
- *
- * _.isPlainObject({ 'x': 0, 'y': 0 });
- * // => true
- *
- * _.isPlainObject(Object.create(null));
- * // => true
- */
-function isPlainObject(value) {
-  var Ctor;
-
-  // Exit early for non `Object` objects.
-  if (!(isObjectLike(value) && objToString.call(value) == objectTag && !isArguments(value)) ||
-      (!hasOwnProperty.call(value, 'constructor') && (Ctor = value.constructor, typeof Ctor == 'function' && !(Ctor instanceof Ctor)))) {
-    return false;
-  }
-  // IE < 9 iterates inherited properties before own properties. If the first
-  // iterated property is an object's own property then there are no inherited
-  // enumerable properties.
-  var result;
-  // In most environments an object's own properties are iterated before
-  // its inherited properties. If the last iterated property is an object's
-  // own property then there are no inherited enumerable properties.
-  baseForIn(value, function(subValue, key) {
-    result = key;
-  });
-  return result === undefined || hasOwnProperty.call(value, result);
-}
-
-module.exports = isPlainObject;
-
-},{"../internal/baseForIn":12,"../internal/isObjectLike":29,"./isArguments":33}],39:[function(require,module,exports){
-var isLength = require('../internal/isLength'),
-    isObjectLike = require('../internal/isObjectLike');
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]',
-    arrayTag = '[object Array]',
-    boolTag = '[object Boolean]',
-    dateTag = '[object Date]',
-    errorTag = '[object Error]',
-    funcTag = '[object Function]',
-    mapTag = '[object Map]',
-    numberTag = '[object Number]',
-    objectTag = '[object Object]',
-    regexpTag = '[object RegExp]',
-    setTag = '[object Set]',
-    stringTag = '[object String]',
-    weakMapTag = '[object WeakMap]';
-
-var arrayBufferTag = '[object ArrayBuffer]',
-    float32Tag = '[object Float32Array]',
-    float64Tag = '[object Float64Array]',
-    int8Tag = '[object Int8Array]',
-    int16Tag = '[object Int16Array]',
-    int32Tag = '[object Int32Array]',
-    uint8Tag = '[object Uint8Array]',
-    uint8ClampedTag = '[object Uint8ClampedArray]',
-    uint16Tag = '[object Uint16Array]',
-    uint32Tag = '[object Uint32Array]';
-
-/** Used to identify `toStringTag` values of typed arrays. */
-var typedArrayTags = {};
-typedArrayTags[float32Tag] = typedArrayTags[float64Tag] =
-typedArrayTags[int8Tag] = typedArrayTags[int16Tag] =
-typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] =
-typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] =
-typedArrayTags[uint32Tag] = true;
-typedArrayTags[argsTag] = typedArrayTags[arrayTag] =
-typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] =
-typedArrayTags[dateTag] = typedArrayTags[errorTag] =
-typedArrayTags[funcTag] = typedArrayTags[mapTag] =
-typedArrayTags[numberTag] = typedArrayTags[objectTag] =
-typedArrayTags[regexpTag] = typedArrayTags[setTag] =
-typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/**
- * Checks if `value` is classified as a typed array.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
- * @example
- *
- * _.isTypedArray(new Uint8Array);
- * // => true
- *
- * _.isTypedArray([]);
- * // => false
- */
-function isTypedArray(value) {
-  return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[objToString.call(value)];
-}
-
-module.exports = isTypedArray;
-
-},{"../internal/isLength":28,"../internal/isObjectLike":29}],40:[function(require,module,exports){
-var baseCopy = require('../internal/baseCopy'),
-    keysIn = require('../object/keysIn');
-
-/**
- * Converts `value` to a plain object flattening inherited enumerable
- * properties of `value` to own properties of the plain object.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to convert.
- * @returns {Object} Returns the converted plain object.
- * @example
- *
- * function Foo() {
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.assign({ 'a': 1 }, new Foo);
- * // => { 'a': 1, 'b': 2 }
- *
- * _.assign({ 'a': 1 }, _.toPlainObject(new Foo));
- * // => { 'a': 1, 'b': 2, 'c': 3 }
- */
-function toPlainObject(value) {
-  return baseCopy(value, keysIn(value));
-}
-
-module.exports = toPlainObject;
-
-},{"../internal/baseCopy":10,"../object/keysIn":43}],41:[function(require,module,exports){
-var baseGet = require('../internal/baseGet'),
-    baseSlice = require('../internal/baseSlice'),
-    isArguments = require('../lang/isArguments'),
-    isArray = require('../lang/isArray'),
-    isIndex = require('../internal/isIndex'),
-    isKey = require('../internal/isKey'),
-    isLength = require('../internal/isLength'),
-    last = require('../array/last'),
-    toPath = require('../internal/toPath');
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Checks if `path` is a direct property.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @param {Array|string} path The path to check.
- * @returns {boolean} Returns `true` if `path` is a direct property, else `false`.
- * @example
- *
- * var object = { 'a': { 'b': { 'c': 3 } } };
- *
- * _.has(object, 'a');
- * // => true
- *
- * _.has(object, 'a.b.c');
- * // => true
- *
- * _.has(object, ['a', 'b', 'c']);
- * // => true
- */
-function has(object, path) {
-  if (object == null) {
-    return false;
-  }
-  var result = hasOwnProperty.call(object, path);
-  if (!result && !isKey(path)) {
-    path = toPath(path);
-    object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
-    if (object == null) {
-      return false;
-    }
-    path = last(path);
-    result = hasOwnProperty.call(object, path);
-  }
-  return result || (isLength(object.length) && isIndex(path, object.length) &&
-    (isArray(object) || isArguments(object)));
-}
-
-module.exports = has;
-
-},{"../array/last":5,"../internal/baseGet":13,"../internal/baseSlice":17,"../internal/isIndex":25,"../internal/isKey":27,"../internal/isLength":28,"../internal/toPath":32,"../lang/isArguments":33,"../lang/isArray":34}],42:[function(require,module,exports){
-var getNative = require('../internal/getNative'),
-    isArrayLike = require('../internal/isArrayLike'),
-    isObject = require('../lang/isObject'),
-    shimKeys = require('../internal/shimKeys');
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeKeys = getNative(Object, 'keys');
-
-/**
- * Creates an array of the own enumerable property names of `object`.
- *
- * **Note:** Non-object values are coerced to objects. See the
- * [ES spec](http://ecma-international.org/ecma-262/6.0/#sec-object.keys)
- * for more details.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property names.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.keys(new Foo);
- * // => ['a', 'b'] (iteration order is not guaranteed)
- *
- * _.keys('hi');
- * // => ['0', '1']
- */
-var keys = !nativeKeys ? shimKeys : function(object) {
-  var Ctor = object == null ? undefined : object.constructor;
-  if ((typeof Ctor == 'function' && Ctor.prototype === object) ||
-      (typeof object != 'function' && isArrayLike(object))) {
-    return shimKeys(object);
-  }
-  return isObject(object) ? nativeKeys(object) : [];
-};
-
-module.exports = keys;
-
-},{"../internal/getNative":23,"../internal/isArrayLike":24,"../internal/shimKeys":30,"../lang/isObject":37}],43:[function(require,module,exports){
-var isArguments = require('../lang/isArguments'),
-    isArray = require('../lang/isArray'),
-    isIndex = require('../internal/isIndex'),
-    isLength = require('../internal/isLength'),
-    isObject = require('../lang/isObject');
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Creates an array of the own and inherited enumerable property names of `object`.
- *
- * **Note:** Non-object values are coerced to objects.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property names.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.keysIn(new Foo);
- * // => ['a', 'b', 'c'] (iteration order is not guaranteed)
- */
-function keysIn(object) {
-  if (object == null) {
-    return [];
-  }
-  if (!isObject(object)) {
-    object = Object(object);
-  }
-  var length = object.length;
-  length = (length && isLength(length) &&
-    (isArray(object) || isArguments(object)) && length) || 0;
-
-  var Ctor = object.constructor,
-      index = -1,
-      isProto = typeof Ctor == 'function' && Ctor.prototype === object,
-      result = Array(length),
-      skipIndexes = length > 0;
-
-  while (++index < length) {
-    result[index] = (index + '');
-  }
-  for (var key in object) {
-    if (!(skipIndexes && isIndex(key, length)) &&
-        !(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
-      result.push(key);
-    }
-  }
-  return result;
-}
-
-module.exports = keysIn;
-
-},{"../internal/isIndex":25,"../internal/isLength":28,"../lang/isArguments":33,"../lang/isArray":34,"../lang/isObject":37}],44:[function(require,module,exports){
-var baseMerge = require('../internal/baseMerge'),
-    createAssigner = require('../internal/createAssigner');
-
-/**
- * Recursively merges own enumerable properties of the source object(s), that
- * don't resolve to `undefined` into the destination object. Subsequent sources
- * overwrite property assignments of previous sources. If `customizer` is
- * provided it's invoked to produce the merged values of the destination and
- * source properties. If `customizer` returns `undefined` merging is handled
- * by the method instead. The `customizer` is bound to `thisArg` and invoked
- * with five arguments: (objectValue, sourceValue, key, object, source).
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The destination object.
- * @param {...Object} [sources] The source objects.
- * @param {Function} [customizer] The function to customize assigned values.
- * @param {*} [thisArg] The `this` binding of `customizer`.
- * @returns {Object} Returns `object`.
- * @example
- *
- * var users = {
- *   'data': [{ 'user': 'barney' }, { 'user': 'fred' }]
- * };
- *
- * var ages = {
- *   'data': [{ 'age': 36 }, { 'age': 40 }]
- * };
- *
- * _.merge(users, ages);
- * // => { 'data': [{ 'user': 'barney', 'age': 36 }, { 'user': 'fred', 'age': 40 }] }
- *
- * // using a customizer callback
- * var object = {
- *   'fruits': ['apple'],
- *   'vegetables': ['beet']
- * };
- *
- * var other = {
- *   'fruits': ['banana'],
- *   'vegetables': ['carrot']
- * };
- *
- * _.merge(object, other, function(a, b) {
- *   if (_.isArray(a)) {
- *     return a.concat(b);
- *   }
- * });
- * // => { 'fruits': ['apple', 'banana'], 'vegetables': ['beet', 'carrot'] }
- */
-var merge = createAssigner(baseMerge);
-
-module.exports = merge;
-
-},{"../internal/baseMerge":14,"../internal/createAssigner":20}],45:[function(require,module,exports){
-/**
- * This method returns the first argument provided to it.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {*} value Any value.
- * @returns {*} Returns `value`.
- * @example
- *
- * var object = { 'user': 'fred' };
- *
- * _.identity(object) === object;
- * // => true
- */
-function identity(value) {
-  return value;
-}
-
-module.exports = identity;
-
-},{}],46:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -15040,7 +13621,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":47,"reduce":48}],47:[function(require,module,exports){
+},{"emitter":7,"reduce":8}],7:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -15206,7 +13787,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 
 /**
  * Reduce `arr` with `fn`.
@@ -15231,24 +13812,16 @@ module.exports = function(arr, fn, initial){
   
   return curr;
 };
-},{}],49:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _lodashObjectMerge = require('lodash/object/merge');
-
-var _lodashObjectMerge2 = _interopRequireDefault(_lodashObjectMerge);
-
-var _lodashObjectHas = require('lodash/object/has');
-
-var _lodashObjectHas2 = _interopRequireDefault(_lodashObjectHas);
+var _lodash = require('lodash');
 
 var defaultConfig = {
 	envs: {
@@ -15283,16 +13856,20 @@ var Config = (function () {
 		if (!instance) {
 			instance = this;
 		}
-		console.warn({ description: 'Config object created.', config: (0, _lodashObjectMerge2['default'])(this, defaultConfig), func: 'constructor', obj: 'Config' });
-		return (0, _lodashObjectMerge2['default'])(instance, defaultConfig);
+		// console.log({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
+		return (0, _lodash.merge)(instance, defaultConfig);
 	}
 
 	_createClass(Config, [{
+		key: 'applySettings',
+		value: function applySettings(settings) {
+			(0, _lodash.merge)(instance, settings);
+		}
+	}, {
 		key: 'serverUrl',
 		get: function get() {
-			console.log('defaultConfig:', defaultConfig);
 			var url = defaultConfig.envs[envName].serverUrl;
-			if (typeof window !== 'undefined' && (0, _lodashObjectHas2['default'])(window, 'location') && window.location.host === url) {
+			if (typeof window !== 'undefined' && (0, _lodash.has)(window, 'location') && window.location.host === url) {
 				url = '';
 			}
 			return url;
@@ -15307,7 +13884,7 @@ var Config = (function () {
 		set: function set(newEnv) {
 			envName = newEnv;
 			// this.envName = newEnv;
-			console.log('Environment name set:', envName);
+			// console.log('Environment name set:', envName);
 		}
 	}, {
 		key: 'env',
@@ -15321,11 +13898,10 @@ var Config = (function () {
 
 var config = new Config();
 
-config.serverUrl;
 exports['default'] = config;
 module.exports = exports['default'];
 
-},{"lodash/object/has":41,"lodash/object/merge":44}],50:[function(require,module,exports){
+},{"lodash":5}],10:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -15369,8 +13945,8 @@ var _utilsProviderAuth = require('./utils/providerAuth');
 var _utilsProviderAuth2 = _interopRequireDefault(_utilsProviderAuth);
 
 var Matter = (function () {
-	/* Constructor
-  * @param {string} appName Name of application
+	/** Constructor
+  * @param {String} appName Name of application
   */
 
 	function Matter(appName, opts) {
@@ -15385,18 +13961,31 @@ var Matter = (function () {
 		if (opts) {
 			this.options = opts;
 		}
+		this.config = _config2['default'];
 	}
 
-	/* Endpoint getter
-  *
+	/** Endpoint generation that handles default/provided settings and environment
+  * @return {String} endpoint - endpoint for tessellate application
   */
 
 	_createClass(Matter, [{
 		key: 'signup',
 
-		/* Signup
-   *
-   */
+		/** Signup a new user
+    * @param {Object} signupData - Object containing data to use while signing up to application.
+    * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+    * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+   * @param {String} signupData.password - Password to be used with account (will be encrypted).
+    * @return {Promise}
+    * @example
+    * //Signup a new user
+    * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
+    * matter.signup(signupData).then(function(signupRes){
+    *  console.log('New user signed up successfully. New account: ', signupRes.account);
+    * }, function(err){
+    *  console.error('Error signing up:', err);
+    * });
+    */
 		value: function signup(signupData) {
 			_utilsLogger2['default'].log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
 			if (!signupData || !_lodash2['default'].isObject(signupData) && !_lodash2['default'].isString(signupData)) {
@@ -15426,8 +14015,20 @@ var Matter = (function () {
 			}
 		}
 
-		/** Login
-   *
+		/** Login by username/email or external provider
+   * @param {Object} loginData - Object containing data to use while logging in to application.
+   * @param {String} loginData.username - Username of user to login as
+   * @param {String} loginData.email - Email of new user (Optional instead of username)
+   * @param {String} loginData.password - Password to be used with account (will be encrypted).
+   * @return {Promise}
+   * @example
+   * //Login as 'testuser1'
+   * var loginData = {username: 'testuser1', password: 'testpassword'};
+   * matter.login(loginData).then(function(loginRes){
+   *  console.log('New user logged in succesfully. Account: ', loginRes.account);
+   * }, function(err){
+   *  console.error('Error logging in:', err);
+   * });
    */
 	}, {
 		key: 'login',
@@ -15475,6 +14076,14 @@ var Matter = (function () {
 		}
 
 		/** Logout
+   * @return {Promise}
+   * @example
+   * //Logout of currently logged in account
+   * matter.logout().then(function(loginRes){
+   *  console.log('Logged out successfully');
+   * }, function(err){
+   *  console.error('Error logging out:', err);
+   * });
    */
 	}, {
 		key: 'logout',
@@ -15498,6 +14107,17 @@ var Matter = (function () {
 				return Promise.reject(errRes);
 			});
 		}
+
+		/** getCurrentUser
+   * @return {Promise}
+   * @example
+   * //Logout of currently logged in account
+   * matter.getCurrentUser().then(function(currentAccount){
+   *  console.log('Currently logged in account:', currentAccount);
+   * }, function(err){
+   *  console.error('Error logging out:', err);
+   * });
+   */
 	}, {
 		key: 'getCurrentUser',
 		value: function getCurrentUser() {
@@ -15529,6 +14149,15 @@ var Matter = (function () {
 		}
 
 		/** updateProfile
+   * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+   * @return {Promise}
+   * @example
+   * //Update current account's profile
+   * matter.updateProfile().then(function(updatedAccount){
+   *  console.log('Currently logged in account:', updatedAccount);
+   * }, function(err){
+   *  console.error('Error updating profile:', err);
+   * });
    */
 	}, {
 		key: 'updateProfile',
@@ -15549,6 +14178,18 @@ var Matter = (function () {
 				return Promise.reject(errRes);
 			});
 		}
+
+		/** changePassword
+   * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+   * @return {Promise}
+   * @example
+   * //Update current account's profile
+   * matter.changePassword().then(function(updatedAccount){
+   *  console.log('Currently logged in account:', updatedAccount);
+   * }, function(err){
+   *  console.error('Error updating profile:', err);
+   * });
+   */
 	}, {
 		key: 'changePassword',
 		value: function changePassword(updateData) {
@@ -15582,13 +14223,32 @@ var Matter = (function () {
 			});
 		}
 
-		/* set currentUser
-   * @description Sets currently user data
+		/** Get current logged in status
+   * @return {Boolean}
+   * @example
+   * //Check if there is an account currently logged in
+   * if(matter.isLoggedIn){
+   * console.log('There is currently an account logged in.');
+   * } else {
+   * console.warn('There is no account currently logged in.');
+   * }
    */
 	}, {
 		key: 'isInGroup',
 
-		//Check that user is in a single group or in all of a list of groups
+		/** Check that user is in a single group or in all of a list of groups
+   * @param {Array} checkGroups - List of groups to check for account membership
+   * @return {Boolean}
+   * @example
+   * //Check for group membership
+   * var isBoth = ;
+   * if(matter.isInGroup('admins')){
+   * console.log('Current account is an admin!');
+   * } else {
+   * console.warn('Current account is not an admin.');
+   * }
+   *
+   */
 		value: function isInGroup(checkGroups) {
 			var _this5 = this;
 
@@ -15631,6 +14291,20 @@ var Matter = (function () {
 			}
 			//TODO: Handle string and array inputs
 		}
+
+		/** Check that user is in all of a list of groups
+   * @param {Array|String} checkGroups - List of groups to check for account membership
+   * @return {Boolean}
+   * @example
+   * //Check for group membership
+   * var isBoth = matter.isInGroups(['admins', 'users']);
+   * if(isBoth){
+   * console.log('Current account is both an admin and a user');
+   * } else {
+   * console.warn('Current account is not both an admin and a user')
+   * }
+   *
+   */
 	}, {
 		key: 'isInGroups',
 		value: function isInGroups(checkGroups) {
@@ -15695,14 +14369,36 @@ var Matter = (function () {
 			return appEndpoint;
 		}
 	}, {
+		key: 'isLoggedIn',
+		get: function get() {
+			return this.token.string ? true : false;
+		}
+
+		/** Save current user (handled automatically by default)
+   * @param {Object} userData - Account data to set for current user
+   * @example
+   * //Save account response to current user
+   * matter.currentUser = {username: 'testuser1', email: 'test@email.com'};
+   * console.log('New current user set:', matter.currentUser);
+   */
+	}, {
 		key: 'currentUser',
 		set: function set(userData) {
 			_utilsLogger2['default'].log({ description: 'Current User set.', user: userData, func: 'currentUser', obj: 'Matter' });
 			this.storage.setItem(_config2['default'].tokenUserDataName, userData);
 		},
 
-		/* get currentUser
-   * @description Gets currently logged in user or returns null
+		/** Get currently logged in user or returns null
+   * @return {Object|null}
+   * @example
+   * //Return account if logged in
+   * if(matter.isLoggedIn){
+   * console.log('Current user account: ', matter.currentUser);
+   * } else {
+   * console.log('No current user. Current user: ', matter.currentUser)
+   * }
+   * matter.currentUser
+   * console.log('New current user set:', matter.currentUser);
    */
 		get: function get() {
 			if (this.storage.getItem(_config2['default'].tokenUserDataName)) {
@@ -15712,7 +14408,7 @@ var Matter = (function () {
 			}
 		}
 
-		/* Storage
+		/* Storage Utility
    *
    */
 	}, {
@@ -15721,22 +14417,20 @@ var Matter = (function () {
 			return _utilsEnvStorage2['default'];
 		}
 
-		/** Token
+		/** Token Utility
    */
 	}, {
 		key: 'token',
 		get: function get() {
 			return _utilsToken2['default'];
 		}
+
+		/** Utils placed in base library
+   */
 	}, {
 		key: 'utils',
 		get: function get() {
 			return { logger: _utilsLogger2['default'], request: _utilsRequest2['default'], storage: _utilsEnvStorage2['default'], dom: _utilsDom2['default'] };
-		}
-	}, {
-		key: 'isLoggedIn',
-		get: function get() {
-			return this.token.string ? true : false;
 		}
 	}]);
 
@@ -15746,7 +14440,7 @@ var Matter = (function () {
 exports['default'] = Matter;
 module.exports = exports['default'];
 
-},{"./config":49,"./utils/dom":51,"./utils/envStorage":52,"./utils/logger":53,"./utils/providerAuth":54,"./utils/request":55,"./utils/token":56,"lodash":7}],51:[function(require,module,exports){
+},{"./config":9,"./utils/dom":11,"./utils/envStorage":12,"./utils/logger":13,"./utils/providerAuth":14,"./utils/request":15,"./utils/token":16,"lodash":5}],11:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -15829,7 +14523,7 @@ var domUtil = {
 exports['default'] = domUtil;
 module.exports = exports['default'];
 
-},{"./logger":53,"lodash":7}],52:[function(require,module,exports){
+},{"./logger":13,"lodash":5}],12:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -15916,8 +14610,7 @@ var storage = Object.defineProperties({
 		}
 	},
 	/**
-  * @description
-  * Safley removes item from session storage.
+  * @description Safley removes item from session storage.
   *
   * @param {String} itemName - The items name
   *
@@ -15958,12 +14651,10 @@ var storage = Object.defineProperties({
 	}
 }, {
 	localExists: {
-		/**
-   * @description
-   * Gets whether or not local storage exists.
-   *
+		/** Gets whether or not local storage exists.
    * @param {String} itemName The items name
    * @param {String} itemValue The items value
+   * @return {Boolean}
    *
    */
 
@@ -15990,7 +14681,7 @@ var storage = Object.defineProperties({
 exports['default'] = storage;
 module.exports = exports['default'];
 
-},{"../config":49,"./logger":53,"lodash":7}],53:[function(require,module,exports){
+},{"../config":9,"./logger":13,"lodash":5}],13:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -16008,9 +14699,7 @@ var _lodash2 = _interopRequireDefault(_lodash);
 //Set default log level to debug
 var logLevel = 'debug';
 //Set log level from config
-if (_config2['default'].logLevel) {
-	logLevel = _config2['default'].logLevel;
-}
+
 var logger = {
 	log: function log(logData) {
 		var msgArgs = buildMessageArgs(logData);
@@ -16109,7 +14798,7 @@ function buildMessageArgs(logData) {
 }
 module.exports = exports['default'];
 
-},{"../config":49,"lodash":7}],54:[function(require,module,exports){
+},{"../config":9,"lodash":5}],14:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -16141,7 +14830,6 @@ var _lodash = require('lodash');
 var _lodash2 = _interopRequireDefault(_lodash);
 
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
-
 // import hello from 'hellojs'; //After es version of module is created
 //Private object containing clientIds
 var clientIds = {};
@@ -16154,6 +14842,9 @@ var ProviderAuth = (function () {
 		this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
 		this.provider = actionData.provider ? actionData.provider : null;
 	}
+
+	/** Load hellojs library script into DOM
+  */
 
 	_createClass(ProviderAuth, [{
 		key: 'loadHello',
@@ -16189,6 +14880,9 @@ var ProviderAuth = (function () {
 				});
 			});
 		}
+
+		/** Initialize hellojs library and request app providers
+   */
 	}, {
 		key: 'initHello',
 		value: function initHello() {
@@ -16213,12 +14907,21 @@ var ProviderAuth = (function () {
 				});
 			});
 		}
+
+		/** External provider login
+   * @example
+   * //Login to account that was started through external account signup (Google, Facebook, Github)
+   * ProviderAuth('google').login().then(function(loginRes){
+   * 		console.log('Successful login:', loginRes)
+   * }, function(err){
+   * 		console.error('Error with provider login:', err);
+   * });
+   */
 	}, {
 		key: 'login',
 		value: function login() {
 			var _this2 = this;
 
-			//Initalize Hello
 			return this.initHello().then(function () {
 				return window.hello.login(_this2.provider);
 			}, function (err) {
@@ -16226,6 +14929,16 @@ var ProviderAuth = (function () {
 				return Promise.reject({ message: 'Error with third party login.' });
 			});
 		}
+
+		/** Signup using external provider account (Google, Facebook, Github)
+    * @example
+    * //Signup using external account (Google, Facebook, Github)
+    * ProviderAuth('google').signup().then(function(signupRes){
+    * 		console.log('Successful signup:', signupRes)
+    * }, function(err){
+    * 		console.error('Error with provider signup:', err);
+    * });
+   */
 	}, {
 		key: 'signup',
 		value: function signup() {
@@ -16240,7 +14953,7 @@ var ProviderAuth = (function () {
 exports['default'] = ProviderAuth;
 module.exports = exports['default'];
 
-},{"../config":49,"./dom":51,"./logger":53,"./request":55,"lodash":7}],55:[function(require,module,exports){
+},{"../config":9,"./dom":11,"./logger":13,"./request":15,"lodash":5}],15:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -16323,7 +15036,7 @@ function addAuthHeader(req) {
 }
 module.exports = exports['default'];
 
-},{"../config":49,"./envStorage":52,"./logger":53,"./token":56,"superagent":46}],56:[function(require,module,exports){
+},{"../config":9,"./envStorage":12,"./logger":13,"./token":16,"superagent":6}],16:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -16363,9 +15076,13 @@ function decodeToken(tokenStr) {
 	return tokenData;
 }
 var token = Object.defineProperties({
+	/** Save token data
+  */
 	save: function save(tokenStr) {
 		this.string = tokenStr;
 	},
+	/** Delete token data
+  */
 	'delete': function _delete() {
 		//Remove string token
 		_envStorage2['default'].removeItem(_config2['default'].tokenName);
@@ -16375,9 +15092,18 @@ var token = Object.defineProperties({
 	}
 }, {
 	string: {
+		/** Get string value of token
+   * @return {String}
+   * @example
+   * console.log('String value of current token', token.string);
+   */
+
 		get: function get() {
 			return _envStorage2['default'].getItem(_config2['default'].tokenName);
 		},
+
+		/** Set token value as a string
+   */
 		set: function set(tokenData) {
 			var tokenStr = undefined;
 			//Handle object being passed
@@ -16403,6 +15129,12 @@ var token = Object.defineProperties({
 		enumerable: true
 	},
 	data: {
+		/** Get decoded data within token (unencrypted data only)
+   * @return {Object}
+   * @example
+   * console.log('Data of current token:', token.data);
+   */
+
 		get: function get() {
 			if (_envStorage2['default'].getItem(_config2['default'].tokenDataName)) {
 				return _envStorage2['default'].getItem(_config2['default'].tokenDataName);
@@ -16410,6 +15142,9 @@ var token = Object.defineProperties({
 				return decodeToken(this.string);
 			}
 		},
+
+		/** Set token data
+   */
 		set: function set(tokenData) {
 			if (_lodash2['default'].isString(tokenData)) {
 				var tokenStr = tokenData;
@@ -16428,5 +15163,5 @@ var token = Object.defineProperties({
 exports['default'] = token;
 module.exports = exports['default'];
 
-},{"../config":49,"./envStorage":52,"./logger":53,"jwt-decode":2,"lodash":7}]},{},[50])(50)
+},{"../config":9,"./envStorage":12,"./logger":13,"jwt-decode":2,"lodash":5}]},{},[10])(10)
 });
