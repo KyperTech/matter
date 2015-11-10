@@ -57,8 +57,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'serverUrl',
 			get: function get() {
 				var url = defaultConfig.envs[envName].serverUrl;
-				if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host === url) {
-					url = '';
+				if (typeof window !== 'undefined' && _.has(window, 'location') && _.has(window.location, 'host') && window.location.host !== '') {
+					var matchingEnv = _.find(defaultConfig.envs, function (e) {
+						return e.serverUrl === window.location.host;
+					});
+					if (matchingEnv) {
+						url = '';
+					}
 				}
 				return url;
 			}

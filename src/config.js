@@ -1,4 +1,4 @@
-import {merge, has} from 'lodash';
+import {merge, has, find} from 'lodash';
 
 let defaultConfig = {
 	envs: {
@@ -35,8 +35,13 @@ class Config {
 	}
 	get serverUrl() {
 		let url = defaultConfig.envs[envName].serverUrl;
-		if (typeof window !== 'undefined' && has(window, 'location') && window.location.host === url) {
-			url = '';
+		if (typeof window !== 'undefined' && has(window, 'location') && has(window.location, 'host') && window.location.host !== '') {
+			let matchingEnv = find(defaultConfig.envs, (e) => {
+				return e.serverUrl === window.location.host;
+			});
+			if (matchingEnv) {
+				url = '';
+			}
 		}
 		return url;
 	}

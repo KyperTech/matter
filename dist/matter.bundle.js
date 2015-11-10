@@ -13869,8 +13869,13 @@ var Config = (function () {
 		key: 'serverUrl',
 		get: function get() {
 			var url = defaultConfig.envs[envName].serverUrl;
-			if (typeof window !== 'undefined' && (0, _lodash.has)(window, 'location') && window.location.host === url) {
-				url = '';
+			if (typeof window !== 'undefined' && (0, _lodash.has)(window, 'location') && (0, _lodash.has)(window.location, 'host') && window.location.host !== '') {
+				var matchingEnv = (0, _lodash.find)(defaultConfig.envs, function (e) {
+					return e.serverUrl === window.location.host;
+				});
+				if (matchingEnv) {
+					url = '';
+				}
 			}
 			return url;
 		}
