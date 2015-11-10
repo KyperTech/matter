@@ -1,4 +1,3 @@
-import config from '../config';
 import logger from './logger';
 import _ from 'lodash';
 
@@ -126,7 +125,9 @@ let storage = {
 					//Clear session storage
 				window.sessionStorage.clear();
 			} catch (err) {
-				logger.warn({description: 'Session storage could not be cleared.', error: err});
+				logger.warn({
+					description: 'Session storage could not be cleared.', error: err
+				});
 			}
 		}
 	}

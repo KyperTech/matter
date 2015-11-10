@@ -1,5 +1,5 @@
 import cookiesUtil from '../../src/utils/cookies';
-import lodash from 'lodash';
+let error;
 // let mockGet = sinon.stub(superagent, 'get', (url) => {
 //  console.log('mock get called with:', arguments);
 //  if (url == '/testQuery') {
@@ -39,7 +39,6 @@ describe('Cookies Util', () => {
     });
     it('gets cookie', () => {
       if (typeof window !== 'undefined') {
-        let error;
         try {
           cookiesUtil.getCookie('sasdf');
         } catch (err) {
@@ -55,7 +54,6 @@ describe('Cookies Util', () => {
     });
     it('sets cookie', () => {
       if (typeof window !== 'undefined') {
-        let error;
         try {
           cookiesUtil.setCookie('sasdf', 'cookie value');
         } catch (err) {
@@ -72,7 +70,6 @@ describe('Cookies Util', () => {
     it('removes cookie', () => {
       cookiesUtil.setCookie('sasdf', 'testvalue');
       if (typeof window !== 'undefined') {
-        let error;
         try {
           cookiesUtil.deleteCookie('sasdf');
         } catch (err) {

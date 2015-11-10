@@ -1,7 +1,5 @@
-import config from '../config';
 import logger from './logger';
 import token from './token';
-import storage from './envStorage';
 import superagent from 'superagent';
 
 let request = {
@@ -54,7 +52,7 @@ function handleResponse(req) {
 function addAuthHeader(req) {
 	if (token.string) {
 		req = req.set('Authorization', 'Bearer ' + token.string);
-		console.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
+		// console.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
 	}
 	return req;
 }

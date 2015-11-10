@@ -78,7 +78,7 @@ function buildMessageArgs(logData) {
 			}
 		}
 		//Print each key and its value other than obj and func
-		_.each(_.omit(_.keys(logData)), (key, ind, list) => {
+		_.each(_.omit(_.keys(logData)), (key) => {
 			if (key != 'func' && key != 'obj') {
 				if (key == 'description' || key == 'message') {
 					msgStr += logData[key];

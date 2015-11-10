@@ -3,13 +3,13 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash'), require('jwt-decode'), require('superagent')) : typeof define === 'function' && define.amd ? define(['lodash', 'jwt-decode', 'superagent'], factory) : global.Matter = factory(global._, global.jwtDecode, global.superagent);
-})(this, function (_, jwtDecode, superagent) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash'), require('superagent'), require('jwt-decode')) : typeof define === 'function' && define.amd ? define(['lodash', 'superagent', 'jwt-decode'], factory) : global.Matter = factory(global._, global.superagent, global.jwtDecode);
+})(this, function (_, superagent, jwtDecode) {
 	'use strict';
 
 	var ___default = 'default' in _ ? _['default'] : _;
-	jwtDecode = 'default' in jwtDecode ? jwtDecode['default'] : jwtDecode;
 	superagent = 'default' in superagent ? superagent['default'] : superagent;
+	jwtDecode = 'default' in jwtDecode ? jwtDecode['default'] : jwtDecode;
 
 	var defaultConfig = {
 		envs: {
@@ -162,7 +162,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				}
 			}
 			//Print each key and its value other than obj and func
-			___default.each(___default.omit(___default.keys(logData)), function (key, ind, list) {
+			___default.each(___default.omit(___default.keys(logData)), function (key) {
 				if (key != 'func' && key != 'obj') {
 					if (key == 'description' || key == 'message') {
 						msgStr += logData[key];
@@ -244,7 +244,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				js.type = 'text/javascript';
 				window.document.getElementsByTagName('head')[0].appendChild(js);
 				logger.log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
-				return new Promise(function (resolve, reject) {
+				return new Promise(function (resolve) {
 					window.setTimeout(resolve, 30);
 				});
 			}
@@ -354,7 +354,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 					//Clear session storage
 					window.sessionStorage.clear();
 				} catch (err) {
-					logger.warn({ description: 'Session storage could not be cleared.', error: err });
+					logger.warn({
+						description: 'Session storage could not be cleared.', error: err
+					});
 				}
 			}
 		}
@@ -387,18 +389,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		}
 	});
 
-	function decodeToken(tokenStr) {
-		var tokenData = undefined;
-		if (tokenStr && tokenStr != '') {
-			try {
-				tokenData = jwtDecode(tokenStr);
-			} catch (err) {
-				logger.error({ description: 'Error decoding token.', data: tokenData, error: err, func: 'decodeToken', file: 'token' });
-				throw new Error('Invalid token string.');
-			}
-		}
-		return tokenData;
-	}
 	var token = Object.defineProperties({
 		/** Save token data
    */
@@ -412,7 +402,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			storage.removeItem(config.tokenName);
 			//Remove user data
 			storage.removeItem(config.tokenDataName);
-			logger.log({ description: 'Token was removed.', func: 'delete', obj: 'token' });
+			logger.log({
+				description: 'Token was removed.',
+				func: 'delete', obj: 'token'
+			});
 		}
 	}, {
 		string: {
@@ -433,19 +426,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				//Handle object being passed
 				if (!___default.isString(tokenData)) {
 					//Token is included in object
-					logger.log({ description: 'Token data is not string.', token: tokenData, func: 'string', obj: 'token' });
-
+					logger.log({
+						description: 'Token data is not string.',
+						token: tokenData, func: 'string', obj: 'token'
+					});
 					if (___default.isObject(tokenData) && ___default.has(tokenData, 'token')) {
 						tokenStr = tokenData.token;
 					} else {
 						//Input is either not an string or object that contains nessesary info
-						logger.error({ description: 'Invalid value set to token.', token: tokenData, func: 'string', obj: 'token' });
+						logger.error({
+							description: 'Invalid value set to token.',
+							token: tokenData, func: 'string', obj: 'token'
+						});
 						return;
 					}
 				} else {
 					tokenStr = tokenData;
 				}
-				logger.log({ description: 'Token was set.', token: tokenData, tokenStr: tokenStr, func: 'string', obj: 'token' });
+				logger.log({
+					description: 'Token was set.', token: tokenData,
+					tokenStr: tokenStr, func: 'string', obj: 'token'
+				});
 				storage.setItem(config.tokenName, tokenStr);
 				this.data = jwtDecode(tokenStr);
 			},
@@ -473,9 +474,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (___default.isString(tokenData)) {
 					var tokenStr = tokenData;
 					tokenData = decodeToken(tokenStr);
-					logger.info({ description: 'Token data was set as string. Decoding token.', token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token' });
+					logger.info({
+						description: 'Token data was set as string. Decoding token.',
+						token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token'
+					});
 				} else {
-					logger.log({ description: 'Token data was set.', data: tokenData, func: 'data', obj: 'token' });
+					logger.log({
+						description: 'Token data was set.', data: tokenData,
+						func: 'data', obj: 'token'
+					});
 					storage.setItem(config.tokenDataName, tokenData);
 				}
 			},
@@ -483,6 +490,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			enumerable: true
 		}
 	});
+
+	/** Safley decode a JWT string
+  * @private
+  * @return {Object}
+  */
+	function decodeToken(tokenStr) {
+		var tokenData = undefined;
+		if (tokenStr && tokenStr != '') {
+			try {
+				tokenData = jwtDecode(tokenStr);
+			} catch (err) {
+				logger.error({
+					description: 'Error decoding token.', data: tokenData,
+					error: err, func: 'decodeToken', file: 'token'
+				});
+				throw new Error('Invalid token string.');
+			}
+		}
+		return tokenData;
+	}
 
 	var request = {
 		get: function get(endpoint, queryData) {
@@ -532,7 +559,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 	function addAuthHeader(req) {
 		if (token.string) {
 			req = req.set('Authorization', 'Bearer ' + token.string);
-			console.info({ message: 'Set auth header', func: 'addAuthHeader', file: 'request' });
+			// console.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
 		}
 		return req;
 	}
@@ -598,19 +625,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 				return this.loadHello().then(function () {
 					return request.get(_this.app.endpoint + '/providers').then(function (response) {
-						logger.log({ description: 'Provider request successful.', response: response, func: 'initHello', obj: 'ProviderAuth' });
+						logger.log({
+							description: 'Provider request successful.', response: response,
+							func: 'initHello', obj: 'ProviderAuth'
+						});
 						var provider = response[_this.provider];
 						if (!provider) {
-							logger.error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this.provider, provider: _this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+							logger.error({
+								description: 'Provider is not setup.\n' + 'Visit build.kyper.io to enter your client id for ' + _this.provider,
+								provider: _this.provider, clientIds: clientIds,
+								func: 'login', obj: 'ProviderAuth'
+							});
 							return Promise.reject({ message: 'Provider is not setup.' });
 						}
-						logger.log({ description: 'Providers config built', providersConfig: response, func: 'initHello', obj: 'ProviderAuth' });
+						logger.log({
+							description: 'Providers config built', providersConfig: response,
+							func: 'initHello', obj: 'ProviderAuth'
+						});
 						return window.hello.init(response, { redirect_uri: 'redirect.html' });
-					}, function (err) {
-						logger.error({ description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth' });
+					}, function (errRes) {
+						logger.error({
+							description: 'Error loading hellojs.', error: errRes,
+							func: 'initHello', obj: 'ProviderAuth'
+						});
 						return Promise.reject({ message: 'Error requesting application third party providers.' });
 					})['catch'](function (errRes) {
-						logger.error({ description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth' });
+						logger.error({
+							description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth'
+						});
 						return Promise.reject({ message: 'Error loading third party login capability.' });
 					});
 				});
@@ -667,7 +709,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			_classCallCheck(this, Matter);
 
 			if (!appName) {
-				logger.error({ description: 'Application name requires to use Matter.', func: 'constructor', obj: 'Matter' });
+				logger.error({
+					description: 'Application name requires to use Matter.',
+					func: 'constructor', obj: 'Matter'
+				});
 				throw new Error('Application name is required to use Matter');
 			} else {
 				this.name = appName;
@@ -686,20 +731,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 			key: 'signup',
 
 			/** Signup a new user
-     * @param {Object} signupData - Object containing data to use while signing up to application.
-     * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
-     * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+    * @param {Object} signupData - Object containing data to use while signing up to application.
+    * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+    * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
     * @param {String} signupData.password - Password to be used with account (will be encrypted).
-     * @return {Promise}
-     * @example
-     * //Signup a new user
-     * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
-     * matter.signup(signupData).then(function(signupRes){
-     *  console.log('New user signed up successfully. New account: ', signupRes.account);
-     * }, function(err){
-     *  console.error('Error signing up:', err);
-     * });
-     */
+    * @return {Promise}
+    * @example
+    * //Signup a new user
+    * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
+    * matter.signup(signupData).then(function(signupRes){
+    *  console.log('New user signed up successfully. New account: ', signupRes.account);
+    * }, function(err){
+    *  console.error('Error signing up:', err);
+    * });
+    */
 			value: function signup(signupData) {
 				logger.log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
 				if (!signupData || !___default.isObject(signupData) && !___default.isString(signupData)) {
@@ -767,10 +812,46 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 							if (___default.has(response, 'token')) {
 								_this3.token.string = response.token;
 							}
+							var userAccount = {};
+							//Get user data either directly from response or from token
 							if (___default.has(response, 'account')) {
-								_this3.storage.setItem(config.tokenUserDataName, response.account);
+								userAccount = response.account;
+							} else if (_this3.token.data) {
+								//TODO: Handle more Auth Provider tokens
+								//Check for AuthRocket style token
+								logger.log({
+									description: 'User data available from token.',
+									tokenData: _this3.token.data, type: typeof _this3.token.data,
+									func: 'login', obj: 'Matter'
+								});
+								if (_this3.token.data.un) {
+									logger.log({
+										description: 'Token is AuthRocket format.',
+										func: 'login', obj: 'Matter'
+									});
+									userAccount = {
+										username: _this3.token.data.un,
+										name: _this3.token.data.n || null,
+										authrocketId: _this3.token.data.uid || null
+									};
+								} else {
+									logger.log({
+										description: 'Token is default format.',
+										func: 'login', obj: 'Matter'
+									});
+									//Default token style
+									userAccount = _this3.token.data;
+								}
+							} else {
+								logger.error({
+									description: 'User data not available from response or token.',
+									func: 'login', obj: 'Matter'
+								});
+								userAccount = { token: _this3.token.string };
 							}
-							return response.account;
+							//Set userdata to local storage
+							_this3.storage.setItem(config.tokenUserDataName, userAccount);
+							return userAccount;
 						}
 					})['catch'](function (errRes) {
 						logger.error({ description: 'Error requesting login.', error: errRes, status: errRes.status, func: 'login', obj: 'Matter' });
@@ -1063,11 +1144,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (___default.has(this, 'options')) {
 					if (this.options.localServer) {
 						config.envName = 'local';
-						logger.info({ description: 'LocalServer option was set to true. Now server url is local server.', url: config.serverUrl, func: 'endpoint', obj: 'Matter' });
+						logger.info({
+							description: 'LocalServer option was set to true. Now server url is local server.',
+							url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+						});
 					}
 					if (this.options.env) {
 						config.envName = this.options.env;
-						logger.info({ description: 'Environment set based on provided environment.', config: config, func: 'endpoint', obj: 'Matter' });
+						logger.info({
+							description: 'Environment set based on provided environment.',
+							config: config, func: 'endpoint', obj: 'Matter'
+						});
 					}
 				}
 				var appEndpoint = config.serverUrl + '/apps/' + this.name;
@@ -1075,8 +1162,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 				if (this.name == 'tessellate') {
 					//Remove url if host is a tessellate server
 					if (typeof window !== 'undefined' && ___default.has(window, 'location') && (window.location.host.indexOf('tessellate') !== -1 || window.location.host.indexOf('localhost') !== -1)) {
-						appEndpoint = serverUrl;
-						logger.info({ description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
+						appEndpoint = config.serverUrl;
+						logger.info({
+							description: 'Host is Tessellate Server, serverUrl simplified!',
+							url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+						});
 					}
 				}
 				logger.log({ description: 'Endpoint created.', url: appEndpoint, func: 'endpoint', obj: 'Matter' });

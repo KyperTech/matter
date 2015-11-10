@@ -60,7 +60,7 @@ let domUtil = {
 			js.type = 'text/javascript';
 			window.document.getElementsByTagName('head')[0].appendChild(js);
 			logger.log({description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom'});
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
 				window.setTimeout(resolve, 30);
 			});
 		}

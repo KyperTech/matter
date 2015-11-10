@@ -8,7 +8,7 @@ let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);
 let mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
 let mockLog; let mockWarn; let mockInfo; let mockError;
-let mockGet = sinon.stub(request, 'get', function() {
+let mockGet = sinon.stub(request, 'get', () => {
  // console.log('mock get called with:', arguments);
   return new Promise((resolve, reject) => {
     if (responseState == 'success') {
@@ -20,7 +20,7 @@ let mockGet = sinon.stub(request, 'get', function() {
     }
   });
 });
-let mockPut = sinon.stub(request, 'put', function(putData) {
+let mockPut = sinon.stub(request, 'put', (putData) => {
  // console.log('mock put called with:', arguments);
  return new Promise((resolve, reject) => {
     if (responseState == 'success') {
@@ -32,7 +32,7 @@ let mockPut = sinon.stub(request, 'put', function(putData) {
     }
   });
 });
-let mockPost = sinon.stub(request, 'post', function(url, postData) {
+let mockPost = sinon.stub(request, 'post', (url, postData) => {
  // console.log('mock post called with:', arguments);
  return new Promise((resolve, reject) => {
    if (!postData || postData == {}) {
@@ -43,7 +43,7 @@ let mockPost = sinon.stub(request, 'post', function(url, postData) {
 });
 
 let auth = new ProviderAuth({app: matter, provider: 'google'});
-let mockProviderAuthSignup = sinon.stub(auth, 'signup', function() {
+let mockProviderAuthSignup = sinon.stub(auth, 'signup', () => {
  // console.log('mock get called with:', arguments);
  return new Promise((resolve, reject) => {
     if (responseState == 'success') {
@@ -55,7 +55,7 @@ let mockProviderAuthSignup = sinon.stub(auth, 'signup', function() {
     }
   });
 });
-let mockProviderAuthLogin = sinon.stub(auth, 'login', function() {
+let mockProviderAuthLogin = sinon.stub(auth, 'login', () => {
  // console.log('mock get called with:', arguments);
  return new Promise((resolve, reject) => {
     if (responseState == 'success') {
@@ -68,13 +68,13 @@ let mockProviderAuthLogin = sinon.stub(auth, 'login', function() {
   });
 });
 
-mockLog = sinon.stub(logger, 'log', function() {
+mockLog = sinon.stub(logger, 'log', () => {
 });
-mockWarn = sinon.stub(logger, 'warn', function() {
+mockWarn = sinon.stub(logger, 'warn', () => {
 });
-mockInfo = sinon.stub(logger, 'info', function() {
+mockInfo = sinon.stub(logger, 'info', () => {
 });
-mockError = sinon.stub(logger, 'error', function() {
+mockError = sinon.stub(logger, 'error', () => {
 });
 // TODO: Test options functionality
 describe('Matter', () => {

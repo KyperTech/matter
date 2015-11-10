@@ -1,8 +1,6 @@
-import config from '../config';
 import request from './request';
 import logger from './logger';
 import dom from './dom';
-import _ from 'lodash';
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
 // import hello from 'hellojs'; //After es version of module is created
 //Private object containing clientIds
@@ -54,20 +52,36 @@ class ProviderAuth {
 		return this.loadHello().then(() => {
 			return request.get(`${this.app.endpoint}/providers`)
 			.then((response) => {
-				logger.log({description: 'Provider request successful.',  response: response, func: 'initHello', obj: 'ProviderAuth'});
+				logger.log({
+					description: 'Provider request successful.',  response: response,
+					func: 'initHello', obj: 'ProviderAuth'
+				});
 				let provider = response[this.provider];
 				if (!provider) {
-					logger.error({description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + this.provider, provider: this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth'});
+					logger.error({
+						description: 'Provider is not setup.\n' +
+						'Visit build.kyper.io to enter your client id for ' + this.provider,
+						provider: this.provider, clientIds: clientIds,
+						func: 'login', obj: 'ProviderAuth'
+					});
 					return Promise.reject({message: 'Provider is not setup.'});
 				}
-				logger.log({description: 'Providers config built', providersConfig: response, func: 'initHello', obj: 'ProviderAuth'});
+				logger.log({
+					description: 'Providers config built', providersConfig: response,
+					func: 'initHello', obj: 'ProviderAuth'
+				});
 				return window.hello.init(response, {redirect_uri: 'redirect.html'});
-			}, (err) => {
-				logger.error({description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth'});
+			}, (errRes) => {
+				logger.error({
+					description: 'Error loading hellojs.', error: errRes,
+					func: 'initHello', obj: 'ProviderAuth'
+				});
 				return Promise.reject({message: 'Error requesting application third party providers.'});
 			})
 			['catch']((errRes) => {
-				logger.error({description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth'});
+				logger.error({
+					description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth'
+				});
 				return Promise.reject({message: 'Error loading third party login capability.'});
 			});
 		});

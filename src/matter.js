@@ -13,7 +13,10 @@ class Matter {
 	 */
 	constructor(appName, opts) {
 		if (!appName) {
-			logger.error({description: 'Application name requires to use Matter.', func: 'constructor', obj: 'Matter'});
+			logger.error({
+				description: 'Application name requires to use Matter.',
+				func: 'constructor', obj: 'Matter'
+			});
 			throw new Error('Application name is required to use Matter');
 		} else {
 			this.name = appName;
@@ -31,11 +34,17 @@ class Matter {
 		if (_.has(this, 'options')) {
 			if (this.options.localServer) {
 				config.envName = 'local';
-				logger.info({description: 'LocalServer option was set to true. Now server url is local server.', url: config.serverUrl, func: 'endpoint', obj: 'Matter'});
+				logger.info({
+					description: 'LocalServer option was set to true. Now server url is local server.',
+					url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+				});
 			}
 			if (this.options.env) {
 				config.envName = this.options.env;
-				logger.info({description: 'Environment set based on provided environment.', config: config, func: 'endpoint', obj: 'Matter'});
+				logger.info({
+					description: 'Environment set based on provided environment.',
+					config: config, func: 'endpoint', obj: 'Matter'
+				});
 			}
 		}
 		let appEndpoint = `${config.serverUrl}/apps/${this.name}`;
@@ -43,28 +52,31 @@ class Matter {
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
 			if (typeof window !== 'undefined' && _.has(window, 'location') && (window.location.host.indexOf('tessellate') !== -1 || window.location.host.indexOf('localhost') !== -1)) {
-				appEndpoint = serverUrl;
-				logger.info({description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter'});
+				appEndpoint = config.serverUrl;
+				logger.info({
+					description: 'Host is Tessellate Server, serverUrl simplified!',
+					url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+				});
 			}
 		}
 		logger.log({description: 'Endpoint created.', url: appEndpoint, func: 'endpoint', obj: 'Matter'});
 		return appEndpoint;
 	}
 	/** Signup a new user
-   * @param {Object} signupData - Object containing data to use while signing up to application.
-   * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
-   * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+	 * @param {Object} signupData - Object containing data to use while signing up to application.
+	 * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+	 * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
 	 * @param {String} signupData.password - Password to be used with account (will be encrypted).
-   * @return {Promise}
-   * @example
-   * //Signup a new user
-   * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
-   * matter.signup(signupData).then(function(signupRes){
-   *  console.log('New user signed up successfully. New account: ', signupRes.account);
-   * }, function(err){
-   *  console.error('Error signing up:', err);
-   * });
-   */
+	 * @return {Promise}
+	 * @example
+	 * //Signup a new user
+	 * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
+	 * matter.signup(signupData).then(function(signupRes){
+	 *  console.log('New user signed up successfully. New account: ', signupRes.account);
+	 * }, function(err){
+	 *  console.error('Error signing up:', err);
+	 * });
+	 */
 	signup(signupData) {
 		logger.log({description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter'});
 		if (!signupData || (!_.isObject(signupData) && !_.isString(signupData))) {
@@ -95,21 +107,21 @@ class Matter {
 			});
 		}
 	}
-  /** Login by username/email or external provider
-   * @param {Object} loginData - Object containing data to use while logging in to application.
-   * @param {String} loginData.username - Username of user to login as
-   * @param {String} loginData.email - Email of new user (Optional instead of username)
-   * @param {String} loginData.password - Password to be used with account (will be encrypted).
-   * @return {Promise}
-   * @example
-   * //Login as 'testuser1'
-   * var loginData = {username: 'testuser1', password: 'testpassword'};
-   * matter.login(loginData).then(function(loginRes){
-   *  console.log('New user logged in succesfully. Account: ', loginRes.account);
-   * }, function(err){
-   *  console.error('Error logging in:', err);
-   * });
-   */
+	/** Login by username/email or external provider
+	 * @param {Object} loginData - Object containing data to use while logging in to application.
+	 * @param {String} loginData.username - Username of user to login as
+	 * @param {String} loginData.email - Email of new user (Optional instead of username)
+	 * @param {String} loginData.password - Password to be used with account (will be encrypted).
+	 * @return {Promise}
+	 * @example
+	 * //Login as 'testuser1'
+	 * var loginData = {username: 'testuser1', password: 'testpassword'};
+	 * matter.login(loginData).then(function(loginRes){
+	 *  console.log('New user logged in succesfully. Account: ', loginRes.account);
+	 * }, function(err){
+	 *  console.error('Error logging in:', err);
+	 * });
+	 */
 	login(loginData) {
 		if (!loginData || (!_.isObject(loginData) && !_.isString(loginData))) {
 			logger.error({description: 'Username/Email and Password are required to login', func: 'login', obj: 'Matter'});
@@ -130,10 +142,46 @@ class Matter {
 					if (_.has(response, 'token')) {
 						this.token.string = response.token;
 					}
+					let userAccount = {};
+					//Get user data either directly from response or from token
 					if (_.has(response, 'account')) {
-						this.storage.setItem(config.tokenUserDataName, response.account);
+						userAccount = response.account;
+					} else if (this.token.data) {
+						//TODO: Handle more Auth Provider tokens
+						//Check for AuthRocket style token
+						logger.log({
+							description: 'User data available from token.',
+							tokenData: this.token.data, type: typeof this.token.data,
+							func: 'login', obj: 'Matter'
+						});
+						if (this.token.data.un) {
+							logger.log({
+								description: 'Token is AuthRocket format.',
+								func: 'login', obj: 'Matter'
+							});
+							userAccount = {
+								username: this.token.data.un,
+								name: this.token.data.n || null,
+								authrocketId: this.token.data.uid || null
+							};
+						} else {
+							logger.log({
+								description: 'Token is default format.',
+								func: 'login', obj: 'Matter'
+							});
+							//Default token style
+							userAccount = this.token.data;
+						}
+					} else {
+						logger.error({
+							description: 'User data not available from response or token.',
+							func: 'login', obj: 'Matter'
+						});
+						userAccount = {token: this.token.string};
 					}
-					return response.account;
+					//Set userdata to local storage
+					this.storage.setItem(config.tokenUserDataName, userAccount);
+					return userAccount;
 				}
 			})['catch']((errRes) => {
 				logger.error({description: 'Error requesting login.', error: errRes, status: errRes.status,  func: 'login', obj: 'Matter'});
@@ -385,19 +433,19 @@ class Matter {
 		}
 		//TODO: Handle string and array inputs
 	}
-  /** Check that user is in all of a list of groups
-   * @param {Array|String} checkGroups - List of groups to check for account membership
-   * @return {Boolean}
-   * @example
-   * //Check for group membership
-   * var isBoth = matter.isInGroups(['admins', 'users']);
-   * if(isBoth){
-   * console.log('Current account is both an admin and a user');
-   * } else {
-   * console.warn('Current account is not both an admin and a user')
-   * }
-   *
-   */
+	/** Check that user is in all of a list of groups
+	 * @param {Array|String} checkGroups - List of groups to check for account membership
+	 * @return {Boolean}
+	 * @example
+	 * //Check for group membership
+	 * var isBoth = matter.isInGroups(['admins', 'users']);
+	 * if(isBoth){
+	 * console.log('Current account is both an admin and a user');
+	 * } else {
+	 * console.warn('Current account is not both an admin and a user')
+	 * }
+	 *
+	 */
 	isInGroups(checkGroups) {
 		if (!this.isLoggedIn) {
 			logger.log({description: 'No logged in user to check.', func: 'isInGroups', obj: 'Matter'});

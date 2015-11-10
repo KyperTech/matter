@@ -3,7 +3,7 @@
   "version": "0.1.2",
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "dist/matter.js",
-  "jsnext:main": "dist/matter.js",
+  "jsnext:main": "src/matter.js",
   "babelBoilerplateOptions": {
     "entryFileName": "src/matter.js",
     "mainVarName": "Matter",
@@ -81,7 +81,7 @@
     "karma-phantomjs-launcher": "^0.2.1",
     "mocha": "^2.1.0",
     "phantomjs": "^1.9.18",
-    "rollup": "^0.14.1",
+    "rollup": "^0.20.5",
     "run-sequence": "^1.0.2",
     "sinon": "^1.12.2",
     "sinon-chai": "^2.7.0",

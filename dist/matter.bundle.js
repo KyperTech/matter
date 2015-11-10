@@ -13953,7 +13953,10 @@ var Matter = (function () {
 		_classCallCheck(this, Matter);
 
 		if (!appName) {
-			_utilsLogger2['default'].error({ description: 'Application name requires to use Matter.', func: 'constructor', obj: 'Matter' });
+			_utilsLogger2['default'].error({
+				description: 'Application name requires to use Matter.',
+				func: 'constructor', obj: 'Matter'
+			});
 			throw new Error('Application name is required to use Matter');
 		} else {
 			this.name = appName;
@@ -13972,20 +13975,20 @@ var Matter = (function () {
 		key: 'signup',
 
 		/** Signup a new user
-    * @param {Object} signupData - Object containing data to use while signing up to application.
-    * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
-    * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+   * @param {Object} signupData - Object containing data to use while signing up to application.
+   * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+   * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
    * @param {String} signupData.password - Password to be used with account (will be encrypted).
-    * @return {Promise}
-    * @example
-    * //Signup a new user
-    * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
-    * matter.signup(signupData).then(function(signupRes){
-    *  console.log('New user signed up successfully. New account: ', signupRes.account);
-    * }, function(err){
-    *  console.error('Error signing up:', err);
-    * });
-    */
+   * @return {Promise}
+   * @example
+   * //Signup a new user
+   * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
+   * matter.signup(signupData).then(function(signupRes){
+   *  console.log('New user signed up successfully. New account: ', signupRes.account);
+   * }, function(err){
+   *  console.error('Error signing up:', err);
+   * });
+   */
 		value: function signup(signupData) {
 			_utilsLogger2['default'].log({ description: 'Signup called.', signupData: signupData, func: 'signup', obj: 'Matter' });
 			if (!signupData || !_lodash2['default'].isObject(signupData) && !_lodash2['default'].isString(signupData)) {
@@ -14053,10 +14056,46 @@ var Matter = (function () {
 						if (_lodash2['default'].has(response, 'token')) {
 							_this.token.string = response.token;
 						}
+						var userAccount = {};
+						//Get user data either directly from response or from token
 						if (_lodash2['default'].has(response, 'account')) {
-							_this.storage.setItem(_config2['default'].tokenUserDataName, response.account);
+							userAccount = response.account;
+						} else if (_this.token.data) {
+							//TODO: Handle more Auth Provider tokens
+							//Check for AuthRocket style token
+							_utilsLogger2['default'].log({
+								description: 'User data available from token.',
+								tokenData: _this.token.data, type: typeof _this.token.data,
+								func: 'login', obj: 'Matter'
+							});
+							if (_this.token.data.un) {
+								_utilsLogger2['default'].log({
+									description: 'Token is AuthRocket format.',
+									func: 'login', obj: 'Matter'
+								});
+								userAccount = {
+									username: _this.token.data.un,
+									name: _this.token.data.n || null,
+									authrocketId: _this.token.data.uid || null
+								};
+							} else {
+								_utilsLogger2['default'].log({
+									description: 'Token is default format.',
+									func: 'login', obj: 'Matter'
+								});
+								//Default token style
+								userAccount = _this.token.data;
+							}
+						} else {
+							_utilsLogger2['default'].error({
+								description: 'User data not available from response or token.',
+								func: 'login', obj: 'Matter'
+							});
+							userAccount = { token: _this.token.string };
 						}
-						return response.account;
+						//Set userdata to local storage
+						_this.storage.setItem(_config2['default'].tokenUserDataName, userAccount);
+						return userAccount;
 					}
 				})['catch'](function (errRes) {
 					_utilsLogger2['default'].error({ description: 'Error requesting login.', error: errRes, status: errRes.status, func: 'login', obj: 'Matter' });
@@ -14349,11 +14388,17 @@ var Matter = (function () {
 			if (_lodash2['default'].has(this, 'options')) {
 				if (this.options.localServer) {
 					_config2['default'].envName = 'local';
-					_utilsLogger2['default'].info({ description: 'LocalServer option was set to true. Now server url is local server.', url: _config2['default'].serverUrl, func: 'endpoint', obj: 'Matter' });
+					_utilsLogger2['default'].info({
+						description: 'LocalServer option was set to true. Now server url is local server.',
+						url: _config2['default'].serverUrl, func: 'endpoint', obj: 'Matter'
+					});
 				}
 				if (this.options.env) {
 					_config2['default'].envName = this.options.env;
-					_utilsLogger2['default'].info({ description: 'Environment set based on provided environment.', config: _config2['default'], func: 'endpoint', obj: 'Matter' });
+					_utilsLogger2['default'].info({
+						description: 'Environment set based on provided environment.',
+						config: _config2['default'], func: 'endpoint', obj: 'Matter'
+					});
 				}
 			}
 			var appEndpoint = _config2['default'].serverUrl + '/apps/' + this.name;
@@ -14361,8 +14406,11 @@ var Matter = (function () {
 			if (this.name == 'tessellate') {
 				//Remove url if host is a tessellate server
 				if (typeof window !== 'undefined' && _lodash2['default'].has(window, 'location') && (window.location.host.indexOf('tessellate') !== -1 || window.location.host.indexOf('localhost') !== -1)) {
-					appEndpoint = serverUrl;
-					_utilsLogger2['default'].info({ description: 'Host is Tessellate Server, serverUrl simplified!', url: serverUrl, func: 'endpoint', obj: 'Matter' });
+					appEndpoint = _config2['default'].serverUrl;
+					_utilsLogger2['default'].info({
+						description: 'Host is Tessellate Server, serverUrl simplified!',
+						url: _config2['default'].serverUrl, func: 'endpoint', obj: 'Matter'
+					});
 				}
 			}
 			_utilsLogger2['default'].log({ description: 'Endpoint created.', url: appEndpoint, func: 'endpoint', obj: 'Matter' });
@@ -14514,7 +14562,7 @@ var domUtil = {
 			js.type = 'text/javascript';
 			window.document.getElementsByTagName('head')[0].appendChild(js);
 			_logger2['default'].log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
-			return new Promise(function (resolve, reject) {
+			return new Promise(function (resolve) {
 				window.setTimeout(resolve, 30);
 			});
 		}
@@ -14529,10 +14577,6 @@ Object.defineProperty(exports, '__esModule', {
 });
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _config = require('../config');
-
-var _config2 = _interopRequireDefault(_config);
 
 var _logger = require('./logger');
 
@@ -14645,7 +14689,9 @@ var storage = Object.defineProperties({
 				//Clear session storage
 				window.sessionStorage.clear();
 			} catch (err) {
-				_logger2['default'].warn({ description: 'Session storage could not be cleared.', error: err });
+				_logger2['default'].warn({
+					description: 'Session storage could not be cleared.', error: err
+				});
 			}
 		}
 	}
@@ -14681,7 +14727,7 @@ var storage = Object.defineProperties({
 exports['default'] = storage;
 module.exports = exports['default'];
 
-},{"../config":9,"./logger":13,"lodash":5}],13:[function(require,module,exports){
+},{"./logger":13,"lodash":5}],13:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -14774,7 +14820,7 @@ function buildMessageArgs(logData) {
 			}
 		}
 		//Print each key and its value other than obj and func
-		_lodash2['default'].each(_lodash2['default'].omit(_lodash2['default'].keys(logData)), function (key, ind, list) {
+		_lodash2['default'].each(_lodash2['default'].omit(_lodash2['default'].keys(logData)), function (key) {
 			if (key != 'func' && key != 'obj') {
 				if (key == 'description' || key == 'message') {
 					msgStr += logData[key];
@@ -14809,10 +14855,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _config = require('../config');
-
-var _config2 = _interopRequireDefault(_config);
-
 var _request = require('./request');
 
 var _request2 = _interopRequireDefault(_request);
@@ -14824,10 +14866,6 @@ var _logger2 = _interopRequireDefault(_logger);
 var _dom = require('./dom');
 
 var _dom2 = _interopRequireDefault(_dom);
-
-var _lodash = require('lodash');
-
-var _lodash2 = _interopRequireDefault(_lodash);
 
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
 // import hello from 'hellojs'; //After es version of module is created
@@ -14890,19 +14928,34 @@ var ProviderAuth = (function () {
 
 			return this.loadHello().then(function () {
 				return _request2['default'].get(_this.app.endpoint + '/providers').then(function (response) {
-					_logger2['default'].log({ description: 'Provider request successful.', response: response, func: 'initHello', obj: 'ProviderAuth' });
+					_logger2['default'].log({
+						description: 'Provider request successful.', response: response,
+						func: 'initHello', obj: 'ProviderAuth'
+					});
 					var provider = response[_this.provider];
 					if (!provider) {
-						_logger2['default'].error({ description: 'Provider is not setup. Visit tessellate.kyper.io to enter your client id for ' + _this.provider, provider: _this.provider, clientIds: clientIds, func: 'login', obj: 'ProviderAuth' });
+						_logger2['default'].error({
+							description: 'Provider is not setup.\n' + 'Visit build.kyper.io to enter your client id for ' + _this.provider,
+							provider: _this.provider, clientIds: clientIds,
+							func: 'login', obj: 'ProviderAuth'
+						});
 						return Promise.reject({ message: 'Provider is not setup.' });
 					}
-					_logger2['default'].log({ description: 'Providers config built', providersConfig: response, func: 'initHello', obj: 'ProviderAuth' });
+					_logger2['default'].log({
+						description: 'Providers config built', providersConfig: response,
+						func: 'initHello', obj: 'ProviderAuth'
+					});
 					return window.hello.init(response, { redirect_uri: 'redirect.html' });
-				}, function (err) {
-					_logger2['default'].error({ description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth' });
+				}, function (errRes) {
+					_logger2['default'].error({
+						description: 'Error loading hellojs.', error: errRes,
+						func: 'initHello', obj: 'ProviderAuth'
+					});
 					return Promise.reject({ message: 'Error requesting application third party providers.' });
 				})['catch'](function (errRes) {
-					_logger2['default'].error({ description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth' });
+					_logger2['default'].error({
+						description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth'
+					});
 					return Promise.reject({ message: 'Error loading third party login capability.' });
 				});
 			});
@@ -14953,16 +15006,12 @@ var ProviderAuth = (function () {
 exports['default'] = ProviderAuth;
 module.exports = exports['default'];
 
-},{"../config":9,"./dom":11,"./logger":13,"./request":15,"lodash":5}],15:[function(require,module,exports){
+},{"./dom":11,"./logger":13,"./request":15}],15:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _config = require('../config');
-
-var _config2 = _interopRequireDefault(_config);
 
 var _logger = require('./logger');
 
@@ -14971,10 +15020,6 @@ var _logger2 = _interopRequireDefault(_logger);
 var _token = require('./token');
 
 var _token2 = _interopRequireDefault(_token);
-
-var _envStorage = require('./envStorage');
-
-var _envStorage2 = _interopRequireDefault(_envStorage);
 
 var _superagent = require('superagent');
 
@@ -15030,13 +15075,13 @@ function handleResponse(req) {
 function addAuthHeader(req) {
 	if (_token2['default'].string) {
 		req = req.set('Authorization', 'Bearer ' + _token2['default'].string);
-		console.info({ message: 'Set auth header', func: 'addAuthHeader', file: 'request' });
+		// console.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
 	}
 	return req;
 }
 module.exports = exports['default'];
 
-},{"../config":9,"./envStorage":12,"./logger":13,"./token":16,"superagent":6}],16:[function(require,module,exports){
+},{"./logger":13,"./token":16,"superagent":6}],16:[function(require,module,exports){
 Object.defineProperty(exports, '__esModule', {
 	value: true
 });
@@ -15063,18 +15108,6 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-function decodeToken(tokenStr) {
-	var tokenData = undefined;
-	if (tokenStr && tokenStr != '') {
-		try {
-			tokenData = (0, _jwtDecode2['default'])(tokenStr);
-		} catch (err) {
-			_logger2['default'].error({ description: 'Error decoding token.', data: tokenData, error: err, func: 'decodeToken', file: 'token' });
-			throw new Error('Invalid token string.');
-		}
-	}
-	return tokenData;
-}
 var token = Object.defineProperties({
 	/** Save token data
   */
@@ -15088,7 +15121,10 @@ var token = Object.defineProperties({
 		_envStorage2['default'].removeItem(_config2['default'].tokenName);
 		//Remove user data
 		_envStorage2['default'].removeItem(_config2['default'].tokenDataName);
-		_logger2['default'].log({ description: 'Token was removed.', func: 'delete', obj: 'token' });
+		_logger2['default'].log({
+			description: 'Token was removed.',
+			func: 'delete', obj: 'token'
+		});
 	}
 }, {
 	string: {
@@ -15109,19 +15145,27 @@ var token = Object.defineProperties({
 			//Handle object being passed
 			if (!_lodash2['default'].isString(tokenData)) {
 				//Token is included in object
-				_logger2['default'].log({ description: 'Token data is not string.', token: tokenData, func: 'string', obj: 'token' });
-
+				_logger2['default'].log({
+					description: 'Token data is not string.',
+					token: tokenData, func: 'string', obj: 'token'
+				});
 				if (_lodash2['default'].isObject(tokenData) && _lodash2['default'].has(tokenData, 'token')) {
 					tokenStr = tokenData.token;
 				} else {
 					//Input is either not an string or object that contains nessesary info
-					_logger2['default'].error({ description: 'Invalid value set to token.', token: tokenData, func: 'string', obj: 'token' });
+					_logger2['default'].error({
+						description: 'Invalid value set to token.',
+						token: tokenData, func: 'string', obj: 'token'
+					});
 					return;
 				}
 			} else {
 				tokenStr = tokenData;
 			}
-			_logger2['default'].log({ description: 'Token was set.', token: tokenData, tokenStr: tokenStr, func: 'string', obj: 'token' });
+			_logger2['default'].log({
+				description: 'Token was set.', token: tokenData,
+				tokenStr: tokenStr, func: 'string', obj: 'token'
+			});
 			_envStorage2['default'].setItem(_config2['default'].tokenName, tokenStr);
 			this.data = (0, _jwtDecode2['default'])(tokenStr);
 		},
@@ -15149,9 +15193,15 @@ var token = Object.defineProperties({
 			if (_lodash2['default'].isString(tokenData)) {
 				var tokenStr = tokenData;
 				tokenData = decodeToken(tokenStr);
-				_logger2['default'].info({ description: 'Token data was set as string. Decoding token.', token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token' });
+				_logger2['default'].info({
+					description: 'Token data was set as string. Decoding token.',
+					token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token'
+				});
 			} else {
-				_logger2['default'].log({ description: 'Token data was set.', data: tokenData, func: 'data', obj: 'token' });
+				_logger2['default'].log({
+					description: 'Token data was set.', data: tokenData,
+					func: 'data', obj: 'token'
+				});
 				_envStorage2['default'].setItem(_config2['default'].tokenDataName, tokenData);
 			}
 		},
@@ -15161,6 +15211,26 @@ var token = Object.defineProperties({
 });
 
 exports['default'] = token;
+
+/** Safley decode a JWT string
+ * @private
+ * @return {Object}
+ */
+function decodeToken(tokenStr) {
+	var tokenData = undefined;
+	if (tokenStr && tokenStr != '') {
+		try {
+			tokenData = (0, _jwtDecode2['default'])(tokenStr);
+		} catch (err) {
+			_logger2['default'].error({
+				description: 'Error decoding token.', data: tokenData,
+				error: err, func: 'decodeToken', file: 'token'
+			});
+			throw new Error('Invalid token string.');
+		}
+	}
+	return tokenData;
+}
 module.exports = exports['default'];
 
 },{"../config":9,"./envStorage":12,"./logger":13,"jwt-decode":2,"lodash":5}]},{},[10])(10)

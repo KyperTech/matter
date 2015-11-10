@@ -21,15 +21,15 @@ let defaultConfig = {
 	},
 	tokenName: 'tessellate',
 	tokenDataName: 'tessellate-tokenData',
-	tokenUserDataName: 'tessellate-currentUser',
+	tokenUserDataName: 'tessellate-currentUser'
 };
 let instance = null;
 let envName = 'prod';
 class Config {
 	constructor() {
 		if (!instance) {
-      instance = this;
-    }
+			instance = this;
+		}
 		// console.log({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
 		return merge(instance, defaultConfig);
 	}
