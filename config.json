@@ -8,5 +8,8 @@
 	"cdn":{
 		"bucketName":"kyper-cdn",
 		"path":"js/matter"
+	},
+	"linkedModules":{
+		
 	}
 }

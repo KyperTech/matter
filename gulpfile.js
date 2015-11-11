@@ -134,7 +134,7 @@ function buildLinkCommands(linkAction){
   if(!linkAction){
     linkAction = 'link';
   }
-  const linkTypes = _.keys(config.linkedModules);
+  const linkTypes = _.keys(conf.linkedModules);
   const messageCommand = 'echo ' + linkAction + 'ing local modules';
   var commands = [messageCommand];
   //Each type of packages to link
