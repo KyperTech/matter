@@ -1,6 +1,6 @@
 angular.module('matterApp', [])
 .service('$matter', ['$window', '$log', '$q', function ($window, $log, $q) {
-  var matter = new $window.Matter('cloudbrain', {localServer:false});
+  var matter = new $window.Matter('exampleApp', {localServer:false});
   return matter;
 }])
 .controller('MainCtrl', ['$scope', '$matter', function($scope, $matter){
