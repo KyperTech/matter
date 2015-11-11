@@ -1,4 +1,4 @@
-import Matter from '../../src/matter';
+import Matter from '../../src';
 import request from '../../src/utils/request';
 import config from '../../src/config';
 import logger from '../../src/utils/logger';

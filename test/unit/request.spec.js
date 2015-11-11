@@ -1,4 +1,4 @@
-import Matter from '../../src/matter';
+import Matter from '../../src';
 import request from '../../src/utils/request';
 import superagent from 'superagent';
 
