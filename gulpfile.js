@@ -9,12 +9,9 @@ const path = require('path');
 const buffer = require('vinyl-buffer');
 const runSequence = require('run-sequence');
 const source = require('vinyl-source-stream');
-const awspublish = require('gulp-awspublish');
 const browserSync = require('browser-sync').create();
 const KarmaServer = require('karma').Server;
-const bump = require('gulp-bump');
 const _ = require('lodash');
-const esdoc = require("gulp-esdoc");
 
 // Gather the library data from `package.json`
 const pkg = require('./package.json');
@@ -56,7 +53,7 @@ gulp.task('release', function(callback) {
 // Will patch the version
 gulp.task('bump', function(){
   gulp.src('./component.json')
-  .pipe(bump())
+  .pipe($.bump())
   .pipe(gulp.dest('./'));
 });
 
@@ -78,7 +75,7 @@ gulp.task('upload:version', function() {
       path.dirname = conf.cdn.path + '/' + pkg.version + '/' + path.dirname;
     }))
     .pipe(publisher.publish())
-    .pipe(awspublish.reporter());
+    .pipe($.awspublish.reporter());
 });
 //Upload to CDN under "/latest"
 gulp.task('upload:latest', function() {
@@ -87,7 +84,7 @@ gulp.task('upload:latest', function() {
       path.dirname = conf.cdn.path + '/latest/' + path.dirname;
     }))
     .pipe(publisher.publish())
-    .pipe(awspublish.reporter());
+    .pipe($.awspublish.reporter());
 });
 //Upload to CDN under "/latest"
 gulp.task('upload:docs', function() {
@@ -96,7 +93,7 @@ gulp.task('upload:docs', function() {
       path.dirname = conf.cdn.path + '/latest/docs/' + path.dirname;
     }))
     .pipe(publisher.publish())
-    .pipe(awspublish.reporter());
+    .pipe($.awspublish.reporter());
 });
 // Generate docs based on comments
 const esdocConfig = require('./esdoc.json');
@@ -166,7 +163,7 @@ function CDNPublisher () {
       Bucket:conf.cdn.bucketName
     }
   };
-  return awspublish.create(s3Config);
+  return $.awspublish.create(s3Config);
 }
 
 // Send a notification when JSCS fails,

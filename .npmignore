@@ -1,2 +1,9 @@
 src
 examples
+index.html
+esdoc.json
+config.json
+karma.conf.js
+webpack.config.base.js
+webpack.config.development.js
+webpack.config.production.js
