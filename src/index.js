@@ -52,10 +52,16 @@ class Matter {
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
 			if (typeof window !== 'undefined' && _.has(window, 'location') && (window.location.host.indexOf('tessellate') !== -1 || window.location.host.indexOf('localhost') !== -1)) {
-				appEndpoint = config.serverUrl;
+				appEndpoint = '';
 				logger.info({
 					description: 'Host is Tessellate Server, serverUrl simplified!',
-					url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+					url: appEndpoint, func: 'endpoint', obj: 'Matter'
+				});
+			} else {
+				appEndpoint = config.serverUrl;
+				logger.info({
+					description: 'App is tessellate, serverUrl set as main tessellate server.',
+					url: appEndpoint, func: 'endpoint', obj: 'Matter'
 				});
 			}
 		}
