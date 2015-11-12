@@ -779,7 +779,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	// }
 	//Set log level from config
 	if (_config2['default'].logLevel) {
-		console.log('log level from config', _config2['default'].logLevel);
 		logLevel = _config2['default'].logLevel;
 	}
 	var logger = {
@@ -792,7 +791,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		debug: function debug(logData) {
 			var msgArgs = buildMessageArgs(logData);
 			if (logLevel === 'trace' || logLevel === 'debug') {
-				// runConsoleMethod('debug', msgArgs);
 				runConsoleMethod('debug', msgArgs);
 			}
 		},
@@ -13255,11 +13253,11 @@ return /******/ (function(modules) { // webpackBootstrap
 			},
 			stage: {
 				serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
-				logLevel: 'info'
+				logLevel: 'debug'
 			},
 			prod: {
 				serverUrl: 'http://tessellate.elasticbeanstalk.com',
-				logLevel: 'warn'
+				logLevel: 'info'
 			}
 		},
 		tokenName: 'tessellate',
