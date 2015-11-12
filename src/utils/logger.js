@@ -3,54 +3,50 @@ import _ from 'lodash';
 
 //Set default log level to debug
 let logLevel = 'debug';
+// if (config.envName == 'production') {
+// 	logLevel = 'warn';
+// }
 //Set log level from config
-
+if(config.logLevel){
+	logLevel = config.logLevel;
+}
 let logger = {
 	log(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (config.envName == 'production') {
+		if (logLevel === 'trace') {
 			runConsoleMethod('log', msgArgs);
-		} else {
-			runConsoleMethod('log', msgArgs);
-		}
-	},
-	info(logData) {
-		let msgArgs = buildMessageArgs(logData);
-		if (config.envName == 'production') {
-			runConsoleMethod('info', msgArgs);
-		} else {
-			runConsoleMethod('info', msgArgs);
-		}
-	},
-	warn(logData) {
-		let msgArgs = buildMessageArgs(logData);
-		if (config.envName == 'production') {
-			runConsoleMethod('warn', msgArgs);
-		} else {
-			runConsoleMethod('warn', msgArgs);
 		}
 	},
 	debug(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (config.envName == 'production') {
-			// runConsoleMethod('debug', msgArgs);
-			//Do not display console debugs in production
-		} else {
+		if (logLevel === 'trace' || logLevel === 'debug') {
 			runConsoleMethod('debug', msgArgs);
+		}
+	},
+	info(logData) {
+		if (logLevel === 'trace'  || logLevel === 'debug' || logLevel === 'info') {
+			let msgArgs = buildMessageArgs(logData);
+			runConsoleMethod('info', msgArgs);
+		} else {
+			console.info('Info called, but incorrect log level', logLevel);
+		}
+	},
+	warn(logData) {
+		let msgArgs = buildMessageArgs(logData);
+		if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn') {
+			runConsoleMethod('warn', msgArgs);
 		}
 	},
 	error(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (config.envName == 'production') {
-			//TODO: Log to external logger
-			runConsoleMethod('error', msgArgs);
-		} else {
+		if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn' || logLevel === 'error' || logLevel === 'fatal') {
 			runConsoleMethod('error', msgArgs);
 		}
 	}
 };
 
 export default logger;
+
 function runConsoleMethod(methodName, methodData) {
 	//Safley run console methods or use console log
 	if (methodName && console[methodName]) {

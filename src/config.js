@@ -12,11 +12,11 @@ let defaultConfig = {
 		},
 		stage: {
 			serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
-			logLevel: 'info'
+			logLevel: 'debug'
 		},
 		prod: {
 			serverUrl: 'http://tessellate.elasticbeanstalk.com',
-			logLevel: 'warn'
+			logLevel: 'info'
 		}
 	},
 	tokenName: 'tessellate',
@@ -25,6 +25,7 @@ let defaultConfig = {
 };
 let instance = null;
 let envName = 'prod';
+let level = null;
 class Config {
 	constructor() {
 		if (!instance) {
@@ -45,7 +46,13 @@ class Config {
 		}
 		return url;
 	}
+	set logLevel(setLevel) {
+		level = setLevel;
+	}
 	get logLevel() {
+		if (level) {
+			return level;
+		}
 		return defaultConfig.envs[envName].logLevel;
 	}
 	set envName(newEnv) {

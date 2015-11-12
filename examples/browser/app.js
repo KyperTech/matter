@@ -1,4 +1,4 @@
-var matter = new Matter('exampleApp', {logLevel: 'error'});
+var matter = new Matter('exampleApp', {logLevel: 'debug'});
 console.log('matter:', matter);
 //Set logged in status when dom is loaded
 document.addEventListener("DOMContentLoaded", function(event) {
