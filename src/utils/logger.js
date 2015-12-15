@@ -1,45 +1,34 @@
 import config from '../config';
 import _ from 'lodash';
 
-//Set default log level to debug
-let logLevel = 'debug';
-// if (config.envName == 'production') {
-// 	logLevel = 'warn';
-// }
-//Set log level from config
-if(config.logLevel){
-	logLevel = config.logLevel;
-}
 let logger = {
 	log(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (logLevel === 'trace') {
+		if (config.logLevel === 'trace') {
 			runConsoleMethod('log', msgArgs);
 		}
 	},
 	debug(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (logLevel === 'trace' || logLevel === 'debug') {
+		if (config.logLevel === 'trace' || config.logLevel === 'debug') {
 			runConsoleMethod('debug', msgArgs);
 		}
 	},
 	info(logData) {
-		if (logLevel === 'trace'  || logLevel === 'debug' || logLevel === 'info') {
+		if (config.logLevel === 'trace'  || config.logLevel === 'debug' || config.logLevel === 'info') {
 			let msgArgs = buildMessageArgs(logData);
 			runConsoleMethod('info', msgArgs);
-		} else {
-			console.info('Info called, but incorrect log level', logLevel);
 		}
 	},
 	warn(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn') {
+		if (config.logLevel === 'trace' || config.logLevel === 'debug' || config.logLevel === 'info' || config.logLevel === 'warn') {
 			runConsoleMethod('warn', msgArgs);
 		}
 	},
 	error(logData) {
 		let msgArgs = buildMessageArgs(logData);
-		if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn' || logLevel === 'error' || logLevel === 'fatal') {
+		if (config.logLevel === 'trace' || config.logLevel === 'debug' || config.logLevel === 'info' || config.logLevel === 'warn' || config.logLevel === 'error' || config.logLevel === 'fatal') {
 			runConsoleMethod('error', msgArgs);
 		}
 	}
@@ -61,7 +50,7 @@ function buildMessageArgs(logData) {
 	//TODO: Attach time stamp
 	//Attach location information to the beginning of message
 	if (_.isObject(logData)) {
-		if (logLevel == 'debug') {
+		if (config.logLevel == 'debug') {
 			if (_.has(logData, 'func')) {
 				if (_.has(logData, 'obj')) {
 					//Object and function provided

@@ -7,7 +7,10 @@
     "build:lib": "babel src --out-dir lib",
     "build:umd": "webpack src/index.js dist/matter.js --config webpack.config.development.js",
     "build:umd:min": "webpack src/index.js dist/matter.min.js --config webpack.config.production.js",
-    "build": "npm run build:lib && npm run build:umd && npm run build:umd:min",
+    "build": "npm run clean && npm run build:lib && npm run build:umd && npm run build:umd:min",
+    "watch:umd": "npm run build:umd -- --stats --progress --colors --watch",
+    "watch:lib": "npm run build:lib -- --stats --progress --colors --watch",
+    "watch": "npm run watch:umd",
     "clean": "rimraf lib dist coverage",
     "prepublish": "npm run clean && npm run build",
     "test": "gulp test"

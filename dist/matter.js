@@ -88,13 +88,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _utilsEnvStorage2 = _interopRequireDefault(_utilsEnvStorage);
 
-	var _lodash = __webpack_require__(2);
-
-	var _lodash2 = _interopRequireDefault(_lodash);
-
 	var _utilsProviderAuth = __webpack_require__(8);
 
 	var _utilsProviderAuth2 = _interopRequireDefault(_utilsProviderAuth);
+
+	var _lodash = __webpack_require__(2);
 
 	var Matter = (function () {
 		/** Constructor
@@ -106,7 +104,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 			if (!appName) {
 				_utilsLogger2['default'].error({
-					description: 'Application name requires to use Matter.',
+					description: 'Application name required to use Matter.',
 					func: 'constructor', obj: 'Matter'
 				});
 				throw new Error('Application name is required to use Matter');
@@ -117,11 +115,13 @@ return /******/ (function(modules) { // webpackBootstrap
 				this.options = opts;
 				if (this.options.logLevel) {
 					_config2['default'].logLevel = this.options.logLevel;
-					console.warn('log level set', _config2['default'].logLevel);
 				}
 			}
 			this.config = _config2['default'];
-			console.warn('config set:', this.config);
+			_utilsLogger2['default'].debug({
+				description: 'Matter object built.', matter: this,
+				func: 'constructor', obj: 'Matter'
+			});
 		}
 
 		/** Endpoint generation that handles default/provided settings and environment
@@ -147,22 +147,49 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * });
 	   */
 			value: function signup(signupData) {
-				_utilsLogger2['default'].log({
+				_utilsLogger2['default'].debug({
 					description: 'Signup called.', signupData: signupData,
 					func: 'signup', obj: 'Matter'
 				});
-				if (!signupData || !_lodash2['default'].isObject(signupData) && !_lodash2['default'].isString(signupData)) {
-					_utilsLogger2['default'].error({ description: 'Signup information is required to signup.', func: 'signup', obj: 'Matter' });
-					return Promise.reject({ message: 'Login data is required to login.' });
+				if (!signupData || !(0, _lodash.isObject)(signupData) && !(0, _lodash.isString)(signupData)) {
+					_utilsLogger2['default'].error({
+						description: 'Signup information is required to signup.',
+						func: 'signup', obj: 'Matter'
+					});
+					return Promise.reject({
+						message: 'Login data is required to login.',
+						status: 'NULL_DATA'
+					});
 				}
-				if (_lodash2['default'].isObject(signupData)) {
+				if ((0, _lodash.isObject)(signupData)) {
+					//Handle no username or email
+					if (!signupData.username && !signupData.email) {
+						_utilsLogger2['default'].error({
+							description: 'Email or Username required to signup.',
+							func: 'signup', obj: 'Matter'
+						});
+						return Promise.reject({
+							message: 'Email or Username required to signup.',
+							status: 'ID_REQUIRED'
+						});
+					}
+					if (!signupData.password) {
+						_utilsLogger2['default'].error({
+							description: 'Password is required to signup.',
+							func: 'signup', obj: 'Matter'
+						});
+						return Promise.reject({
+							message: 'Password is required to signup.',
+							status: 'PASS_REQUIRED'
+						});
+					}
 					return _utilsRequest2['default'].post(this.endpoint + '/signup', signupData).then(function (response) {
 						_utilsLogger2['default'].info({
 							description: 'Signup successful.',
 							signupData: signupData, response: response,
 							func: 'signup', obj: 'Matter'
 						});
-						if (_lodash2['default'].has(response, 'account')) {
+						if ((0, _lodash.has)(response, 'account')) {
 							return response.account;
 						} else {
 							_utilsLogger2['default'].warn({
@@ -175,13 +202,17 @@ return /******/ (function(modules) { // webpackBootstrap
 					})['catch'](function (errRes) {
 						_utilsLogger2['default'].error({
 							description: 'Error requesting signup.',
-							signupData: signupData, error: errRes,
+							signupData: signupData,
 							func: 'signup', obj: 'Matter'
 						});
 						return Promise.reject(errRes);
 					});
 				} else {
 					//Handle 3rd Party signups
+					_utilsLogger2['default'].debug({
+						description: 'Third party signup called.',
+						provider: signupData, func: 'signup', obj: 'Matter'
+					});
 					var auth = new _utilsProviderAuth2['default']({ provider: signupData, app: this });
 					return auth.signup(signupData).then(function (res) {
 						_utilsLogger2['default'].info({
@@ -214,21 +245,39 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: function login(loginData) {
 				var _this = this;
 
-				if (!loginData || !_lodash2['default'].isObject(loginData) && !_lodash2['default'].isString(loginData)) {
+				if (!loginData || !(0, _lodash.isObject)(loginData) && !(0, _lodash.isString)(loginData)) {
 					_utilsLogger2['default'].error({
 						description: 'Username/Email and Password are required to login',
 						func: 'login', obj: 'Matter'
 					});
-					return Promise.reject({ message: 'Login data is required to login.' });
+					return Promise.reject({
+						message: 'Login data is required to login.',
+						status: 'DATA_REQUIRED'
+					});
 				}
-				if (_lodash2['default'].isObject(loginData)) {
-					if (!loginData.password || !loginData.username) {
-						return Promise.reject({ message: 'Username/Email and Password are required to login' });
+				if ((0, _lodash.isObject)(loginData)) {
+					//Handle no username or email
+					if (!loginData.username && !loginData.email) {
+						_utilsLogger2['default'].error({
+							description: 'Email or Username required to login.',
+							func: 'login', obj: 'Matter'
+						});
+						return Promise.reject({
+							message: 'Email or Username required to login.',
+							status: 'ID_REQUIRED'
+						});
+					}
+					//Handle null or invalid password
+					if (!loginData.password || loginData.password === '') {
+						return Promise.reject({
+							message: 'Password is required to login.',
+							status: 'PASS_REQUIRED'
+						});
 					}
 					//Username/Email Login
 					return _utilsRequest2['default'].put(this.endpoint + '/login', loginData).then(function (response) {
-						if (_lodash2['default'].has(response, 'data') && _lodash2['default'].has(response.data, 'status') && response.data.status == 409) {
-							_utilsLogger2['default'].warn({
+						if ((0, _lodash.has)(response, 'data') && (0, _lodash.has)(response.data, 'status') && response.data.status == 409) {
+							_utilsLogger2['default'].error({
 								description: 'Account not found.', response: response,
 								func: 'login', obj: 'Matter'
 							});
@@ -238,17 +287,17 @@ return /******/ (function(modules) { // webpackBootstrap
 								description: 'Successful login.', response: response,
 								func: 'login', obj: 'Matter'
 							});
-							if (_lodash2['default'].has(response, 'token')) {
+							if ((0, _lodash.has)(response, 'token')) {
 								_this.token.string = response.token;
 							}
 							var userAccount = {};
 							//Get user data either directly from response or from token
-							if (_lodash2['default'].has(response, 'account')) {
+							if ((0, _lodash.has)(response, 'account')) {
 								userAccount = response.account;
 							} else if (_this.token.data) {
 								//TODO: Handle more Auth Provider tokens
 								//Check for AuthRocket style token
-								_utilsLogger2['default'].log({
+								_utilsLogger2['default'].debug({
 									description: 'User data available from token.',
 									tokenData: _this.token.data, type: typeof _this.token.data,
 									func: 'login', obj: 'Matter'
@@ -264,7 +313,7 @@ return /******/ (function(modules) { // webpackBootstrap
 										authrocketId: _this.token.data.uid || null
 									};
 								} else {
-									_utilsLogger2['default'].log({
+									_utilsLogger2['default'].debug({
 										description: 'Token is default format.',
 										func: 'login', obj: 'Matter'
 									});
@@ -329,7 +378,10 @@ return /******/ (function(modules) { // webpackBootstrap
 						description: 'No logged in account to log out.',
 						func: 'logout', obj: 'Matter'
 					});
-					return Promise.reject({ message: 'No logged in account to log out.' });
+					return Promise.reject({
+						message: 'No logged in account to log out.',
+						status: 'NULL_ACCOUNT'
+					});
 				}
 				return _utilsRequest2['default'].put(this.endpoint + '/logout').then(function (response) {
 					_utilsLogger2['default'].info({
@@ -366,28 +418,42 @@ return /******/ (function(modules) { // webpackBootstrap
 				var _this3 = this;
 
 				if (this.currentUser) {
+					_utilsLogger2['default'].debug({
+						description: 'Current is already available. Returning user.',
+						func: 'currentUser', obj: 'Matter'
+					});
 					return Promise.resolve(this.currentUser);
-				} else {
-					if (this.isLoggedIn) {
-						return _utilsRequest2['default'].get(this.endpoint + '/user').then(function (response) {
-							//TODO: Save user information locally
-							_utilsLogger2['default'].log({ description: 'Current User Request responded.', responseData: response, func: 'currentUser', obj: 'Matter' });
-							_this3.currentUser = response;
-							return response;
-						})['catch'](function (errRes) {
-							if (errRes.status == 401) {
-								_utilsLogger2['default'].warn({ description: 'Called for current user without token.', error: errRes, func: 'currentUser', obj: 'Matter' });
-								_utilsToken2['default']['delete']();
-								return Promise.resolve(null);
-							} else {
-								_utilsLogger2['default'].error({ description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter' });
-								return Promise.reject(errRes);
-							}
+				}
+				if (!this.isLoggedIn) {
+					_utilsLogger2['default'].debug({
+						description: 'Current user is null.',
+						func: 'currentUser', obj: 'Matter'
+					});
+					return Promise.resolve(null);
+				}
+				return _utilsRequest2['default'].get(this.endpoint + '/user').then(function (response) {
+					//TODO: Save user information locally
+					_utilsLogger2['default'].log({
+						description: 'Current User Request responded.',
+						responseData: response, func: 'currentUser', obj: 'Matter'
+					});
+					_this3.currentUser = response;
+					return response;
+				})['catch'](function (errRes) {
+					if (errRes.status == 401) {
+						_utilsLogger2['default'].warn({
+							description: 'Called for current user without token.',
+							error: errRes, func: 'currentUser', obj: 'Matter'
 						});
-					} else {
+						_utilsToken2['default']['delete']();
 						return Promise.resolve(null);
 					}
-				}
+					_utilsLogger2['default'].error({
+						description: 'Error requesting current user.',
+						error: errRes, func: 'currentUser', obj: 'Matter'
+					});
+					return Promise.reject(errRes);
+				});
 			}
 
 			/** updateProfile
@@ -413,9 +479,19 @@ return /******/ (function(modules) { // webpackBootstrap
 					});
 					return Promise.reject({ message: 'Must be logged in to update profile.' });
 				}
+				if (!updateData) {
+					_utilsLogger2['default'].error({
+						description: 'Data is required to update profile.',
+						func: 'updateProfile', obj: 'Matter'
+					});
+					return Promise.reject({
+						message: 'Data required to update profile.',
+						status: 'NULL_DATA'
+					});
+				}
 				//Send update request
 				return _utilsRequest2['default'].put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
-					_utilsLogger2['default'].log({
+					_utilsLogger2['default'].info({
 						description: 'Update profile request responded.',
 						responseData: response, func: 'updateProfile', obj: 'Matter'
 					});
@@ -431,11 +507,12 @@ return /******/ (function(modules) { // webpackBootstrap
 			}
 
 			/** changePassword
-	   * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+	   * @param {String} updateData - New password for account.
 	   * @return {Promise}
 	   * @example
-	   * //Update current account's profile
-	   * matter.changePassword().then(function(updatedAccount){
+	   * //Update current account's password
+	   * var newPassword = 'asdfasdfasdf';
+	   * matter.changePassword(newPassword).then(function(updatedAccount){
 	   *  console.log('Currently logged in account:', updatedAccount);
 	   * }, function(err){
 	   *  console.error('Error updating profile:', err);
@@ -443,7 +520,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 		}, {
 			key: 'changePassword',
-			value: function changePassword(updateData) {
+			value: function changePassword(newPassword) {
 				if (!this.isLoggedIn) {
 					_utilsLogger2['default'].error({
 						description: 'No current user profile for which to change password.',
@@ -452,7 +529,7 @@ return /******/ (function(modules) { // webpackBootstrap
 					return Promise.reject({ message: 'Must be logged in to change password.' });
 				}
 				//Send update request
-				return _utilsRequest2['default'].put(this.endpoint + '/user/' + this.token.data.username, updateData).then(function (response) {
+				return _utilsRequest2['default'].put(this.endpoint + '/user/' + this.token.data.username, newPassword).then(function (response) {
 					_utilsLogger2['default'].log({
 						description: 'Update password request responded.',
 						responseData: response, func: 'changePassword', obj: 'Matter'
@@ -478,7 +555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				}
 				//Send update request
 				return _utilsRequest2['default'].post(this.endpoint + '/accounts/' + this.token.data.username + '/recover').then(function (response) {
-					_utilsLogger2['default'].log({
+					_utilsLogger2['default'].info({
 						description: 'Recover password request responded.',
 						responseData: response, func: 'recoverPassword',
 						obj: 'Matter'
@@ -523,14 +600,21 @@ return /******/ (function(modules) { // webpackBootstrap
 				var _this5 = this;
 
 				if (!this.isLoggedIn) {
+					_utilsLogger2['default'].error({
+						description: 'No logged in user to check for groups.',
+						func: 'isInGroup', obj: 'Matter'
+					});
+					return false;
+				}
+				if (!checkGroups) {
 					_utilsLogger2['default'].log({
-						description: 'No logged in user to check.',
+						description: 'Invalid group(s).',
 						func: 'isInGroup', obj: 'Matter'
 					});
 					return false;
 				}
 				//Check if user is
-				if (checkGroups && _lodash2['default'].isString(checkGroups)) {
+				if ((0, _lodash.isString)(checkGroups)) {
 					var _ret = (function () {
 						var groupName = checkGroups;
 						//Single role or string list of roles
@@ -553,7 +637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 								func: 'isInGroup', obj: 'Matter'
 							});
 							return {
-								v: _lodash2['default'].any(groups, function (group) {
+								v: (0, _lodash.any)(groups, function (group) {
 									return groupName == group.name;
 								})
 							};
@@ -561,8 +645,8 @@ return /******/ (function(modules) { // webpackBootstrap
 					})();
 
 					if (typeof _ret === 'object') return _ret.v;
-				} else if (checkGroups && _lodash2['default'].isArray(checkGroups)) {
-					//Array of roles
+				} else if ((0, _lodash.isArray)(checkGroups)) {
+					//Array of groups/roles
 					//Check that user is in every group
 					_utilsLogger2['default'].info({
 						description: 'Array of groups.', list: checkGroups,
@@ -572,7 +656,6 @@ return /******/ (function(modules) { // webpackBootstrap
 				} else {
 					return false;
 				}
-				//TODO: Handle string and array inputs
 			}
 
 			/** Check that user is in all of a list of groups
@@ -600,15 +683,22 @@ return /******/ (function(modules) { // webpackBootstrap
 					});
 					return false;
 				}
+				if (!checkGroups) {
+					_utilsLogger2['default'].log({
+						description: 'Invalid group(s).',
+						func: 'isInGroup', obj: 'Matter'
+					});
+					return false;
+				}
 				//Check if user is in any of the provided groups
-				if (checkGroups && _lodash2['default'].isArray(checkGroups)) {
-					return _lodash2['default'].every(_lodash2['default'].map(checkGroups, function (group) {
-						if (_lodash2['default'].isString(group)) {
+				if ((0, _lodash.isArray)(checkGroups)) {
+					return (0, _lodash.every)(checkGroups.map(function (group) {
+						if ((0, _lodash.isString)(group)) {
 							//Group is string
 							return _this6.isInGroup(group);
 						} else {
 							//Group is object
-							if (_lodash2['default'].has(group, 'name')) {
+							if ((0, _lodash.has)(group, 'name')) {
 								return _this6.isInGroup(group.name);
 							} else {
 								_utilsLogger2['default'].error({
@@ -619,7 +709,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							}
 						}
 					}), true);
-				} else if (checkGroups && _lodash2['default'].isString(checkGroups)) {
+				} else if ((0, _lodash.isString)(checkGroups)) {
 					//TODO: Handle spaces within string list
 					var groupsArray = checkGroups.split(',');
 					if (groupsArray.length > 1) {
@@ -638,7 +728,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			key: 'endpoint',
 			get: function get() {
 				//Handle options
-				if (_lodash2['default'].has(this, 'options')) {
+				if ((0, _lodash.has)(this, 'options')) {
 					if (this.options.localServer) {
 						_config2['default'].envName = 'local';
 						_utilsLogger2['default'].log({
@@ -658,7 +748,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				//Handle tessellate as name
 				if (this.name == 'tessellate') {
 					//Remove url if host is a tessellate server
-					if (typeof window !== 'undefined' && _lodash2['default'].has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
+					if (typeof window !== 'undefined' && (0, _lodash.has)(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
 						appEndpoint = '';
 						_utilsLogger2['default'].info({
 							description: 'Host is Tessellate Server, serverUrl simplified!',
@@ -694,10 +784,9 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'currentUser',
 			set: function set(userData) {
-				_utilsLogger2['default'].log({
+				_utilsLogger2['default'].debug({
 					description: 'Current User set.', user: userData,
 					func: 'currentUser', obj: 'Matter'
-
 				});
 				this.storage.setItem(_config2['default'].tokenUserDataName, userData);
 			},
@@ -772,45 +861,34 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _lodash2 = _interopRequireDefault(_lodash);
 
-	//Set default log level to debug
-	var logLevel = 'debug';
-	// if (config.envName == 'production') {
-	// 	logLevel = 'warn';
-	// }
-	//Set log level from config
-	if (_config2['default'].logLevel) {
-		logLevel = _config2['default'].logLevel;
-	}
 	var logger = {
 		log: function log(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (logLevel === 'trace') {
+			if (_config2['default'].logLevel === 'trace') {
 				runConsoleMethod('log', msgArgs);
 			}
 		},
 		debug: function debug(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (logLevel === 'trace' || logLevel === 'debug') {
+			if (_config2['default'].logLevel === 'trace' || _config2['default'].logLevel === 'debug') {
 				runConsoleMethod('debug', msgArgs);
 			}
 		},
 		info: function info(logData) {
-			if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info') {
+			if (_config2['default'].logLevel === 'trace' || _config2['default'].logLevel === 'debug' || _config2['default'].logLevel === 'info') {
 				var msgArgs = buildMessageArgs(logData);
 				runConsoleMethod('info', msgArgs);
-			} else {
-				console.info('Info called, but incorrect log level', logLevel);
 			}
 		},
 		warn: function warn(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn') {
+			if (_config2['default'].logLevel === 'trace' || _config2['default'].logLevel === 'debug' || _config2['default'].logLevel === 'info' || _config2['default'].logLevel === 'warn') {
 				runConsoleMethod('warn', msgArgs);
 			}
 		},
 		error: function error(logData) {
 			var msgArgs = buildMessageArgs(logData);
-			if (logLevel === 'trace' || logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn' || logLevel === 'error' || logLevel === 'fatal') {
+			if (_config2['default'].logLevel === 'trace' || _config2['default'].logLevel === 'debug' || _config2['default'].logLevel === 'info' || _config2['default'].logLevel === 'warn' || _config2['default'].logLevel === 'error' || _config2['default'].logLevel === 'fatal') {
 				runConsoleMethod('error', msgArgs);
 			}
 		}
@@ -832,7 +910,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		//TODO: Attach time stamp
 		//Attach location information to the beginning of message
 		if (_lodash2['default'].isObject(logData)) {
-			if (logLevel == 'debug') {
+			if (_config2['default'].logLevel == 'debug') {
 				if (_lodash2['default'].has(logData, 'func')) {
 					if (_lodash2['default'].has(logData, 'obj')) {
 						//Object and function provided

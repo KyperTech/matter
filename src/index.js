@@ -4,8 +4,12 @@ import dom from './utils/dom';
 import request from './utils/request';
 import token from './utils/token';
 import envStorage from './utils/envStorage';
-import _ from 'lodash';
 import ProviderAuth from './utils/providerAuth';
+import {
+	isString, isArray,
+	isObject, has,
+	any, every
+} from 'lodash';
 
 class Matter {
 	/** Constructor
@@ -14,7 +18,7 @@ class Matter {
 	constructor(appName, opts) {
 		if (!appName) {
 			logger.error({
-				description: 'Application name requires to use Matter.',
+				description: 'Application name required to use Matter.',
 				func: 'constructor', obj: 'Matter'
 			});
 			throw new Error('Application name is required to use Matter');
@@ -25,18 +29,20 @@ class Matter {
 			this.options = opts;
 			if(this.options.logLevel){
 				config.logLevel = this.options.logLevel;
-				console.warn('log level set', config.logLevel);
 			}
 		}
 		this.config = config;
-		console.warn('config set:', this.config);
+		logger.debug({
+			description: 'Matter object built.', matter: this,
+			func: 'constructor', obj: 'Matter'
+		});
 	}
 	/** Endpoint generation that handles default/provided settings and environment
 	 * @return {String} endpoint - endpoint for tessellate application
 	 */
 	get endpoint() {
 		//Handle options
-		if (_.has(this, 'options')) {
+		if (has(this, 'options')) {
 			if (this.options.localServer) {
 				config.envName = 'local';
 				logger.log({
@@ -56,7 +62,7 @@ class Matter {
 		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
-			if (typeof window !== 'undefined' && _.has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
+			if (typeof window !== 'undefined' && has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
 				appEndpoint = '';
 				logger.info({
 					description: 'Host is Tessellate Server, serverUrl simplified!',
@@ -92,15 +98,42 @@ class Matter {
 	 * });
 	 */
 	signup(signupData) {
-		logger.log({
+		logger.debug({
 			description: 'Signup called.', signupData: signupData,
 			func: 'signup', obj: 'Matter'
 		});
-		if (!signupData || (!_.isObject(signupData) && !_.isString(signupData))) {
-			logger.error({description: 'Signup information is required to signup.', func: 'signup', obj: 'Matter'});
-			return Promise.reject({message: 'Login data is required to login.'});
+		if (!signupData || (!isObject(signupData) && !isString(signupData))) {
+			logger.error({
+				description: 'Signup information is required to signup.',
+				func: 'signup', obj: 'Matter'
+			});
+			return Promise.reject({
+				message: 'Login data is required to login.',
+				status: 'NULL_DATA'
+			});
 		}
-		if (_.isObject(signupData)) {
+		if (isObject(signupData)) {
+			//Handle no username or email
+			if (!signupData.username && !signupData.email) {
+				logger.error({
+					description: 'Email or Username required to signup.',
+					func: 'signup', obj: 'Matter'
+				});
+				return Promise.reject({
+					message: 'Email or Username required to signup.',
+					status: 'ID_REQUIRED'
+				});
+			}
+			if (!signupData.password) {
+				logger.error({
+					description: 'Password is required to signup.',
+					func: 'signup', obj: 'Matter'
+				});
+				return Promise.reject({
+					message: 'Password is required to signup.',
+					status: 'PASS_REQUIRED'
+				});
+			}
 			return request.post(this.endpoint + '/signup', signupData)
 			.then((response) => {
 				logger.info({
@@ -108,7 +141,7 @@ class Matter {
 					signupData: signupData, response: response,
 					func: 'signup', obj: 'Matter'
 				});
-				if (_.has(response, 'account')) {
+				if (has(response, 'account')) {
 					return response.account;
 				} else {
 					logger.warn({
@@ -122,13 +155,17 @@ class Matter {
 			['catch']((errRes) => {
 				logger.error({
 					description: 'Error requesting signup.',
-					signupData: signupData, error: errRes,
+					signupData: signupData,
 					func: 'signup', obj: 'Matter'
 				});
 				return Promise.reject(errRes);
 			});
 		} else {
 			//Handle 3rd Party signups
+			logger.debug({
+				description: 'Third party signup called.',
+				provider: signupData, func: 'signup', obj: 'Matter'
+			});
 			let auth = new ProviderAuth({provider: signupData, app: this});
 			return auth.signup(signupData).then((res) => {
 				logger.info({
@@ -156,22 +193,40 @@ class Matter {
 	 * });
 	 */
 	login(loginData) {
-		if (!loginData || (!_.isObject(loginData) && !_.isString(loginData))) {
+		if (!loginData || (!isObject(loginData) && !isString(loginData))) {
 			logger.error({
 				description: 'Username/Email and Password are required to login',
 				func: 'login', obj: 'Matter'
 			});
-			return Promise.reject({message: 'Login data is required to login.'});
+			return Promise.reject({
+				message: 'Login data is required to login.',
+				status: 'DATA_REQUIRED'
+			});
 		}
-		if (_.isObject(loginData)) {
-			if (!loginData.password || !loginData.username) {
-				return Promise.reject({message: 'Username/Email and Password are required to login'});
+		if (isObject(loginData)) {
+			//Handle no username or email
+			if (!loginData.username && !loginData.email) {
+				logger.error({
+					description: 'Email or Username required to login.',
+					func: 'login', obj: 'Matter'
+				});
+				return Promise.reject({
+					message: 'Email or Username required to login.',
+					status: 'ID_REQUIRED'
+				});
+			}
+			//Handle null or invalid password
+			if (!loginData.password || loginData.password === '') {
+				return Promise.reject({
+					message: 'Password is required to login.',
+					status: 'PASS_REQUIRED'
+				});
 			}
 			//Username/Email Login
 			return request.put(this.endpoint + '/login', loginData)
 			.then((response) => {
-				if (_.has(response, 'data') && _.has(response.data, 'status') && response.data.status == 409) {
-					logger.warn({
+				if (has(response, 'data') && has(response.data, 'status') && response.data.status == 409) {
+					logger.error({
 						description: 'Account not found.',response: response,
 						func: 'login', obj: 'Matter'
 					});
@@ -181,17 +236,17 @@ class Matter {
 						description: 'Successful login.', response: response,
 						func: 'login', obj: 'Matter'
 					});
-					if (_.has(response, 'token')) {
+					if (has(response, 'token')) {
 						this.token.string = response.token;
 					}
 					let userAccount = {};
 					//Get user data either directly from response or from token
-					if (_.has(response, 'account')) {
+					if (has(response, 'account')) {
 						userAccount = response.account;
 					} else if (this.token.data) {
 						//TODO: Handle more Auth Provider tokens
 						//Check for AuthRocket style token
-						logger.log({
+						logger.debug({
 							description: 'User data available from token.',
 							tokenData: this.token.data, type: typeof this.token.data,
 							func: 'login', obj: 'Matter'
@@ -207,7 +262,7 @@ class Matter {
 								authrocketId: this.token.data.uid || null
 							};
 						} else {
-							logger.log({
+							logger.debug({
 								description: 'Token is default format.',
 								func: 'login', obj: 'Matter'
 							});
@@ -267,7 +322,10 @@ class Matter {
 				description: 'No logged in account to log out.',
 				func: 'logout', obj: 'Matter'
 			});
-			return Promise.reject({message: 'No logged in account to log out.'});
+			return Promise.reject({
+				message: 'No logged in account to log out.',
+				status: 'NULL_ACCOUNT'
+			});
 		}
 		return request.put(this.endpoint + '/logout').then((response) => {
 			logger.info({
@@ -299,28 +357,42 @@ class Matter {
 	 */
 	getCurrentUser() {
 		if (this.currentUser) {
+			logger.debug({
+				description: 'Current is already available. Returning user.',
+				func: 'currentUser', obj: 'Matter'
+			});
 			return Promise.resolve(this.currentUser);
-		} else {
-			if (this.isLoggedIn) {
-				return request.get(this.endpoint + '/user').then((response) => {
-					//TODO: Save user information locally
-					logger.log({description: 'Current User Request responded.', responseData: response, func: 'currentUser', obj: 'Matter'});
-					this.currentUser = response;
-					return response;
-				})['catch']((errRes) => {
-					if (errRes.status == 401) {
-						logger.warn({description: 'Called for current user without token.', error: errRes, func: 'currentUser', obj: 'Matter'});
-						token.delete();
-						return Promise.resolve(null);
-					} else {
-						logger.error({description: 'Error requesting current user.', error: errRes, func: 'currentUser', obj: 'Matter'});
-						return Promise.reject(errRes);
-					}
+		}
+		if (!this.isLoggedIn) {
+			logger.debug({
+				description: 'Current user is null.',
+				func: 'currentUser', obj: 'Matter'
+			});
+			return Promise.resolve(null);
+		}
+		return request.get(this.endpoint + '/user').then((response) => {
+			//TODO: Save user information locally
+			logger.log({
+				description: 'Current User Request responded.',
+				responseData: response, func: 'currentUser', obj: 'Matter'
+			});
+			this.currentUser = response;
+			return response;
+		})['catch']((errRes) => {
+			if (errRes.status == 401) {
+				logger.warn({
+					description: 'Called for current user without token.',
+					error: errRes, func: 'currentUser', obj: 'Matter'
 				});
-			} else {
+				token.delete();
 				return Promise.resolve(null);
 			}
-		}
+			logger.error({
+				description: 'Error requesting current user.',
+				error: errRes, func: 'currentUser', obj: 'Matter'
+			});
+			return Promise.reject(errRes);
+		});
 	}
 
 	/** updateProfile
@@ -342,9 +414,19 @@ class Matter {
 			});
 			return Promise.reject({message: 'Must be logged in to update profile.'});
 		}
+		if (!updateData) {
+			logger.error({
+				description: 'Data is required to update profile.',
+				func: 'updateProfile', obj: 'Matter'
+			});
+			return Promise.reject({
+				message: 'Data required to update profile.',
+				status: 'NULL_DATA'
+			});
+		}
 		//Send update request
 		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
-			logger.log({
+			logger.info({
 				description: 'Update profile request responded.',
 				responseData: response, func: 'updateProfile', obj: 'Matter'
 			});
@@ -359,17 +441,18 @@ class Matter {
 		});
 	}
 	/** changePassword
-	 * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+	 * @param {String} updateData - New password for account.
 	 * @return {Promise}
 	 * @example
-	 * //Update current account's profile
-	 * matter.changePassword().then(function(updatedAccount){
+	 * //Update current account's password
+	 * var newPassword = 'asdfasdfasdf';
+	 * matter.changePassword(newPassword).then(function(updatedAccount){
 	 *  console.log('Currently logged in account:', updatedAccount);
 	 * }, function(err){
 	 *  console.error('Error updating profile:', err);
 	 * });
 	 */
-	changePassword(updateData) {
+	changePassword(newPassword) {
 		if (!this.isLoggedIn) {
 			logger.error({
 				description: 'No current user profile for which to change password.',
@@ -378,7 +461,7 @@ class Matter {
 			return Promise.reject({message: 'Must be logged in to change password.'});
 		}
 		//Send update request
-		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
+		return request.put(`${this.endpoint}/user/${this.token.data.username}` , newPassword).then((response) => {
 			logger.log({
 				description: 'Update password request responded.',
 				responseData: response, func: 'changePassword', obj: 'Matter'
@@ -402,7 +485,7 @@ class Matter {
 		}
 		//Send update request
 		return request.post(`${this.endpoint}/accounts/${this.token.data.username}/recover`).then((response) => {
-			logger.log({
+			logger.info({
 				description: 'Recover password request responded.',
 				responseData: response, func: 'recoverPassword',
 				obj: 'Matter'
@@ -437,11 +520,9 @@ class Matter {
 	 * console.log('New current user set:', matter.currentUser);
 	 */
 	set currentUser(userData) {
-		logger.log({
+		logger.debug({
 			description: 'Current User set.', user: userData,
 			func: 'currentUser', obj: 'Matter'
-
-
 		});
 		this.storage.setItem(config.tokenUserDataName, userData);
 	}
@@ -496,14 +577,21 @@ class Matter {
 	 */
 	isInGroup(checkGroups) {
 		if (!this.isLoggedIn) {
+			logger.error({
+				description: 'No logged in user to check for groups.',
+				func: 'isInGroup', obj: 'Matter'
+			});
+			return false;
+		}
+		if (!checkGroups) {
 			logger.log({
-				description: 'No logged in user to check.',
+				description: 'Invalid group(s).',
 				func: 'isInGroup', obj: 'Matter'
 			});
 			return false;
 		}
 		//Check if user is
-		if (checkGroups && _.isString(checkGroups)) {
+		if (isString(checkGroups)) {
 			let groupName = checkGroups;
 			//Single role or string list of roles
 			let groupsArray = groupName.split(',');
@@ -522,12 +610,12 @@ class Matter {
 					group: groupName, userGroups: this.token.data.groups,
 					func: 'isInGroup', obj: 'Matter'
 				});
-				return _.any(groups, (group) =>  {
+				return any(groups, (group) =>  {
 					return groupName == group.name;
 				});
 			}
-		} else if (checkGroups && _.isArray(checkGroups)) {
-			//Array of roles
+		} else if (isArray(checkGroups)) {
+			//Array of groups/roles
 			//Check that user is in every group
 			logger.info({
 				description: 'Array of groups.', list: checkGroups,
@@ -537,7 +625,6 @@ class Matter {
 		} else {
 			return false;
 		}
-		//TODO: Handle string and array inputs
 	}
 	/** Check that user is in all of a list of groups
 	 * @param {Array|String} checkGroups - List of groups to check for account membership
@@ -560,15 +647,22 @@ class Matter {
 			});
 			return false;
 		}
+		if (!checkGroups) {
+			logger.log({
+				description: 'Invalid group(s).',
+				func: 'isInGroup', obj: 'Matter'
+			});
+			return false;
+		}
 		//Check if user is in any of the provided groups
-		if (checkGroups && _.isArray(checkGroups)) {
-			return _.every(_.map(checkGroups, (group) =>  {
-				if (_.isString(group)) {
+		if (isArray(checkGroups)) {
+			return every(checkGroups.map((group) => {
+				if (isString(group)) {
 					//Group is string
 					return this.isInGroup(group);
 				} else {
 					//Group is object
-					if (_.has(group, 'name')) {
+					if (has(group, 'name')) {
 						return this.isInGroup(group.name);
 					} else {
 						logger.error({
@@ -579,7 +673,7 @@ class Matter {
 					}
 				}
 			}), true);
-		} else if (checkGroups && _.isString(checkGroups)) {
+		} else if (isString(checkGroups)) {
 			//TODO: Handle spaces within string list
 			let groupsArray = checkGroups.split(',');
 			if (groupsArray.length > 1) {
