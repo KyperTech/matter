@@ -2,7 +2,7 @@
 	"distFolder":"dist",
 	"folders": {
 		"dist": "dist",
-		"dev": "dev",
+		"dev": "src",
 		"docs": "docs"
 	},
 	"cdn":{
@@ -10,6 +10,6 @@
 		"path":"js/matter"
 	},
 	"linkedModules":{
-		
+
 	}
 }

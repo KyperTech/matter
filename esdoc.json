@@ -2,11 +2,11 @@
   "source": "./src",
   "destination": "./docs",
   "access": ["public"],
-  "autoPrivate": true,
+  "excludes":["config"],
   "unexportIdentifier": false,
-  "undocumentIdentifier": true,
   "builtinExternal": true,
   "index": "./README.md",
   "package": "./package.json",
-  "includeSource": true
+  "includeSource": true,
+  "lint": false
 }

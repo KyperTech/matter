@@ -304,7 +304,7 @@ class Matter {
 			});
 		}
 	}
-	/** Logout
+	/** logout
 	 * @description Log out of currently logged in user account
 	 * @return {Promise}
 	 * @example
@@ -394,7 +394,6 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-
 	/** updateProfile
 	 * @param {Object} updateData - Data to update within profile (only provided data will be modified).
 	 * @return {Promise}
@@ -441,7 +440,7 @@ class Matter {
 		});
 	}
 	/** changePassword
-	 * @param {String} updateData - New password for account.
+	 * @param {String} updateData New password for account.
 	 * @return {Promise}
 	 * @example
 	 * //Update current account's password
@@ -475,6 +474,17 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+	/** recoverPassword
+	 * @param {String} updateData New password for account.
+	 * @return {Promise}
+	 * @example
+	 * //Recover current users password
+	 * matter.recoverPassword().then(function(updatedAccount){
+	 *  console.log('Currently logged in account:', updatedAccount);
+	 * }, function(err){
+	 *  console.error('Error updating profile:', err);
+	 * });
+	 */
 	recoverPassword() {
 		if (!this.isLoggedIn) {
 			logger.error({

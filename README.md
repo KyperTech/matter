@@ -1,34 +1,13 @@
 # Matter
-<p align="center">
-  <!-- Npm Version -->
-  <a href="https://npmjs.org/package/kyper-matter">
-    <img src="https://img.shields.io/npm/v/kyper-matter.svg" alt="npm version">
-  </a>
-  <!-- Build Status -->
-  <a href="https://travis-ci.org/KyperTech/matter">
-    <img title="Build Status" src="https://travis-ci.org/KyperTech/matter.svg">
-  </a>
-  <!-- Dependency Status -->
-  <a href="https://david-dm.org/KyperTech/matter">
-    <img src="https://david-dm.org/KyperTech/matter.svg" alt="dependency status">
-  </a>
-  <!-- Codeclimate -->
-  <a href="https://codeclimate.com/github/KyperTech/matter">
-    <img src="https://codeclimate.com/github/KyperTech/matter/badges/gpa.svg" alt="codeclimate">
-  </a>
-  <!-- Coverage -->
-  <a href="https://codeclimate.com/github/KyperTech/matter">
-    <img src="https://codeclimate.com/github/KyperTech/matter/badges/coverage.svg" alt="Coverage">
-  </a>
-  <!-- Documentation Coverage -->
-  <a href="http://cdn.kyper.io/js/matter/latest/docs/class/src/matter.js~Matter.html">
-    <img src="http://cdn.kyper.io/js/matter/latest/docs/badge.svg" alt="Docs Coverage"
-  </a>
-  <!-- License -->
-  <a href="https://github.com/KyperTech/matter/blob/master/LICENSE">
-    <img src="https://img.shields.io/npm/l/kyper-matter.svg" alt="license">
-  </a>
-</p>
+
+[![npm version](https://img.shields.io/npm/v/kyper-matter.svg?style=flat-square)](https://www.npmjs.com/package/kyper-matter)
+[![npm downloads](https://img.shields.io/npm/dm/kyper-matter.svg?style=flat-square)](https://www.npmjs.com/package/kyper-matter)
+[![build status](https://img.shields.io/travis/KyperTech/matter/master.svg?style=flat-square)](https://travis-ci.org/KyperTech/matter)
+[![dependencies status](https://img.shields.io/david/KyperTech/matter/master.svg?style=flat-square)](https://david-dm.org/KyperTech/matter)
+[![codeclimate](https://img.shields.io/codeclimate/github/KyperTech/matter.svg?style=flat-square)](https://codeclimate.com/github/KyperTech/matter)
+[![coverage](https://img.shields.io/codeclimate/coverage/github/KyperTech/matter.svg?style=flat-square)](https://codeclimate.com/github/KyperTech/matter)
+[![license](https://img.shields.io/npm/l/kyper-matter.svg?style=flat-square)](https://github.com/KyperTech/matter/blob/master/LICENSE)
+
 > *What are the minimal tools I need to make an app* **matter**?
 
 Matter is a Javascript library that provides common web application functionality such as user authentication and local/session/token storage. This library communicates with [Tessellate](https://github.com/KyperTech/tessellate) for application data, but custom server setups are on the roadmap.
@@ -79,7 +58,7 @@ matter.login({username:"test", password:"test"}).then(function(user){
 
 ## Docs
 
-### [API Documentation](http://cdn.kyper.io/js/matter/latest/docs/class/src/matter.js~Matter.html)
+### [API Documentation](http://cdn.kyper.io/js/matter/latest/docs/index.html)
 
 ### [Examples](https://github.com/KyperTech/matter/tree/master/examples)
 

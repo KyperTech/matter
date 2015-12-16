@@ -98,7 +98,8 @@ gulp.task('upload:docs', function() {
 // Generate docs based on comments
 const esdocConfig = require('./esdoc.json');
 gulp.task('docs', function() {
-  gulp.src('./' + conf.devFolder)
+  console.log('docs for:', './' + conf.folders.dev + '/**/*.js');
+  gulp.src('./' + conf.folders.dev + '/**/*.js')
   .pipe($.esdoc(esdocConfig));
 });
 
