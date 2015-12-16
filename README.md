@@ -13,7 +13,7 @@
     <img src="https://david-dm.org/KyperTech/matter.svg" alt="dependency status">
   </a>
   <!-- Codeclimate -->
-  <a href="https://codeclimate.com/github/kypertech/matter">
+  <a href="https://codeclimate.com/github/KyperTech/matter">
     <img src="https://codeclimate.com/github/KyperTech/matter/badges/gpa.svg" alt="codeclimate">
   </a>
   <!-- Coverage -->
@@ -25,7 +25,7 @@
     <img src="http://cdn.kyper.io/js/matter/latest/docs/badge.svg" alt="Docs Coverage"
   </a>
   <!-- License -->
-  <a href="https://github.com/KyperTech/matter/blob/master/LICENSE.md">
+  <a href="https://github.com/KyperTech/matter/blob/master/LICENSE">
     <img src="https://img.shields.io/npm/l/kyper-matter.svg" alt="license">
   </a>
 </p>
@@ -48,7 +48,7 @@ Using Matter requires having created an application on [Tessellate](http://tesse
 
     ```html
     <!-- Matter Library Bundle -->
-    <script src="http://cdn.kyper.io/js/matter/0.1.6/matter.js"></script>
+    <script src="http://cdn.kyper.io/js/matter/0.1.7/matter.js"></script>
     ```
   #### Bower
   Run `bower install --save kyper-matter`
