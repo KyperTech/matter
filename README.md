@@ -10,13 +10,13 @@
 
 > *What are the minimal tools I need to make an app* **matter**?
 
-Matter is a Javascript library that provides common web application functionality such as user authentication and local/session/token storage. This library communicates with [Tessellate](https://github.com/KyperTech/tessellate) for application data, but custom server setups are on the roadmap.
+Matter is a Javascript library that provides common web application functionality such as user authentication and local/session/token storage. This library is built to communicate with a [Tessellate Server](https://github.com/KyperTech/tessellate) such as [Tessellate](http://tessellate.kyper.io) for application data, but custom server setups are on the roadmap.
 
 Matter is Isomorphic, which means it will work well in both Browser and NodeJS environments. ES6 functionality is also available through importing and/or extending Matter (more details below).
 
 ## Quick Start
 
-Using Matter requires having created an application on [Tessellate](http://tessellate.elasticbeanstalk.com) or [running your own Tessellate server]().
+Using Matter requires having created an application on [Build](http://build.kyper.io), [Tessellate](http://tessellate.kyper.io) or on [your own Tessellate server](https://github.com/KyperTech/tessellate/wiki/Run-Your-Own).
 
 ### Browser
 1. Include the Matter library using one of the following:
@@ -32,29 +32,71 @@ Using Matter requires having created an application on [Tessellate](http://tesse
   #### Bower
   Run `bower install --save kyper-matter`
 
-1. Start using Matter by providing the name of the app you created on [Tessellate](http://tessellate.elasticbeanstalk.com).
-
+2. Start using Matter by providing the name of the app you created on [Build](http://build.kyper.io) or [Tessellate](http://tessellate.kyper.io):
   ```javascript
   //New Matter object with the application name 'exampleApp'
   var matter = new Matter('exampleApp');
-
-  //Login to account with username "test" and password "test"
-  matter.login({username:"test", password:"test"}).then(function(user){
-      console.log('User logged into exampleApp:', user);
-  });
   ```
-
-### ES6 or NodeJS
-1. Run `npm install --save kyper-matter`
-2. Start using matter:
+3. Start using Matter:
 ```javascript
-//New matter object with the application name 'exampleApp'
-var matter = new Matter('exampleApp');
 //Login to account with username "test" and password "test"
 matter.login({username:"test", password:"test"}).then(function(user){
     console.log('User logged into exampleApp:', user);
 });
 ```
+
+### ES6
+  1. Run `npm install --save kyper-matter`
+  2. Import Matter library
+```javascript
+import Matter from 'kyper-matter';
+```
+  3. Create a new matter application object:
+```javascript
+//New matter object with the application name 'exampleApp'
+let matter = new Matter('exampleApp');
+//Login to account with username "test" and password "test"
+matter.login({username:"test", password:"test"}).then((user) => {
+  console.log('User logged into exampleApp:', user);
+}, (err) => {
+  console.error('Error logging in:', err);
+});
+```
+  4. Use [Matter methods](http://cdn.kyper.io/js/matter/latest/docs/class/src/index.js~Matter.html)
+
+### NodeJS
+  1. Run `npm install --save kyper-matter`
+  2. Import Matter library
+  ```javascript
+  var Matter = require('kyper-matter');
+  ```
+  3. Create a new matter application object:
+  ```javascript
+  //New matter object with the application name 'exampleApp'
+  var matter = new Matter('exampleApp');
+  //Login to account with username "test" and password "test"
+  matter.login({username:"test", password:"test"}).then(function(user) {
+    console.log('User logged into exampleApp:', user);
+  }, function(err) {
+    console.error('Error logging in:', err);
+  });
+  ```
+
+## Options
+When creating a new matter object, you can provide an options object as the second argument:
+
+```javascript
+//New matter object with the application name 'exampleApp'
+var optionsObj = {
+  localServer: false,
+  logLevel: 'trace'
+}
+var matter = new Matter('exampleApp', optionsObj);
+```
+Availble options:
+* `logLevel` - Level of logging (error, warn, info, debug, or trace)
+* `localServer` - Boolean of whether or not to use local tessellate server
+
 
 ## Docs
 
