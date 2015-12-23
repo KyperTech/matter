@@ -20,6 +20,7 @@
     "url": "https://github.com/kypertech/matter.git"
   },
   "files": [
+    "src",
     "dist",
     "lib"
   ],
