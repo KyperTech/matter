@@ -72,7 +72,6 @@
     "webpack": "^1.11.0"
   },
   "dependencies": {
-    "browserify-istanbul": "^0.2.1",
     "hellojs": "^1.8.2",
     "jwt-decode": "^1.4.0",
     "lodash": "^3.10.1",
