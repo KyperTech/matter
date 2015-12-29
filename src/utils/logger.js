@@ -50,7 +50,7 @@ function buildMessageArgs(logData) {
 	//TODO: Attach time stamp
 	//Attach location information to the beginning of message
 	if (_.isObject(logData)) {
-		if (config.logLevel == 'debug') {
+		if (config.logLevel !== 'error') {
 			if (_.has(logData, 'func')) {
 				if (_.has(logData, 'obj')) {
 					//Object and function provided

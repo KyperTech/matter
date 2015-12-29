@@ -11,7 +11,7 @@ import {
 	any, every
 } from 'lodash';
 
-class Matter {
+export default class Matter {
 	/** Constructor
 	 * @param {String} appName Name of application
 	 */
@@ -36,6 +36,19 @@ class Matter {
 			description: 'Matter object built.', matter: this,
 			func: 'constructor', obj: 'Matter'
 		});
+	}
+	/** Get current logged in status
+	 * @return {Boolean}
+	 * @example
+	 * //Check if there is an account currently logged in
+	 * if(matter.isLoggedIn){
+	 *   console.log('There is currently an account logged in.');
+	 * } else {
+	 *   console.warn('There is no account currently logged in.');
+	 * }
+	 */
+	get isLoggedIn() {
+		return this.token.string ? true : false;
 	}
 	/** Endpoint generation that handles default/provided settings and environment
 	 * @return {String} endpoint - endpoint for tessellate application
@@ -81,6 +94,13 @@ class Matter {
 			func: 'endpoint', obj: 'Matter'
 		});
 		return appEndpoint;
+	}
+	get urls() {
+		return {
+			update: `${this.endpoint}/account/${this.token.data.username}`,
+			upload: `${this.endpoint}/account/${this.token.data.username}/upload`,
+			recoverPassword: `${this.endpoint}/account/${this.token.data.username}/recover`
+		}
 	}
 	/** Signup a new user
 	 * @param {Object} signupData - Object containing data to use while signing up to application.
@@ -394,29 +414,79 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-	/** updateProfile
+	/** updateAccount
 	 * @param {Object} updateData - Data to update within profile (only provided data will be modified).
 	 * @return {Promise}
 	 * @example
 	 * //Update current account's profile
-	 * matter.updateProfile().then(function(updatedAccount){
+	 * matter.updateAccount().then(function(updatedAccount){
 	 *  console.log('Currently logged in account:', updatedAccount);
 	 * }, function(err){
 	 *  console.error('Error updating profile:', err);
 	 * });
 	 */
-	updateProfile(updateData) {
+	updateAccount(updateData) {
 		if (!this.isLoggedIn) {
 			logger.error({
 				description: 'No current user profile to update.',
-				func: 'updateProfile', obj: 'Matter'
+				func: 'updateAccount', obj: 'Matter'
 			});
-			return Promise.reject({message: 'Must be logged in to update profile.'});
+			return Promise.reject({
+				message: 'Must be logged in to update account.'
+			});
 		}
 		if (!updateData) {
 			logger.error({
 				description: 'Data is required to update profile.',
-				func: 'updateProfile', obj: 'Matter'
+				func: 'updateAccount', obj: 'Matter'
+			});
+			return Promise.reject({
+				message: 'Data required to update account.',
+				status: 'NULL_DATA'
+			});
+		}
+		//Send update request
+		return request.put(this.urls.update, updateData).then((response) => {
+			logger.info({
+				description: 'Update profile request responded.',
+				responseData: response, func: 'updateAccount', obj: 'Matter'
+			});
+			this.currentUser = response;
+			return response;
+		})['catch']((errRes) => {
+			logger.error({
+				description: 'Error requesting current user.',
+				error: errRes, func: 'updateAccount', obj: 'Matter'
+			});
+			return Promise.reject(errRes);
+		});
+	}
+	/** uploadImage
+	 * @description Upload image to Tessellate
+	 * @param {Object} file - File object to upload
+	 * @return {Promise}
+	 * @example
+	 * //Upload image to tessellate
+	 * matter.uploadImage(file).then(function(imgUrl){
+	 *  console.log('Currently logged in account:', imgUrl);
+	 * }, function(err){
+	 *  console.error('Error uploading image:', err);
+	 * });
+	 */
+	uploadImage(fileData) {
+		if (!this.isLoggedIn) {
+			logger.error({
+				description: 'Must be logged in to upload an image.',
+				func: 'uploadImage', obj: 'Matter'
+			});
+			return Promise.reject({
+				message: 'Must be logged in to upload image.'
+			});
+		}
+		if (!fileData) {
+			logger.error({
+				description: 'Data is required to update profile.',
+				func: 'uploadImage', obj: 'Matter'
 			});
 			return Promise.reject({
 				message: 'Data required to update profile.',
@@ -424,19 +494,37 @@ class Matter {
 			});
 		}
 		//Send update request
-		return request.put(`${this.endpoint}/user/${this.token.data.username}` , updateData).then((response) => {
+		const uploadUrl = `${this.endpoint}/user/${this.token.data.username}`;
+		return request.put(this.urls.upload, fileData).then((response) => {
 			logger.info({
-				description: 'Update profile request responded.',
-				responseData: response, func: 'updateProfile', obj: 'Matter'
+				description: 'Upload image request responded.',
+				responseData: response, func: 'uploadImage', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;
 		})['catch']((errRes) => {
 			logger.error({
 				description: 'Error requesting current user.',
-				error: errRes, func: 'updateProfile', obj: 'Matter'
+				error: errRes, func: 'uploadImage', obj: 'Matter'
 			});
 			return Promise.reject(errRes);
+		});
+	}
+	/** uploadAccountImage
+	 * @description Upload image and add url to currently logged in account
+	 * @param {Object} file - File object to upload
+	 * @return {Promise}
+	 * @example
+	 * //Upload image and set it to account
+	 * matter.uploadAccountImage(file).then(function(updatedAccount){
+	 *  console.log('Account with image:', updatedAccount);
+	 * }, function(err){
+	 *  console.error('Error uploading account image:', err);
+	 * });
+	 */
+	uploadAccountImage(fileData) {
+		return this.uploadImage(fileData).then((imgUrl) => {
+			return this.updateAccount({image:{url: imgUrl}});
 		});
 	}
 	/** changePassword
@@ -448,7 +536,7 @@ class Matter {
 	 * matter.changePassword(newPassword).then(function(updatedAccount){
 	 *  console.log('Currently logged in account:', updatedAccount);
 	 * }, function(err){
-	 *  console.error('Error updating profile:', err);
+	 *  console.error('Error changing password:', err);
 	 * });
 	 */
 	changePassword(newPassword) {
@@ -457,10 +545,12 @@ class Matter {
 				description: 'No current user profile for which to change password.',
 				func: 'changePassword', obj: 'Matter'
 			});
-			return Promise.reject({message: 'Must be logged in to change password.'});
+			return Promise.reject({
+				message: 'Must be logged in to change password.'
+			});
 		}
 		//Send update request
-		return request.put(`${this.endpoint}/user/${this.token.data.username}` , newPassword).then((response) => {
+		return request.put(this.urls.changePassword, newPassword).then((response) => {
 			logger.log({
 				description: 'Update password request responded.',
 				responseData: response, func: 'changePassword', obj: 'Matter'
@@ -494,7 +584,7 @@ class Matter {
 			return Promise.reject({message: 'Must be logged in to recover password.'});
 		}
 		//Send update request
-		return request.post(`${this.endpoint}/accounts/${this.token.data.username}/recover`).then((response) => {
+		return request.post(this.urls.recoverPassword).then((response) => {
 			logger.info({
 				description: 'Recover password request responded.',
 				responseData: response, func: 'recoverPassword',
@@ -509,19 +599,7 @@ class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-	/** Get current logged in status
-	 * @return {Boolean}
-	 * @example
-	 * //Check if there is an account currently logged in
-	 * if(matter.isLoggedIn){
-	 * console.log('There is currently an account logged in.');
-	 * } else {
-	 * console.warn('There is no account currently logged in.');
-	 * }
-	 */
-	get isLoggedIn() {
-		return this.token.string ? true : false;
-	}
+
 	/** Save current user (handled automatically by default)
 	 * @param {Object} userData - Account data to set for current user
 	 * @example
@@ -555,18 +633,20 @@ class Matter {
 			return null;
 		}
 	}
-	/* Storage Utility
-	 *
+	/* Utility to handle safley writing to localStorage, sessionStorage, and cookies
+	 * @return {Object}
 	 */
 	get storage() {
 		return envStorage;
 	}
-	/** Token Utility
+	/** Utility to handle token writing/deleting/decoding
+	 * @return {Object}
 	 */
 	get token() {
 		return token;
 	}
 	/** Utils placed in base library
+	 * @return {Object}
 	 */
 	get utils() {
 		return {logger: logger, request: request, storage: envStorage, dom: dom};
@@ -583,7 +663,6 @@ class Matter {
 	 * } else {
 	 * console.warn('Current account is not an admin.');
 	 * }
-	 *
 	 */
 	isInGroup(checkGroups) {
 		if (!this.isLoggedIn) {
@@ -699,4 +778,5 @@ class Matter {
 		}
 	}
 }
-export default Matter;
+export { logger, request, dom };
+export { envStorage as storage };

@@ -3,25 +3,15 @@ const gulp = require('gulp');
 const $ = require('gulp-load-plugins')();
 
 // Load other npm modules
-const del = require('del');
-const glob = require('glob');
 const path = require('path');
 const buffer = require('vinyl-buffer');
 const runSequence = require('run-sequence');
-const source = require('vinyl-source-stream');
-const browserSync = require('browser-sync').create();
 const KarmaServer = require('karma').Server;
 const _ = require('lodash');
 
 // Gather the library data from `package.json`
 const pkg = require('./package.json');
 const conf = require('./config.json');
-
-// JS files that should be watched
-const jsWatchFiles = ['src/**/*', 'test/**/*'];
-
-// These are files other than JS files which are to be watched.
-const otherWatchFiles = ['package.json', '**/.eslintrc', '.jscsrc'];
 
 //Create CDN Publisher
 var publisher = CDNPublisher();
