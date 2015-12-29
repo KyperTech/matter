@@ -4,12 +4,13 @@ module.exports = function(config) {
     basePath: '',
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['browserify','es6-shim','mocha', 'chai', 'chai-sinon', 'chai-as-promised'],
+    frameworks: ['browserify', 'es6-shim', 'mocha', 'chai', 'chai-sinon', 'chai-as-promised'],
 
     // list of files / patterns to load in the browser
     files: [
       // JavaScript Application Libaries
       'src/**/*.js',
+      'test/setup.js',
       'test/**/*.spec.js',
     ],
 
@@ -17,8 +18,8 @@ module.exports = function(config) {
     exclude: [
     ],
     preprocessors: {
-      'src/**/*.js': 'browserify',
-      'test/**/*.js': 'browserify'
+      'src/**/*.js': ['browserify'],
+      'test/**/*.js': ['browserify']
     },
     browserify : {
       debug: true,

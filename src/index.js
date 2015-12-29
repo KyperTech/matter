@@ -128,7 +128,7 @@ export default class Matter {
 				func: 'signup', obj: 'Matter'
 			});
 			return Promise.reject({
-				message: 'Login data is required to login.',
+				message: 'Signup data is required to signup.',
 				status: 'NULL_DATA'
 			});
 		}
@@ -778,5 +778,3 @@ export default class Matter {
 		}
 	}
 }
-export { logger, request, dom };
-export { envStorage as storage };

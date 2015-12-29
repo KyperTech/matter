@@ -61,7 +61,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports.storage = exports.dom = exports.request = exports.logger = undefined;
 
 	var _config = __webpack_require__(3);
 
@@ -168,7 +167,7 @@ return /******/ (function(modules) { // webpackBootstrap
 						func: 'signup', obj: 'Matter'
 					});
 					return Promise.reject({
-						message: 'Login data is required to login.',
+						message: 'Signup data is required to signup.',
 						status: 'NULL_DATA'
 					});
 				}
@@ -948,10 +947,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	})();
 
 	exports.default = Matter;
-	exports.logger = _logger2.default;
-	exports.request = _request2.default;
-	exports.dom = _dom2.default;
-	exports.storage = _envStorage2.default;
+	module.exports = exports['default'];
 
 /***/ },
 /* 1 */
@@ -13824,18 +13820,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function handleResponse(req) {
 		return new Promise(function (resolve, reject) {
+			if (typeof req.end !== 'function') {
+				_logger2.default.warn({
+					description: 'req.end is not a function',
+					func: 'handleResponse'
+				});
+				return reject({});
+			}
 			req.end(function (err, res) {
 				if (!err) {
 					// logger.log({description: 'Response:', response:res, func:'handleResponse', file: 'request'});
 					return resolve(res.body);
 				} else {
 					if (err.status == 401) {
-						_logger2.default.warn({ description: 'Unauthorized. You must be signed into make this request.', func: 'handleResponse' });
+						_logger2.default.warn({
+							description: 'Unauthorized. You must be signed into make this request.',
+							func: 'handleResponse'
+						});
 					}
 					if (err && err.response) {
+						_logger2.default.warn({
+							description: 'Unauthorized. You must be signed into make this request.',
+							error: err, func: 'handleResponse'
+						});
 						return reject(err.response.text);
 					}
-					_logger2.default.warn({ description: 'Unauthorized. You must be signed into make this request.', error: err, func: 'handleResponse' });
 					return reject(err);
 				}
 			});

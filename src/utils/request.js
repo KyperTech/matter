@@ -32,18 +32,31 @@ export default request;
 
 function handleResponse(req) {
 	return new Promise((resolve, reject) => {
+		if (typeof req.end !== 'function') {
+			logger.warn({
+				description: 'req.end is not a function',
+				func: 'handleResponse'
+			});
+			return reject({});
+		}
 		req.end((err, res) => {
 			if (!err) {
 				// logger.log({description: 'Response:', response:res, func:'handleResponse', file: 'request'});
 				return resolve(res.body);
 			} else {
 				if (err.status == 401) {
-					logger.warn({description: 'Unauthorized. You must be signed into make this request.', func: 'handleResponse'});
+					logger.warn({
+						description: 'Unauthorized. You must be signed into make this request.',
+						func: 'handleResponse'
+					});
 				}
 				if (err && err.response) {
+					logger.warn({
+						description: 'Unauthorized. You must be signed into make this request.',
+						error: err, func: 'handleResponse'
+					});
 					return reject(err.response.text);
 				}
-				logger.warn({description: 'Unauthorized. You must be signed into make this request.', error: err, func: 'handleResponse'});
 				return reject(err);
 			}
 		});

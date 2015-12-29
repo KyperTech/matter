@@ -1,4 +1,8 @@
 import cookiesUtil from '../../src/utils/cookies';
+global.sinon = require('sinon');
+global.chai = require('chai');
+global.expect = require('chai').expect;
+
 let error;
 // let mockGet = sinon.stub(superagent, 'get', (url) => {
 //  console.log('mock get called with:', arguments);

@@ -1,5 +1,6 @@
 import token from '../../src/utils/token';
-let mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
+import { expect } from 'chai';
+const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
 
 describe('token Util', () => {
   describe('string', () => {
@@ -31,7 +32,7 @@ describe('token Util', () => {
   });
   describe('string()', () => {
     it('exists', () => {
-      expect(token.string).to.exist;
+      expect(token.string).to.be.defined;
     });
   });
   describe('save', () => {

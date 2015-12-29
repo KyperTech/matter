@@ -1,4 +1,5 @@
 import logger from '../../src/utils/logger';
+import { expect } from 'chai';
 
 describe('Logger Util', () => {
   describe('log', () => {

@@ -1,10 +1,11 @@
 {
   "name": "kyper-matter",
-  "main":["dist/matter.bundle.js"],
+  "main":["dist/matter.js"],
   "description": "Simple application functionality like authentication and local/session/token storage.",
   "moduleType": [
     "amd",
     "globals",
+    "umd",
     "node"
   ],
   "authors": [

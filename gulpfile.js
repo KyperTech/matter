@@ -4,9 +4,8 @@ const $ = require('gulp-load-plugins')();
 
 // Load other npm modules
 const path = require('path');
-const buffer = require('vinyl-buffer');
 const runSequence = require('run-sequence');
-const KarmaServer = require('karma').Server;
+// const KarmaServer = require('karma').Server;
 const _ = require('lodash');
 
 // Gather the library data from `package.json`
@@ -17,13 +16,13 @@ const conf = require('./config.json');
 var publisher = CDNPublisher();
 
 //Run test once using Karma and exit
-gulp.task('test', function (done) {
-  require('babel-core/register');
-  new KarmaServer({
-    configFile: __dirname + '/karma.conf.js',
-    singleRun: true
-  }, done).start();
-});
+// gulp.task('test', function (done) {
+//   require('babel-core/register');
+//   new KarmaServer({
+//     configFile: __dirname + '/karma.conf.js',
+//     singleRun: true
+//   }, done).start();
+// });
 
 // Release a new version of the package
 gulp.task('release', function(callback) {

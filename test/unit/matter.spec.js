@@ -1,8 +1,14 @@
+global.sinon = require('sinon');
+global.chai = require('chai');
+global.expect = require('chai').expect;
+var chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
 import Matter from '../../src';
 import request from '../../src/utils/request';
 import config from '../../src/config';
 import logger from '../../src/utils/logger';
 import ProviderAuth from '../../src/utils/providerAuth';
+
 let responseState = 'success';
 let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);
@@ -104,7 +110,7 @@ describe('Matter', () => {
       expect(matterWithOptions).to.exist;
       expect(matterWithOptions).to.be.an.instanceof(Matter);
     });
-    it.skip('sets localServer mode based on option', () => {
+    it('sets localServer mode based on option', () => {
       let matterWithOptions;
       try {
         matterWithOptions = new Matter(exampleAppName, {localServer: true});
@@ -268,16 +274,16 @@ describe('Matter', () => {
     // });
   });
 
-  describe('updateProfile method', () => {
+  describe('updateAccount method', () => {
     it('requests recover endpoint', () => {
       matter.token.string = mockToken;
-      matter.updateProfile().then((user) =>  {
+      matter.updateAccount().then((user) =>  {
         expect(mockPut).to.have.been.calledOnce;
       });
     });
     it('handles user not being logged in', () => {
       matter.token.delete();
-      expect(matter.updateProfile()).to.eventually.have.property('message');
+      expect(matter.updateAccount()).to.eventually.have.property('message');
     });
   });
 
