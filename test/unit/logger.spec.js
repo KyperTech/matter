@@ -1,5 +1,6 @@
 import logger from '../../src/utils/logger';
 import { expect } from 'chai';
+let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
 describe('Logger Util', () => {
   describe('log', () => {

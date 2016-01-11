@@ -12,11 +12,11 @@ let defaultConfig = {
 		},
 		stage: {
 			serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
-			logLevel: 'debug'
+			logLevel: 'info'
 		},
 		prod: {
 			serverUrl: 'http://tessellate.elasticbeanstalk.com',
-			logLevel: 'info'
+			logLevel: 'error'
 		}
 	},
 	tokenName: 'tessellate',
@@ -59,6 +59,9 @@ class Config {
 		envName = newEnv;
 		// this.envName = newEnv;
 		// console.log('Environment name set:', envName);
+	}
+	get envName() {
+		return envName;
 	}
 	get env() {
 		return defaultConfig.envs[envName];
