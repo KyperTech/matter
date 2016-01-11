@@ -647,19 +647,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 		}, {
 			key: 'recoverAccount',
-			value: function recoverAccount(userData) {
-				if (!userData || !(0, _lodash.isString)(userData) && !(0, _lodash.isObject)(userData)) {
+			value: function recoverAccount(accountData) {
+				if (!accountData || !(0, _lodash.isString)(accountData) && !(0, _lodash.isObject)(accountData)) {
 					_logger2.default.error({
-						description: 'User data is required to recover an account.',
+						description: 'Account data is required to recover an account.',
 						func: 'recoverAccount', obj: 'Matter'
 					});
-					return Promise.reject({ message: 'Must be logged in to recover password.' });
+					return Promise.reject({ message: 'Account data is required to recover an account.' });
 				}
 				var account = {};
-				if ((0, _lodash.isString)(userData)) {
-					account = userData.indexOf('@') !== -1 ? { email: userData } : { username: userData };
+				if ((0, _lodash.isString)(accountData)) {
+					account = accountData.indexOf('@') !== -1 ? { email: accountData } : { username: accountData };
 				} else {
-					account = userData;
+					account = accountData;
 				}
 				_logger2.default.debug({
 					description: 'Requesting recovery of account.', account: account,

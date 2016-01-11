@@ -579,19 +579,19 @@ export default class Matter {
 	 *  console.error('Error updating profile:', err);
 	 * });
 	 */
-	recoverAccount(userData) {
-		if (!userData || (!isString(userData) && !isObject(userData))) {
+	recoverAccount(accountData) {
+		if (!accountData || (!isString(accountData) && !isObject(accountData))) {
 			logger.error({
-				description: 'User data is required to recover an account.',
+				description: 'Account data is required to recover an account.',
 				func: 'recoverAccount', obj: 'Matter'
 			});
-			return Promise.reject({message: 'Must be logged in to recover password.'});
+			return Promise.reject({message: 'Account data is required to recover an account.'});
 		}
 		let account = {};
-		if (isString(userData)) {
-			account = userData.indexOf('@') !== -1 ? {email: userData} : {username: userData};
+		if (isString(accountData)) {
+			account = accountData.indexOf('@') !== -1 ? {email: accountData} : {username: accountData};
 		} else {
-			account = userData;
+			account = accountData;
 		}
 		logger.debug({
 			description: 'Requesting recovery of account.', account,
