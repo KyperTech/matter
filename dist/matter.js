@@ -633,12 +633,12 @@ return /******/ (function(modules) { // webpackBootstrap
 					return Promise.reject(errRes);
 				});
 			}
-			/** recoverPassword
+			/** recoverAccount
 	   * @param {String} updateData New password for account.
 	   * @return {Promise}
 	   * @example
 	   * //Recover current users password
-	   * matter.recoverPassword().then(function(updatedAccount){
+	   * matter.recoverAccount().then(function(updatedAccount){
 	   *  console.log('Currently logged in account:', updatedAccount);
 	   * }, function(err){
 	   *  console.error('Error updating profile:', err);
@@ -646,27 +646,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 
 		}, {
-			key: 'recoverPassword',
-			value: function recoverPassword() {
-				if (!this.isLoggedIn) {
+			key: 'recoverAccount',
+			value: function recoverAccount(userData) {
+				if (!userData || !(0, _lodash.isString)(userData) && !(0, _lodash.isObject)(userData)) {
 					_logger2.default.error({
-						description: 'No current user for which to recover password.',
-						func: 'recoverPassword', obj: 'Matter'
+						description: 'User data is required to recover an account.',
+						func: 'recoverAccount', obj: 'Matter'
 					});
 					return Promise.reject({ message: 'Must be logged in to recover password.' });
 				}
+				var account = {};
+				if ((0, _lodash.isString)(userData)) {
+					account = userData.indexOf('@') !== -1 ? { email: userData } : { username: userData };
+				} else {
+					account = userData;
+				}
+				_logger2.default.debug({
+					description: 'Requesting recovery of account.', account: account,
+					func: 'recoverAccount', obj: 'Matter'
+				});
 				//Send update request
-				return _request2.default.post(this.urls.recoverPassword).then(function (response) {
+				return _request2.default.post(this.urls.recover, account).then(function (response) {
 					_logger2.default.info({
 						description: 'Recover password request responded.',
-						responseData: response, func: 'recoverPassword',
-						obj: 'Matter'
+						response: response, func: 'recoverAccount', obj: 'Matter'
 					});
 					return response;
 				})['catch'](function (errRes) {
 					_logger2.default.error({
 						description: 'Error requesting password recovery.',
-						error: errRes, func: 'recoverPassword', obj: 'Matter'
+						error: errRes, func: 'recoverAccount', obj: 'Matter'
 					});
 					return Promise.reject(errRes);
 				});
@@ -879,10 +888,15 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'urls',
 			get: function get() {
+				if (this.token && this.token.data && this.token.data.username) {
+					return {
+						update: this.endpoint + '/account/' + this.token.data.username,
+						upload: this.endpoint + '/account/' + this.token.data.username + '/upload',
+						recover: this.endpoint + '/recover'
+					};
+				}
 				return {
-					update: this.endpoint + '/account/' + this.token.data.username,
-					upload: this.endpoint + '/account/' + this.token.data.username + '/upload',
-					recoverPassword: this.endpoint + '/account/' + this.token.data.username + '/recover'
+					recover: this.endpoint + '/recover'
 				};
 			}
 		}, {
@@ -13441,11 +13455,11 @@ return /******/ (function(modules) { // webpackBootstrap
 			},
 			stage: {
 				serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
-				logLevel: 'debug'
+				logLevel: 'info'
 			},
 			prod: {
 				serverUrl: 'http://tessellate.elasticbeanstalk.com',
-				logLevel: 'info'
+				logLevel: 'error'
 			}
 		},
 		tokenName: 'tessellate',
@@ -13503,6 +13517,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				envName = newEnv;
 				// this.envName = newEnv;
 				// console.log('Environment name set:', envName);
+			},
+			get: function get() {
+				return envName;
 			}
 		}, {
 			key: 'env',

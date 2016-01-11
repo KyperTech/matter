@@ -1,7 +1,9 @@
 import cookiesUtil from '../../src/utils/cookies';
+import logger from '../../src/utils/logger';
 global.sinon = require('sinon');
 global.chai = require('chai');
 global.expect = require('chai').expect;
+let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
 let error;
 // let mockGet = sinon.stub(superagent, 'get', (url) => {
@@ -35,8 +37,21 @@ let error;
 //    resolve({body: {}});
 //  });
 // });
-
 describe('Cookies Util', () => {
+  beforeEach(() => {
+    mockLog = sinon.stub(logger, 'log', () => {});
+    mockWarn = sinon.stub(logger, 'warn', () => {});
+    mockInfo = sinon.stub(logger, 'info', () => {});
+    mockDebug = sinon.stub(logger, 'debug', () => {});
+    mockError = sinon.stub(logger, 'error', () => {});
+  });
+  afterEach(() => {
+    logger.log.restore();
+    logger.warn.restore();
+    logger.info.restore();
+    logger.debug.restore();
+    logger.error.restore();
+  });
   describe('loadCss', () => {
     it('exists', () => {
       expect(cookiesUtil).to.respondTo('getCookie');

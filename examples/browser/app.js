@@ -1,4 +1,4 @@
-var matter = new Matter('exampleApp', {logLevel: 'debug'});
+var matter = new Matter('exampleApp', {logLevel: 'info'});
 // console.log('matter:', matter);
 //Set logged in status when dom is loaded
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -56,5 +56,13 @@ function signup(signupData){
   }, function(err){
     console.error('logout() : Error signing up:', err);
   });
-
+}
+function recoverAccount(){
+  var recoverData = document.getElementById('recover').value;
+  matter.recoverAccount(recoverData).then(function(){
+    console.log('successful logout');
+    setStatus();
+  }, function(err){
+    console.error('logout() : Error logging out:', err);
+  });
 }

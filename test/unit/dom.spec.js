@@ -1,5 +1,7 @@
 import dom from '../../src/utils/dom';
 import { expect } from 'chai';
+import logger from '../../src/utils/logger';
+let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
 // let mockGet = sinon.stub(superagent, 'get', (url) => {
 //  console.log('mock get called with:', arguments);
@@ -32,8 +34,21 @@ import { expect } from 'chai';
 //    resolve({body: {}});
 //  });
 // });
-
 describe('Dom Util', () => {
+  beforeEach(() => {
+    mockLog = sinon.stub(logger, 'log', () => {});
+    mockWarn = sinon.stub(logger, 'warn', () => {});
+    mockInfo = sinon.stub(logger, 'info', () => {});
+    mockDebug = sinon.stub(logger, 'debug', () => {});
+    mockError = sinon.stub(logger, 'error', () => {});
+  });
+  afterEach(() => {
+    logger.log.restore();
+    logger.warn.restore();
+    logger.info.restore();
+    logger.debug.restore();
+    logger.error.restore();
+  });
   describe('loadCss', () => {
     it('exists', () => {
       expect(dom).to.respondTo('loadCss');

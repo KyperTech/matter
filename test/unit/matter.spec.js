@@ -13,7 +13,7 @@ let responseState = 'success';
 let exampleAppName = 'exampleApp';
 let matter = new Matter(exampleAppName);
 let mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
-let mockLog; let mockWarn; let mockInfo; let mockError;
+let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 let mockGet = sinon.stub(request, 'get', () => {
  // console.log('mock get called with:', arguments);
   return new Promise((resolve, reject) => {
@@ -74,16 +74,23 @@ let mockProviderAuthLogin = sinon.stub(auth, 'login', () => {
   });
 });
 
-mockLog = sinon.stub(logger, 'log', () => {
-});
-mockWarn = sinon.stub(logger, 'warn', () => {
-});
-mockInfo = sinon.stub(logger, 'info', () => {
-});
-mockError = sinon.stub(logger, 'error', () => {
-});
+
 // TODO: Test options functionality
 describe('Matter', () => {
+  beforeEach(() => {
+    mockLog = sinon.stub(logger, 'log', () => {});
+    mockWarn = sinon.stub(logger, 'warn', () => {});
+    mockInfo = sinon.stub(logger, 'info', () => {});
+    mockDebug = sinon.stub(logger, 'debug', () => {});
+    mockError = sinon.stub(logger, 'error', () => {});
+  });
+  afterEach(() => {
+    logger.log.restore();
+    logger.warn.restore();
+    logger.info.restore();
+    logger.debug.restore();
+    logger.error.restore();
+  });
   describe('Config', () => {
     it('sets correct serverUrl', () => {
       expect(matter.endpoint).to.equal(`${config.serverUrl}/apps/${exampleAppName}`);
@@ -275,7 +282,10 @@ describe('Matter', () => {
   });
 
   describe('updateAccount method', () => {
-    it('requests recover endpoint', () => {
+    it('exists', () => {
+      expect(matter).to.respondTo('updateAccount');
+    });
+    it('requests endpoint', () => {
       matter.token.string = mockToken;
       matter.updateAccount().then((user) =>  {
         expect(mockPut).to.have.been.calledOnce;
@@ -288,7 +298,10 @@ describe('Matter', () => {
   });
 
   describe('changePassword method', () => {
-    it('requests recover endpoint', () => {
+    it('exists', () => {
+      expect(matter).to.respondTo('changePassword');
+    });
+    it('requests update endpoint', () => {
       matter.token.string = mockToken;
       matter.changePassword().then((user) =>  {
         expect(mockPut).to.have.been.calledOnce;
@@ -300,16 +313,15 @@ describe('Matter', () => {
     });
   });
 
-  describe('recoverPassword method', () => {
+  describe('recoverAccount method', () => {
+    it('exists', () => {
+      expect(matter).to.respondTo('recoverAccount');
+    });
     it('requests recover endpoint', () => {
       matter.token.string = mockToken;
-      matter.recoverPassword().then((user) =>  {
+      matter.recoverAccount().then((user) =>  {
         expect(mockPut).to.have.been.calledOnce;
       });
-    });
-    it('handles user not being logged in', () => {
-      matter.token.delete();
-      expect(matter.recoverPassword()).to.eventually.have.property('message');
     });
   });
   describe('isInGroups method', () => {

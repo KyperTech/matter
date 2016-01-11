@@ -1,8 +1,24 @@
 import token from '../../src/utils/token';
+import logger from '../../src/utils/logger';
 import { expect } from 'chai';
 const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
+let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
 describe('token Util', () => {
+  beforeEach(() => {
+    mockLog = sinon.stub(logger, 'log', () => {});
+    mockWarn = sinon.stub(logger, 'warn', () => {});
+    mockInfo = sinon.stub(logger, 'info', () => {});
+    mockDebug = sinon.stub(logger, 'debug', () => {});
+    mockError = sinon.stub(logger, 'error', () => {});
+  });
+  afterEach(() => {
+    logger.log.restore();
+    logger.warn.restore();
+    logger.info.restore();
+    logger.debug.restore();
+    logger.error.restore();
+  });
   describe('string', () => {
     it('handles no token being set', () => {
       if (typeof window !== 'undefined') {

@@ -10,7 +10,6 @@ import {
 	isObject, has,
 	any, every
 } from 'lodash';
-
 export default class Matter {
 	/** Constructor
 	 * @param {String} appName Name of application
@@ -96,10 +95,15 @@ export default class Matter {
 		return appEndpoint;
 	}
 	get urls() {
+		if(this.token && this.token.data && this.token.data.username){
+			return {
+				update: `${this.endpoint}/account/${this.token.data.username}`,
+				upload: `${this.endpoint}/account/${this.token.data.username}/upload`,
+				recover: `${this.endpoint}/recover`
+			}
+		}
 		return {
-			update: `${this.endpoint}/account/${this.token.data.username}`,
-			upload: `${this.endpoint}/account/${this.token.data.username}/upload`,
-			recoverPassword: `${this.endpoint}/account/${this.token.data.username}/recover`
+			recover: `${this.endpoint}/recover`
 		}
 	}
 	/** Signup a new user
@@ -564,37 +568,46 @@ export default class Matter {
 			return Promise.reject(errRes);
 		});
 	}
-	/** recoverPassword
+	/** recoverAccount
 	 * @param {String} updateData New password for account.
 	 * @return {Promise}
 	 * @example
 	 * //Recover current users password
-	 * matter.recoverPassword().then(function(updatedAccount){
+	 * matter.recoverAccount().then(function(updatedAccount){
 	 *  console.log('Currently logged in account:', updatedAccount);
 	 * }, function(err){
 	 *  console.error('Error updating profile:', err);
 	 * });
 	 */
-	recoverPassword() {
-		if (!this.isLoggedIn) {
+	recoverAccount(userData) {
+		if (!userData || (!isString(userData) && !isObject(userData))) {
 			logger.error({
-				description: 'No current user for which to recover password.',
-				func: 'recoverPassword', obj: 'Matter'
+				description: 'User data is required to recover an account.',
+				func: 'recoverAccount', obj: 'Matter'
 			});
 			return Promise.reject({message: 'Must be logged in to recover password.'});
 		}
+		let account = {};
+		if (isString(userData)) {
+			account = userData.indexOf('@') !== -1 ? {email: userData} : {username: userData};
+		} else {
+			account = userData;
+		}
+		logger.debug({
+			description: 'Requesting recovery of account.', account,
+			func: 'recoverAccount', obj: 'Matter'
+		});
 		//Send update request
-		return request.post(this.urls.recoverPassword).then((response) => {
+		return request.post(this.urls.recover, account).then((response) => {
 			logger.info({
 				description: 'Recover password request responded.',
-				responseData: response, func: 'recoverPassword',
-				obj: 'Matter'
+				response, func: 'recoverAccount', obj: 'Matter'
 			});
 			return response;
 		})['catch']((errRes) => {
 			logger.error({
 				description: 'Error requesting password recovery.',
-				error: errRes, func: 'recoverPassword', obj: 'Matter'
+				error: errRes, func: 'recoverAccount', obj: 'Matter'
 			});
 			return Promise.reject(errRes);
 		});
