@@ -197,7 +197,14 @@ export default class Matter {
 					provider: signupData, res: res,
 					func: 'signup', obj: 'Matter'
 				});
-				return Promise.resolve(res);
+				return res;
+			}, error => {
+				logger.error({
+					description: 'Provider signup successful.',
+					provider: signupData, error,
+					func: 'signup', obj: 'Matter'
+				});
+				return Promise.reject(error);
 			});
 		}
 	}

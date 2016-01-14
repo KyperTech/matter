@@ -69,7 +69,9 @@
     "chai-as-promised": "^5.1.0",
     "sinon": "^1.12.2",
     "sinon-chai": "^2.7.0",
-    "webpack": "^1.11.0"
+    "webpack": "^1.11.0",
+    "transform-loader": "^0.2.3",
+    "brfs": "^1.4.1"
   },
   "dependencies": {
     "hellojs": "^1.8.2",

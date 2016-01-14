@@ -21,7 +21,15 @@ let defaultConfig = {
 	},
 	tokenName: 'tessellate',
 	tokenDataName: 'tessellate-tokenData',
-	tokenUserDataName: 'tessellate-currentUser'
+	tokenUserDataName: 'tessellate-currentUser',
+	externalProviders: {
+		tessellate: {
+			google: '582741153619-9b3vifnmv2a32v49l63got889tgmnrhs.apps.googleusercontent.com'
+		},
+		devshare: {
+			google: '54741256621-d511263ke51ni32g1jalb9or85ckf5gr.apps.googleusercontent.com'
+		}
+	}
 };
 let instance = null;
 let envName = 'prod';
@@ -64,7 +72,9 @@ class Config {
 		return envName;
 	}
 	get env() {
-		return defaultConfig.envs[envName];
+		if(defaultConfig.envs[envName]){
+			return defaultConfig.envs[envName];
+		}
 	}
 	applySettings(settings) {
 		merge(instance, settings);
