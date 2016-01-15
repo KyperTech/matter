@@ -1,6 +1,6 @@
 import config from './config';
 import logger from './utils/logger';
-import dom from './utils/dom';
+import * as dom from './utils/dom';
 import request from './utils/request';
 import token from './utils/token';
 import envStorage from './utils/envStorage';
@@ -328,10 +328,10 @@ export default class Matter {
 			return auth.login().then((res) => {
 				logger.info({
 					description: 'Provider login successful.',
-					provider: loginData, res: res,
+					provider: loginData, res,
 					func: 'login', obj: 'Matter'
 				});
-				return Promise.resolve(res);
+				return res;
 			});
 		}
 	}
@@ -374,6 +374,30 @@ export default class Matter {
 			this.storage.removeItem(config.tokenUserDataName);
 			this.token.delete();
 			return Promise.reject(errRes);
+		});
+	}
+	providerSignup(providerData) {
+		const { provider, code } = providerData;
+		if(!provider){
+			return Promise.reject('Provider name is required to signup.');
+		}
+		if(!code){
+			return Promise.reject('Provider code or token is required to signup.');
+		}
+		let auth = new ProviderAuth({provider, app: this});
+		return auth.accountFromCode(code).then(res => {
+			logger.info({
+				description: 'Provider login successful.',
+				providerData, res,
+				func: 'providerSignup', obj: 'Matter'
+			});
+			return res;
+		}, error => {
+			logger.error({
+				description: 'Provider signup error.', error,
+				func: 'providerSignup', obj: 'Matter'
+			});
+			return Promise.reject(error);
 		});
 	}
 	/** getCurrentUser
