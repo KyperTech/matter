@@ -1,120 +1,147 @@
 import request from './request';
 import logger from './logger';
-import dom from './dom';
+import * as dom from './dom';
+import config from '../config';
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
-// import hello from 'hellojs'; //After es version of module is created
-//Private object containing clientIds
-let clientIds = {};
-
-class ProviderAuth {
+export default class ProviderAuth {
 	constructor(actionData) {
-		this.app = actionData.app ? actionData.app : null;
-		this.redirectUri = actionData.redirectUri ? actionData.redirectUri : 'redirect.html';
-		this.provider = actionData.provider ? actionData.provider : null;
-	}
-	/** Load hellojs library script into DOM
-	 */
-	loadHello() {
-		//Load hellojs script
-		//TODO: Replace this with es6ified version
-		if (typeof window != 'undefined' && !window.hello) {
-			return dom.asyncLoadJs('https://s3.amazonaws.com/kyper-cdn/js/hello.js');
-		} else {
-			return Promise.reject();
+		const { app, redirectUrl, provider } = actionData;
+		this.app = app;
+		this.provider = provider;
+		const externalAuth = config.externalAuth[this.app.name] ? config.externalAuth[this.app.name] : null;
+		this.redirectUrl = externalAuth ? externalAuth.redirectUrl : '/oauthcallback';
+		if(redirectUrl){
+			this.redirectUrl = redirectUrl;
 		}
 	}
-	helloLoginListener() {
-		//Login Listener
-		window.hello.on('auth.login', (auth) => {
-			logger.info({description: 'User logged in to google.', func: 'loadHello', obj: 'Google'});
-			// Call user information, for the given network
-			window.hello(auth.network).api('/me').then(function(r) {
-				// Inject it into the container
-				//TODO:Send account informaiton to server
-				var userData = r;
-				userData.provider = auth.network;
-				//Login or Signup endpoint
-				return request.post(this.endpoint + '/provider', userData)
-					.then((response) => {
-						logger.log({description: 'Provider request successful.',  response: response, func: 'signup', obj: 'GoogleUtil'});
-						return response;
-					})
-					['catch']((errRes) => {
-						logger.error({description: 'Error requesting login.', error: errRes, func: 'signup', obj: 'Matter'});
-						return Promise.reject(errRes);
-					});
+	getAuthUrl() {
+		const endpointUrl = `${this.app.endpoint}/authUrl?provider=${this.provider}&redirectUrl=${this.redirectUrl}`;
+		logger.log({
+			description: 'Requesting Auth url.',  endpointUrl,
+			func: 'getAuthUrl', obj: 'providerAuth'
+		});
+		return request.get(endpointUrl).then((authUrl) => {
+			logger.log({
+				description: 'Get auth url request successful.',  authUrl,
+				func: 'getAuthUrl', obj: 'providerAuth'
 			});
+			return authUrl;
+		})
+		['catch'](error => {
+			logger.error({
+				description: 'Error requesting auth url.', error,
+				func: 'getAuthUrl', obj: 'providerAuth'
+			});
+			return Promise.reject('External authentication not available.');
 		});
 	}
-	/** Initialize hellojs library and request app providers
+	accountFromCode(code) {
+		logger.log({
+			description: 'Requesting Auth url.',  code,
+			func: 'accountFromCode', obj: 'providerAuth'
+		});
+		return request.post(`${this.app.endpoint}/oauth2`, { code }).then(account => {
+			logger.log({
+				description: 'Get auth url request successful.',  account,
+				func: 'accountFromCode', obj: 'providerAuth'
+			});
+			return account;
+		})
+		['catch'](error => {
+			logger.error({
+				description: 'Error requesting auth url.', error,
+				func: 'accountFromCode', obj: 'providerAuth'
+			});
+			return Promise.reject('External authentication not available.');
+		});
+	}
+	/** External provider login
+	 * @example
+	 * //Login to account that was started through external account signup (Google, Facebook, Github)
+	 * matter.login('google').then(function(loginRes){
+	 * 		console.log('Successful login:', loginRes)
+	 * }, function(err){
+	 * 		console.error('Error with provider login:', err);
+	 * });
 	 */
-	initHello() {
-		return this.loadHello().then(() => {
-			return request.get(`${this.app.endpoint}/providers`)
-			.then((response) => {
-				logger.log({
-					description: 'Provider request successful.',  response: response,
-					func: 'initHello', obj: 'ProviderAuth'
-				});
-				let provider = response[this.provider];
-				if (!provider) {
-					logger.error({
-						description: 'Provider is not setup.\n' +
-						'Visit build.kyper.io to enter your client id for ' + this.provider,
-						provider: this.provider, clientIds: clientIds,
-						func: 'login', obj: 'ProviderAuth'
-					});
-					return Promise.reject({message: 'Provider is not setup.'});
-				}
-				logger.log({
-					description: 'Providers config built', providersConfig: response,
-					func: 'initHello', obj: 'ProviderAuth'
-				});
-				return window.hello.init(response, {redirect_uri: 'redirect.html'});
-			}, (errRes) => {
-				logger.error({
-					description: 'Error loading hellojs.', error: errRes,
-					func: 'initHello', obj: 'ProviderAuth'
-				});
-				return Promise.reject({message: 'Error requesting application third party providers.'});
-			})
-			['catch']((errRes) => {
-				logger.error({
-					description: 'Error loading hellojs.', error: errRes, func: 'initHello', obj: 'ProviderAuth'
-				});
-				return Promise.reject({message: 'Error loading third party login capability.'});
-			});
-		});
-	}
-  /** External provider login
-   * @example
-   * //Login to account that was started through external account signup (Google, Facebook, Github)
-   * ProviderAuth('google').login().then(function(loginRes){
-   * 		console.log('Successful login:', loginRes)
-   * }, function(err){
-   * 		console.error('Error with provider login:', err);
-   * });
-   */
 	login() {
-		return this.initHello().then(() => {
-			return window.hello.login(this.provider);
-		}, (err) => {
-			logger.error({description: 'Error initalizing hellojs.', error: err, func: 'login', obj: 'Matter'});
-			return Promise.reject({message: 'Error with third party login.'});
+		return this.getAuthUrl().then(url => {
+			logger.info({
+				description: 'Login response.', url,
+				func: 'login', obj: 'providerAuth'
+			});
+			return url;
+		}, error => {
+			logger.error({
+				description: 'Error initalizing hellojs.', error,
+				func: 'login', obj: 'providerAuth'
+			});
+			return Promise.reject('Error with third party login.');
 		});
 	}
 	/** Signup using external provider account (Google, Facebook, Github)
-   * @example
-   * //Signup using external account (Google, Facebook, Github)
-   * ProviderAuth('google').signup().then(function(signupRes){
-   * 		console.log('Successful signup:', signupRes)
-   * }, function(err){
-   * 		console.error('Error with provider signup:', err);
-   * });
+	 * @example
+	 * //Signup using external account (Google, Facebook, Github)
+	 * matter.signup('google').then(function(signupRes){
+	 * 		console.log('Successful signup:', signupRes)
+	 * }, function(err){
+	 * 		console.error('Error with provider signup:', err);
+	 * });
 	 */
 	signup() {
-		//TODO: send info to server
-		return this.login();
+		if(this.provider === 'google'){
+			return this.googleAuth();
+		} else {
+			return Promise.reject('Invalid provider');
+		}
+	}
+	googleAuth() {
+		const clientId = (this.app && this.app.name && config.externalAuth[this.app.name]) ? config.externalAuth[this.app.name].google : null;
+		if(!clientId){
+			logger.error({
+				description: 'ClientId is required to authenticate with Google.',
+				func: 'googleSignup', obj: 'providerAuth'
+			});
+			return Promise.reject('Client id is required to authenticate with Google.');
+		}
+		if(typeof window !== 'undefined'){
+			window.OnLoadCallback = (data) => {
+				logger.log({
+					description: 'Google load callback:', data,
+					func: 'googleSignup', obj: 'providerAuth'
+				});
+			};
+		}
+		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback'
+		return new Promise((resolve, reject) => {
+			dom.asyncLoadJs(scriptSrc).then(() => {
+				window.gapi.auth.authorize({client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me'}, (auth) => {
+					if(!auth || auth.error || auth.message){
+						logger.error({
+							description: 'Error authorizing with google',
+							func: 'googleSignup', obj: 'providerAuth'
+						});
+						return reject(auth.error || auth.message);
+					}
+					logger.log({
+						description: 'Auth with google successful.', auth,
+						func: 'googleSignup', obj: 'providerAuth'
+					});
+					window.gapi.client.load('plus', 'v1', () => {
+	          let request = gapi.client.plus.people.get({
+	            'userId': 'me'
+	          });
+	          request.execute((account) => {
+							logger.log({
+								description: 'Account loaded from google.', account,
+								func: 'googleSignup', obj: 'providerAuth'
+							});
+							//TODO: Signup/Login to Tessellate server with this information
+							resolve(account);
+	          });
+	        });
+				});
+			});
+		});
 	}
 }
-export default ProviderAuth;
