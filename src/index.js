@@ -8,7 +8,7 @@ import ProviderAuth from './utils/providerAuth';
 import {
 	isString, isArray,
 	isObject, has,
-	any, every
+	some, every
 } from 'lodash';
 export default class Matter {
 	/** Constructor
@@ -100,11 +100,11 @@ export default class Matter {
 				update: `${this.endpoint}/account/${this.token.data.username}`,
 				upload: `${this.endpoint}/account/${this.token.data.username}/upload`,
 				recover: `${this.endpoint}/recover`
-			}
+			};
 		}
 		return {
 			recover: `${this.endpoint}/recover`
-		}
+		};
 	}
 	/** Signup a new user
 	 * @param {Object} signupData - Object containing data to use while signing up to application.
@@ -582,18 +582,18 @@ export default class Matter {
 			});
 		}
 		//Send update request
-		return request.put(this.urls.changePassword, newPassword).then((response) => {
+		return request.put(this.urls.changePassword, newPassword).then(updatedAccount => {
 			logger.log({
 				description: 'Update password request responded.',
-				responseData: response, func: 'changePassword', obj: 'Matter'
+				updatedAccount, func: 'changePassword', obj: 'Matter'
 			});
-			return response;
-		})['catch']((errRes) => {
+			return updatedAccount;
+		})['catch'](error => {
 			logger.error({
 				description: 'Error requesting password change.',
-				error: errRes, func: 'changePassword', obj: 'Matter'
+				error, func: 'changePassword', obj: 'Matter'
 			});
-			return Promise.reject(errRes);
+			return Promise.reject(error);
 		});
 	}
 	/** recoverAccount
@@ -626,12 +626,12 @@ export default class Matter {
 			func: 'recoverAccount', obj: 'Matter'
 		});
 		//Send update request
-		return request.post(this.urls.recover, account).then((response) => {
+		return request.post(this.urls.recover, account).then(res => {
 			logger.info({
-				description: 'Recover password request responded.',
-				response, func: 'recoverAccount', obj: 'Matter'
+				description: 'Recover account request responded.',
+				res, func: 'recoverAccount', obj: 'Matter'
 			});
-			return response;
+			return res;
 		})['catch']((errRes) => {
 			logger.error({
 				description: 'Error requesting password recovery.',
@@ -740,7 +740,7 @@ export default class Matter {
 					group: groupName, userGroups: this.token.data.groups,
 					func: 'isInGroup', obj: 'Matter'
 				});
-				return any(groups, (group) =>  {
+				return some(groups, (group) =>  {
 					return groupName == group.name;
 				});
 			}
@@ -784,7 +784,7 @@ export default class Matter {
 			});
 			return false;
 		}
-		//Check if user is in any of the provided groups
+		//Check if user is in some of the provided groups
 		if (isArray(checkGroups)) {
 			return every(checkGroups.map((group) => {
 				if (isString(group)) {
