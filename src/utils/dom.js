@@ -30,14 +30,16 @@ export function loadCss(src) {
  */
 export function loadJs(src) {
 	if (typeof window == 'undefined' || !has(window, 'document')) {
-		logger.error({description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom'});
+		logger.error({description: 'Document does not exsist to load assets into.', func: 'loadJs', obj: 'dom'});
 		throw new Error('Document object is required to load assets.');
 	} else {
 		let js = window.document.createElement('script');
 		js.src = src;
 		js.type = 'text/javascript';
 		window.document.getElementsByTagName('head')[0].appendChild(js);
-		logger.log({description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom'});
+		logger.log({
+			description: 'JS was loaded into document.', element: js, func: 'loadJs', obj: 'dom'
+		});
 		return js; //Return script element
 	}
 }
@@ -50,16 +52,20 @@ export function loadJs(src) {
  */
 export function asyncLoadJs(src) {
 	if (typeof window == 'undefined' || !has(window, 'document')) {
-		logger.error({description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom'});
+		logger.error({
+			description: 'Document does not exsist to load assets into.', func: 'asyncLoadJs', obj: 'dom'
+		});
 		throw new Error('Document object is required to load assets.');
 	} else {
 		let js = window.document.createElement('script');
 		js.src = src;
 		js.type = 'text/javascript';
 		window.document.getElementsByTagName('head')[0].appendChild(js);
-		logger.log({description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom'});
+		logger.log({
+			description: 'JS was loaded into document.', element: js, func: 'asyncLoadJs', obj: 'dom'
+		});
 		return new Promise((resolve) => {
-			window.setTimeout(resolve, 30);
+			window.setTimeout(resolve, 200);
 		});
 	}
 }

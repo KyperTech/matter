@@ -1,5 +1,6 @@
 import request from './request';
 import logger from './logger';
+import * as dom from './dom';
 import config from '../config';
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
 export default class ProviderAuth {
@@ -88,23 +89,43 @@ export default class ProviderAuth {
 	 * });
 	 */
 	signup() {
-		//TODO: send info to server
-		return this.getAuthUrl().then(url => {
-			logger.info({
-				description: 'Login response.', url,
-				func: 'login', obj: 'providerAuth'
+		const clientId = config.externalAuth[this.app.name].google;
+		if(typeof window !== 'undefined'){
+			window.oAuthCallback = (data) => {
+				console.log('oAuthcallback', data);
+			};
+		}
+		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback'
+		return new Promise((resolve, reject) => {
+			dom.asyncLoadJs(scriptSrc).then(() => {
+				console.log('script loaded', typeof window.gapi);
+				window.gapi.auth.authorize({client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me'}, (auth) => {
+					if(!auth || auth.error || auth.message){
+						logger.error({description: 'Error authorizing with google'});
+						return reject(auth.error || auth.message);
+					}
+					logger.log({description: 'Auth with google successful.', auth});
+					resolve(auth);
+				});
 			});
-			if(typeof window !== 'undefined'){
-				//Redirect to auth url
-				window.location.href = url;
-			}
-			return url;
-		}, error => {
-			logger.error({
-				description: 'Error initalizing hellojs.', error,
-				func: 'login', obj: 'providerAuth'
-			});
-			return Promise.reject('Error with third party login.');
 		});
+		//TODO: send info to server
+		// return this.getAuthUrl().then(url => {
+		// 	logger.info({
+		// 		description: 'Login response.', url,
+		// 		func: 'login', obj: 'providerAuth'
+		// 	});
+		// 	if(typeof window !== 'undefined'){
+		// 		//Redirect to auth url
+		// 		window.location.href = url;
+		// 	}
+		// 	return url;
+		// }, error => {
+		// 	logger.error({
+		// 		description: 'Error initalizing hellojs.', error,
+		// 		func: 'login', obj: 'providerAuth'
+		// 	});
+		// 	return Promise.reject('Error with third party login.');
+		// });
 	}
 }

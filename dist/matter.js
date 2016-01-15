@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _dom = __webpack_require__(7);
+	var _dom = __webpack_require__(16);
 
 	var dom = _interopRequireWildcard(_dom);
 
@@ -86,7 +86,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _envStorage2 = _interopRequireDefault(_envStorage);
 
-	var _providerAuth = __webpack_require__(8);
+	var _providerAuth = __webpack_require__(7);
 
 	var _providerAuth2 = _interopRequireDefault(_providerAuth);
 
@@ -13462,7 +13462,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)(module), (function() { return this; }())))
 
 /***/ },
 /* 3 */
@@ -13763,7 +13763,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _token2 = _interopRequireDefault(_token);
 
-	var _superagent = __webpack_require__(13);
+	var _superagent = __webpack_require__(12);
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
@@ -13860,7 +13860,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _envStorage2 = _interopRequireDefault(_envStorage);
 
-	var _jwtDecode = __webpack_require__(10);
+	var _jwtDecode = __webpack_require__(9);
 
 	var _jwtDecode2 = _interopRequireDefault(_jwtDecode);
 
@@ -13989,98 +13989,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.loadCss = loadCss;
-	exports.loadJs = loadJs;
-	exports.asyncLoadJs = asyncLoadJs;
-	exports.getQueryParam = getQueryParam;
-
-	var _logger = __webpack_require__(1);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _lodash = __webpack_require__(2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	/**
-	 * @description
-	 * Appends given css source to DOM head.
-	 *
-	 * @param {String} src - url src for css to append
-	 *
-	 */
-	function loadCss(src) {
-		if (typeof document == 'undefined') {
-			_logger2.default.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
-			throw new Error('Document object is required to load assets.');
-		} else {
-			var css = document.createElement('link');
-			css.rel = 'stylesheet';
-			css.type = 'text/css';
-			css.href = src;
-			document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
-			_logger2.default.log({ description: 'CSS was loaded into document.', element: css, func: 'loadCss', obj: 'dom' });
-			return css; //Return link element
-		}
-	}
-	/**
-	 * @description
-	 * Appends given javascript source to DOM head.
-	 *
-	 * @param {String} src - url src for javascript to append
-	 *
-	 */
-	function loadJs(src) {
-		if (typeof window == 'undefined' || !(0, _lodash.has)(window, 'document')) {
-			_logger2.default.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
-			throw new Error('Document object is required to load assets.');
-		} else {
-			var js = window.document.createElement('script');
-			js.src = src;
-			js.type = 'text/javascript';
-			window.document.getElementsByTagName('head')[0].appendChild(js);
-			_logger2.default.log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
-			return js; //Return script element
-		}
-	}
-	/**
-	 * @description
-	 * Appends given javascript source to DOM head.
-	 *
-	 * @param {String} src - url src for javascript to append
-	 *
-	 */
-	function asyncLoadJs(src) {
-		if (typeof window == 'undefined' || !(0, _lodash.has)(window, 'document')) {
-			_logger2.default.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
-			throw new Error('Document object is required to load assets.');
-		} else {
-			var js = window.document.createElement('script');
-			js.src = src;
-			js.type = 'text/javascript';
-			window.document.getElementsByTagName('head')[0].appendChild(js);
-			_logger2.default.log({ description: 'JS was loaded into document.', element: js, func: 'loadCss', obj: 'dom' });
-			return new Promise(function (resolve) {
-				window.setTimeout(resolve, 30);
-			});
-		}
-	}
-	function getQueryParam(name) {
-		name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-		    results = regex.exec(location.search);
-		return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-	}
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 	Object.defineProperty(exports, "__esModule", {
@@ -14095,11 +14003,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
+	var _dom = __webpack_require__(16);
+
+	var dom = _interopRequireWildcard(_dom);
+
 	var _config = __webpack_require__(3);
 
 	var _config2 = _interopRequireDefault(_config);
 
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -14205,24 +14121,44 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'signup',
 			value: function signup() {
-				//TODO: send info to server
-				return this.getAuthUrl().then(function (url) {
-					_logger2.default.info({
-						description: 'Login response.', url: url,
-						func: 'login', obj: 'providerAuth'
+				var clientId = _config2.default.externalAuth[this.app.name].google;
+				if (typeof window !== 'undefined') {
+					window.oAuthCallback = function (data) {
+						console.log('oAuthcallback', data);
+					};
+				}
+				var scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
+				return new Promise(function (resolve, reject) {
+					dom.asyncLoadJs(scriptSrc).then(function () {
+						console.log('script loaded', _typeof(window.gapi));
+						window.gapi.auth.authorize({ client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me' }, function (auth) {
+							if (!auth || auth.error || auth.message) {
+								_logger2.default.error({ description: 'Error authorizing with google' });
+								return reject(auth.error || auth.message);
+							}
+							_logger2.default.log({ description: 'Auth with google successful.', auth: auth });
+							resolve(auth);
+						});
 					});
-					if (typeof window !== 'undefined') {
-						//Redirect to auth url
-						window.location.href = url;
-					}
-					return url;
-				}, function (error) {
-					_logger2.default.error({
-						description: 'Error initalizing hellojs.', error: error,
-						func: 'login', obj: 'providerAuth'
-					});
-					return Promise.reject('Error with third party login.');
 				});
+				//TODO: send info to server
+				// return this.getAuthUrl().then(url => {
+				// 	logger.info({
+				// 		description: 'Login response.', url,
+				// 		func: 'login', obj: 'providerAuth'
+				// 	});
+				// 	if(typeof window !== 'undefined'){
+				// 		//Redirect to auth url
+				// 		window.location.href = url;
+				// 	}
+				// 	return url;
+				// }, error => {
+				// 	logger.error({
+				// 		description: 'Error initalizing hellojs.', error,
+				// 		func: 'login', obj: 'providerAuth'
+				// 	});
+				// 	return Promise.reject('Error with third party login.');
+				// });
 			}
 		}]);
 
@@ -14233,10 +14169,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Base64 = __webpack_require__(12);
+	var Base64 = __webpack_require__(11);
 
 	module.exports = function(str) {
 	  var output = str.replace(/-/g, "+").replace(/_/g, "/");
@@ -14264,13 +14200,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var base64_url_decode = __webpack_require__(9);
-	var json_parse = __webpack_require__(11);
+	var base64_url_decode = __webpack_require__(8);
+	var json_parse = __webpack_require__(10);
 
 	module.exports = function (token) {
 	  if (!token) {
@@ -14282,7 +14218,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports) {
 
 	module.exports = function (str) {
@@ -14297,7 +14233,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	;(function () {
@@ -14358,15 +14294,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(14);
-	var reduce = __webpack_require__(15);
+	var Emitter = __webpack_require__(13);
+	var reduce = __webpack_require__(14);
 
 	/**
 	 * Root reference for iframes.
@@ -15565,7 +15501,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports) {
 
 	
@@ -15735,7 +15671,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports) {
 
 	
@@ -15764,7 +15700,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -15778,6 +15714,104 @@ return /******/ (function(modules) { // webpackBootstrap
 		return module;
 	}
 
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.loadCss = loadCss;
+	exports.loadJs = loadJs;
+	exports.asyncLoadJs = asyncLoadJs;
+	exports.getQueryParam = getQueryParam;
+
+	var _logger = __webpack_require__(1);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	var _lodash = __webpack_require__(2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/**
+	 * @description
+	 * Appends given css source to DOM head.
+	 *
+	 * @param {String} src - url src for css to append
+	 *
+	 */
+	function loadCss(src) {
+		if (typeof document == 'undefined') {
+			_logger2.default.error({ description: 'Document does not exsist to load assets into.', func: 'loadCss', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var css = document.createElement('link');
+			css.rel = 'stylesheet';
+			css.type = 'text/css';
+			css.href = src;
+			document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
+			_logger2.default.log({ description: 'CSS was loaded into document.', element: css, func: 'loadCss', obj: 'dom' });
+			return css; //Return link element
+		}
+	}
+	/**
+	 * @description
+	 * Appends given javascript source to DOM head.
+	 *
+	 * @param {String} src - url src for javascript to append
+	 *
+	 */
+	function loadJs(src) {
+		if (typeof window == 'undefined' || !(0, _lodash.has)(window, 'document')) {
+			_logger2.default.error({ description: 'Document does not exsist to load assets into.', func: 'loadJs', obj: 'dom' });
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var js = window.document.createElement('script');
+			js.src = src;
+			js.type = 'text/javascript';
+			window.document.getElementsByTagName('head')[0].appendChild(js);
+			_logger2.default.log({
+				description: 'JS was loaded into document.', element: js, func: 'loadJs', obj: 'dom'
+			});
+			return js; //Return script element
+		}
+	}
+	/**
+	 * @description
+	 * Appends given javascript source to DOM head.
+	 *
+	 * @param {String} src - url src for javascript to append
+	 *
+	 */
+	function asyncLoadJs(src) {
+		if (typeof window == 'undefined' || !(0, _lodash.has)(window, 'document')) {
+			_logger2.default.error({
+				description: 'Document does not exsist to load assets into.', func: 'asyncLoadJs', obj: 'dom'
+			});
+			throw new Error('Document object is required to load assets.');
+		} else {
+			var js = window.document.createElement('script');
+			js.src = src;
+			js.type = 'text/javascript';
+			window.document.getElementsByTagName('head')[0].appendChild(js);
+			_logger2.default.log({
+				description: 'JS was loaded into document.', element: js, func: 'asyncLoadJs', obj: 'dom'
+			});
+			return new Promise(function (resolve) {
+				window.setTimeout(resolve, 200);
+			});
+		}
+	}
+	function getQueryParam(name) {
+		name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+		    results = regex.exec(location.search);
+		return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	}
 
 /***/ }
 /******/ ])
