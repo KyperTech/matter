@@ -196,9 +196,7 @@ describe('Matter', () => {
       expect(matter.signup([''])).to.eventually.have.property('message');
     });
     it('accepts third party signup/login', () => {
-      matter.signup('google').then(() => {
-        expect(mockProviderAuthSignup).to.have.been.calledOnce;
-      });
+      expect(matter.signup('google')).to.be.rejectedWith('Client id is required to authenticate with Google.');
     });
     it('calls signup endpoint', () => {
       return matter.signup({username: 'test', password: 'test'}).then(() => {
@@ -221,6 +219,23 @@ describe('Matter', () => {
       });
     });
   });
+  describe('Provider signup method', () => {
+    beforeEach(() => {
+      sinon.spy(matter, 'providerSignup');
+    });
+    afterEach(() => {
+      matter.providerSignup.restore();
+    });
+    it('handles no input', () => {
+      expect(matter.providerSignup()).to.be.rejectedWith('Provider data is required to signup.');
+    });
+    it('handles incorrectly formatted data', () => {
+      expect(matter.providerSignup([''])).to.eventually.have.property('message');
+    });
+    it('accepts third party providerSignup/login', () => {
+      expect(matter.providerSignup('google')).to.be.rejectedWith('Client id is required to authenticate with Google.');
+    });
+  });
   describe('Logout method', () => {
     beforeEach(() => {
       sinon.spy(matter, 'logout');
@@ -234,7 +249,7 @@ describe('Matter', () => {
       expect(matter.logout()).to.eventually.have.property('message');
     });
     it('calls logout endpoint', () => {
-      matter.logout().then(() =>  {
+      return matter.logout().then(() =>  {
         expect(mockPut).to.have.been.calledOnce;
       });
     });
@@ -319,7 +334,7 @@ describe('Matter', () => {
       expect(matter).to.respondTo('recoverAccount');
     });
     it('handles no data', () => {
-      return expect(matter.recoverAccount()).to.be.rejectedWith('Account data is required to recover an account');
+      expect(matter.recoverAccount()).to.be.rejectedWith('Account data is required to recover an account');
     });
     it('calls recover endpoint', () => {
       matter.token.string = mockToken;

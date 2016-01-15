@@ -1,4 +1,4 @@
-import dom from '../../src/utils/dom';
+import * as dom from '../../src/utils/dom';
 import { expect } from 'chai';
 import logger from '../../src/utils/logger';
 let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;

@@ -158,31 +158,26 @@ export default class Matter {
 					status: 'PASS_REQUIRED'
 				});
 			}
-			return request.post(this.endpoint + '/signup', signupData)
-			.then((response) => {
+			return request.post(this.endpoint + '/signup', signupData).then(res => {
 				logger.info({
 					description: 'Signup successful.',
-					signupData: signupData, response: response,
-					func: 'signup', obj: 'Matter'
+					signupData, res, func: 'signup', obj: 'Matter'
 				});
-				if (has(response, 'account')) {
-					return response.account;
+				if (has(res, 'account')) {
+					return res.account;
 				} else {
 					logger.warn({
-						description: 'Account was not contained in signup response.',
-						signupData: signupData, response: response,
-						func: 'signup', obj: 'Matter'
+						description: 'Account was not contained in signup res.',
+						signupData, res, func: 'signup', obj: 'Matter'
 					});
-					return response;
+					return res;
 				}
-			})
-			['catch']((errRes) => {
+			})['catch'](error => {
 				logger.error({
-					description: 'Error requesting signup.',
-					signupData: signupData,
-					func: 'signup', obj: 'Matter'
+					description: 'Error requesting signup.', error,
+					signupData, func: 'signup', obj: 'Matter'
 				});
-				return Promise.reject(errRes);
+				return Promise.reject(error);
 			});
 		} else {
 			//Handle 3rd Party signups
@@ -201,8 +196,7 @@ export default class Matter {
 			}, error => {
 				logger.error({
 					description: 'Provider signup successful.',
-					provider: signupData, error,
-					func: 'signup', obj: 'Matter'
+					provider: signupData, error, func: 'signup', obj: 'Matter'
 				});
 				return Promise.reject(error);
 			});
@@ -377,12 +371,15 @@ export default class Matter {
 		});
 	}
 	providerSignup(providerData) {
+		if (!providerData) {
+			return Promise.reject('Provider data is required to signup.');
+		}
 		const { provider, code } = providerData;
-		if(!provider){
+		if (!provider) {
 			return Promise.reject('Provider name is required to signup.');
 		}
-		if(!code){
-			return Promise.reject('Provider code or token is required to signup.');
+		if (!code) {
+			return Promise.reject('Provider code is required to signup.');
 		}
 		let auth = new ProviderAuth({provider, app: this});
 		return auth.accountFromCode(code).then(res => {
@@ -693,7 +690,7 @@ export default class Matter {
 	 * @return {Object}
 	 */
 	get utils() {
-		return {logger: logger, request: request, storage: envStorage, dom: dom};
+		return {logger, request, storage: envStorage, dom};
 	}
 
 	/** Check that user is in a single group or in all of a list of groups

@@ -195,29 +195,26 @@ return /******/ (function(modules) { // webpackBootstrap
 							status: 'PASS_REQUIRED'
 						});
 					}
-					return _request2.default.post(this.endpoint + '/signup', signupData).then(function (response) {
+					return _request2.default.post(this.endpoint + '/signup', signupData).then(function (res) {
 						_logger2.default.info({
 							description: 'Signup successful.',
-							signupData: signupData, response: response,
-							func: 'signup', obj: 'Matter'
+							signupData: signupData, res: res, func: 'signup', obj: 'Matter'
 						});
-						if ((0, _lodash.has)(response, 'account')) {
-							return response.account;
+						if ((0, _lodash.has)(res, 'account')) {
+							return res.account;
 						} else {
 							_logger2.default.warn({
-								description: 'Account was not contained in signup response.',
-								signupData: signupData, response: response,
-								func: 'signup', obj: 'Matter'
+								description: 'Account was not contained in signup res.',
+								signupData: signupData, res: res, func: 'signup', obj: 'Matter'
 							});
-							return response;
+							return res;
 						}
-					})['catch'](function (errRes) {
+					})['catch'](function (error) {
 						_logger2.default.error({
-							description: 'Error requesting signup.',
-							signupData: signupData,
-							func: 'signup', obj: 'Matter'
+							description: 'Error requesting signup.', error: error,
+							signupData: signupData, func: 'signup', obj: 'Matter'
 						});
-						return Promise.reject(errRes);
+						return Promise.reject(error);
 					});
 				} else {
 					//Handle 3rd Party signups
@@ -236,8 +233,7 @@ return /******/ (function(modules) { // webpackBootstrap
 					}, function (error) {
 						_logger2.default.error({
 							description: 'Provider signup successful.',
-							provider: signupData, error: error,
-							func: 'signup', obj: 'Matter'
+							provider: signupData, error: error, func: 'signup', obj: 'Matter'
 						});
 						return Promise.reject(error);
 					});
@@ -423,6 +419,9 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'providerSignup',
 			value: function providerSignup(providerData) {
+				if (!providerData) {
+					return Promise.reject('Provider data is required to signup.');
+				}
 				var provider = providerData.provider;
 				var code = providerData.code;
 
@@ -430,7 +429,7 @@ return /******/ (function(modules) { // webpackBootstrap
 					return Promise.reject('Provider name is required to signup.');
 				}
 				if (!code) {
-					return Promise.reject('Provider code or token is required to signup.');
+					return Promise.reject('Provider code is required to signup.');
 				}
 				var auth = new _providerAuth2.default({ provider: provider, app: this });
 				return auth.accountFromCode(code).then(function (res) {
@@ -14226,7 +14225,14 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'googleAuth',
 			value: function googleAuth() {
-				var clientId = _config2.default.externalAuth[this.app.name].google;
+				var clientId = this.app && this.app.name && _config2.default.externalAuth[this.app.name] ? _config2.default.externalAuth[this.app.name].google : null;
+				if (!clientId) {
+					_logger2.default.error({
+						description: 'ClientId is required to authenticate with Google.',
+						func: 'googleSignup', obj: 'providerAuth'
+					});
+					return Promise.reject('Client id is required to authenticate with Google.');
+				}
 				if (typeof window !== 'undefined') {
 					window.OnLoadCallback = function (data) {
 						_logger2.default.log({

@@ -96,7 +96,14 @@ export default class ProviderAuth {
 		}
 	}
 	googleAuth() {
-		const clientId = config.externalAuth[this.app.name].google;
+		const clientId = (this.app && this.app.name && config.externalAuth[this.app.name]) ? config.externalAuth[this.app.name].google : null;
+		if(!clientId){
+			logger.error({
+				description: 'ClientId is required to authenticate with Google.',
+				func: 'googleSignup', obj: 'providerAuth'
+			});
+			return Promise.reject('Client id is required to authenticate with Google.');
+		}
 		if(typeof window !== 'undefined'){
 			window.OnLoadCallback = (data) => {
 				logger.log({
