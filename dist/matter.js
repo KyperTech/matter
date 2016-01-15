@@ -14015,8 +14015,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	// import hello from 'hellojs'; //Modifies objects to have id parameter?
@@ -14121,44 +14119,43 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'signup',
 			value: function signup() {
+				if (this.provider === 'google') {
+					return this.googleAuth();
+				} else {
+					return Promise.reject('Invalid provider');
+				}
+			}
+		}, {
+			key: 'googleAuth',
+			value: function googleAuth() {
 				var clientId = _config2.default.externalAuth[this.app.name].google;
 				if (typeof window !== 'undefined') {
-					window.oAuthCallback = function (data) {
-						console.log('oAuthcallback', data);
+					window.OnLoadCallback = function (data) {
+						_logger2.default.log({
+							description: 'Google load callback:', data: data,
+							func: 'googleSignup', obj: 'providerAuth'
+						});
 					};
 				}
 				var scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
 				return new Promise(function (resolve, reject) {
 					dom.asyncLoadJs(scriptSrc).then(function () {
-						console.log('script loaded', _typeof(window.gapi));
 						window.gapi.auth.authorize({ client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me' }, function (auth) {
 							if (!auth || auth.error || auth.message) {
-								_logger2.default.error({ description: 'Error authorizing with google' });
+								_logger2.default.error({
+									description: 'Error authorizing with google',
+									func: 'googleSignup', obj: 'providerAuth'
+								});
 								return reject(auth.error || auth.message);
 							}
-							_logger2.default.log({ description: 'Auth with google successful.', auth: auth });
+							_logger2.default.log({
+								description: 'Auth with google successful.', auth: auth,
+								func: 'googleSignup', obj: 'providerAuth'
+							});
 							resolve(auth);
 						});
 					});
 				});
-				//TODO: send info to server
-				// return this.getAuthUrl().then(url => {
-				// 	logger.info({
-				// 		description: 'Login response.', url,
-				// 		func: 'login', obj: 'providerAuth'
-				// 	});
-				// 	if(typeof window !== 'undefined'){
-				// 		//Redirect to auth url
-				// 		window.location.href = url;
-				// 	}
-				// 	return url;
-				// }, error => {
-				// 	logger.error({
-				// 		description: 'Error initalizing hellojs.', error,
-				// 		func: 'login', obj: 'providerAuth'
-				// 	});
-				// 	return Promise.reject('Error with third party login.');
-				// });
 			}
 		}]);
 

@@ -89,43 +89,52 @@ export default class ProviderAuth {
 	 * });
 	 */
 	signup() {
+		if(this.provider === 'google'){
+			return this.googleAuth();
+		} else {
+			return Promise.reject('Invalid provider');
+		}
+	}
+	googleAuth() {
 		const clientId = config.externalAuth[this.app.name].google;
 		if(typeof window !== 'undefined'){
-			window.oAuthCallback = (data) => {
-				console.log('oAuthcallback', data);
+			window.OnLoadCallback = (data) => {
+				logger.log({
+					description: 'Google load callback:', data,
+					func: 'googleSignup', obj: 'providerAuth'
+				});
 			};
 		}
 		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback'
 		return new Promise((resolve, reject) => {
 			dom.asyncLoadJs(scriptSrc).then(() => {
-				console.log('script loaded', typeof window.gapi);
 				window.gapi.auth.authorize({client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me'}, (auth) => {
 					if(!auth || auth.error || auth.message){
-						logger.error({description: 'Error authorizing with google'});
+						logger.error({
+							description: 'Error authorizing with google',
+							func: 'googleSignup', obj: 'providerAuth'
+						});
 						return reject(auth.error || auth.message);
 					}
-					logger.log({description: 'Auth with google successful.', auth});
-					resolve(auth);
+					logger.log({
+						description: 'Auth with google successful.', auth,
+						func: 'googleSignup', obj: 'providerAuth'
+					});
+					window.gapi.client.load('plus', 'v1', () => {
+	          let request = gapi.client.plus.people.get({
+	            'userId': 'me'
+	          });
+	          request.execute((account) => {
+							logger.log({
+								description: 'Account loaded from google.', account,
+								func: 'googleSignup', obj: 'providerAuth'
+							});
+							//TODO: Signup/Login to Tessellate server with this information
+							resolve(account);
+	          });
+	        });
 				});
 			});
 		});
-		//TODO: send info to server
-		// return this.getAuthUrl().then(url => {
-		// 	logger.info({
-		// 		description: 'Login response.', url,
-		// 		func: 'login', obj: 'providerAuth'
-		// 	});
-		// 	if(typeof window !== 'undefined'){
-		// 		//Redirect to auth url
-		// 		window.location.href = url;
-		// 	}
-		// 	return url;
-		// }, error => {
-		// 	logger.error({
-		// 		description: 'Error initalizing hellojs.', error,
-		// 		func: 'login', obj: 'providerAuth'
-		// 	});
-		// 	return Promise.reject('Error with third party login.');
-		// });
 	}
 }
