@@ -1813,33 +1813,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		_createClass(ProviderAuth, [{
 			key: 'login',
 			value: function login() {
-				return this.getAuthUrl().then(function (url) {
-					_logger2.default.info({
-						description: 'Login response.', url: url,
-						func: 'login', obj: 'providerAuth'
-					});
-					return url;
-				}, function (error) {
-					_logger2.default.error({
-						description: 'Error initalizing hellojs.', error: error,
-						func: 'login', obj: 'providerAuth'
-					});
-					return Promise.reject('Error with third party login.');
-				});
-			}
-			/** Signup using external provider account (Google, Facebook, Github)
-	   * @example
-	   * //Signup using external account (Google, Facebook, Github)
-	   * matter.signup('google').then(function(signupRes){
-	   * 		console.log('Successful signup:', signupRes)
-	   * }, function(err){
-	   * 		console.error('Error with provider signup:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'signup',
-			value: function signup() {
 				var _this = this;
 
 				if (this.provider === 'google') {
@@ -1889,10 +1862,72 @@ return /******/ (function(modules) { // webpackBootstrap
 					return Promise.reject('Invalid provider');
 				}
 			}
+			/** Signup using external provider account (Google, Facebook, Github)
+	   * @example
+	   * //Signup using external account (Google, Facebook, Github)
+	   * matter.signup('google').then(function(signupRes){
+	   * 		console.log('Successful signup:', signupRes)
+	   * }, function(err){
+	   * 		console.error('Error with provider signup:', err);
+	   * });
+	   */
+
+		}, {
+			key: 'signup',
+			value: function signup() {
+				var _this2 = this;
+
+				if (this.provider === 'google') {
+					return this.googleAuth().then(function (googleAccount) {
+						if (!googleAccount) {
+							return Promise.reject('Error loading Google account.');
+						}
+						var image = googleAccount.image;
+						var emails = googleAccount.emails;
+
+						var email = emails && emails[0] && emails[0].value ? emails[0].value : '';
+						var account = {
+							image: image, email: email,
+							username: email.split('@')[0],
+							provider: _this2.provider,
+							providerAccount: googleAccount
+						};
+						_logger2.default.info({
+							description: 'Google account loaded, signing up.', account: account,
+							googleAccount: googleAccount, func: 'signup', obj: 'providerAuth'
+						});
+						return new _request2.default.post(_this2.app.endpoint + '/signup', account).then(function (newAccount) {
+							_logger2.default.info({
+								description: 'Signup with external account successful.',
+								newAccount: newAccount, func: 'signup', obj: 'providerAuth'
+							});
+							return newAccount;
+						}, function (error) {
+							_logger2.default.error({
+								description: 'Error loading google account.', account: account,
+								googleAccount: googleAccount, error: error, func: 'signup', obj: 'providerAuth'
+							});
+							return Promise.reject(error);
+						});
+					}, function (error) {
+						_logger2.default.error({
+							description: 'Error authenticating with Google.', error: error,
+							func: 'signup', obj: 'providerAuth'
+						});
+						return Promise.reject('Error getting external account.');
+					});
+				} else {
+					_logger2.default.error({
+						description: 'Invalid provider.',
+						func: 'signup', obj: 'providerAuth'
+					});
+					return Promise.reject('Invalid provider');
+				}
+			}
 		}, {
 			key: 'googleAuth',
 			value: function googleAuth() {
-				var _this2 = this;
+				var _this3 = this;
 
 				var clientId = this.app && this.app.name && _config2.default.externalAuth[this.app.name] ? _config2.default.externalAuth[this.app.name].google : null;
 				if (!clientId) {
@@ -1904,7 +1939,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				}
 				if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
 					return this.addGoogleLib().then(function () {
-						return _this2.googleAuth();
+						return _this3.googleAuth();
 					});
 				}
 				return new Promise(function (resolve, reject) {
