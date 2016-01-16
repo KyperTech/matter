@@ -188,14 +188,13 @@ export default class Matter {
 			let auth = new ProviderAuth({provider: signupData, app: this});
 			return auth.signup(signupData).then((res) => {
 				logger.info({
-					description: 'Provider signup successful.',
-					provider: signupData, res: res,
-					func: 'signup', obj: 'Matter'
+					description: 'Provider signup successful.', provider: signupData,
+					res, func: 'signup', obj: 'Matter'
 				});
 				return res;
 			}, error => {
 				logger.error({
-					description: 'Provider signup successful.',
+					description: 'Error with provider authentication.',
 					provider: signupData, error, func: 'signup', obj: 'Matter'
 				});
 				return Promise.reject(error);

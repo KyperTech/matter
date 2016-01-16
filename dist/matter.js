@@ -88,7 +88,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _envStorage2 = _interopRequireDefault(_envStorage);
 
-	var _providerAuth = __webpack_require__(8);
+	var _providerAuth = __webpack_require__(9);
 
 	var _providerAuth2 = _interopRequireDefault(_providerAuth);
 
@@ -225,14 +225,13 @@ return /******/ (function(modules) { // webpackBootstrap
 					var auth = new _providerAuth2.default({ provider: signupData, app: this });
 					return auth.signup(signupData).then(function (res) {
 						_logger2.default.info({
-							description: 'Provider signup successful.',
-							provider: signupData, res: res,
-							func: 'signup', obj: 'Matter'
+							description: 'Provider signup successful.', provider: signupData,
+							res: res, func: 'signup', obj: 'Matter'
 						});
 						return res;
 					}, function (error) {
 						_logger2.default.error({
-							description: 'Provider signup successful.',
+							description: 'Error with provider authentication.',
 							provider: signupData, error: error, func: 'signup', obj: 'Matter'
 						});
 						return Promise.reject(error);
@@ -1109,7 +1108,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(13);
+	module.exports = __webpack_require__(14);
 
 /***/ },
 /* 3 */
@@ -1508,7 +1507,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _token2 = _interopRequireDefault(_token);
 
-	var _superagent = __webpack_require__(14);
+	var _superagent = __webpack_require__(15);
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
@@ -1546,30 +1545,30 @@ return /******/ (function(modules) { // webpackBootstrap
 		return new Promise(function (resolve, reject) {
 			if (typeof req.end !== 'function') {
 				_logger2.default.warn({
-					description: 'req.end is not a function',
-					func: 'handleResponse'
+					description: 'req.end is not a function', func: 'handleResponse'
 				});
-				return reject({});
+				return reject('req.end is not a function');
 			}
-			req.end(function (err, res) {
-				if (!err) {
-					// logger.log({description: 'Response:', response:res, func:'handleResponse', file: 'request'});
-					return resolve(res.body);
-				} else {
-					if (err.status == 401) {
+			req.end(function (errorRes, res) {
+				if (errorRes) {
+					var error = errorRes.response.body.error ? errorRes.response.body.error : errorRes.response.body;
+					_logger2.default.warn({
+						description: 'Error in request.', error: error,
+						errorRes: errorRes, func: 'handleResponse'
+					});
+					if (errorRes.status == 401) {
 						_logger2.default.warn({
 							description: 'Unauthorized. You must be signed into make this request.',
 							func: 'handleResponse'
 						});
 					}
-					if (err && err.response) {
-						_logger2.default.warn({
-							description: 'Unauthorized. You must be signed into make this request.',
-							error: err, func: 'handleResponse'
-						});
-						return reject(err.response.text);
-					}
-					return reject(err);
+					return reject(error.message || error);
+				}
+				try {
+					var response = JSON.parse(res.body);
+					resolve(response);
+				} catch (err) {
+					resolve(res.body);
 				}
 			});
 		});
@@ -1577,7 +1576,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function addAuthHeader(req) {
 		if (_token2.default.string) {
 			req = req.set('Authorization', 'Bearer ' + _token2.default.string);
-			// console.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
+			// logger.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
 		}
 		return req;
 	}
@@ -1605,7 +1604,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _envStorage2 = _interopRequireDefault(_envStorage);
 
-	var _jwtDecode = __webpack_require__(10);
+	var _jwtDecode = __webpack_require__(11);
 
 	var _jwtDecode2 = _interopRequireDefault(_jwtDecode);
 
@@ -1734,6 +1733,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.logger = undefined;
+
+	var _logger2 = __webpack_require__(1);
+
+	var _logger3 = _interopRequireDefault(_logger2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.logger = _logger3.default;
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	Object.defineProperty(exports, "__esModule", {
@@ -1751,6 +1769,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _dom = __webpack_require__(4);
 
 	var dom = _interopRequireWildcard(_dom);
+
+	var _index = __webpack_require__(8);
 
 	var _config = __webpack_require__(3);
 
@@ -1772,69 +1792,25 @@ return /******/ (function(modules) { // webpackBootstrap
 			var redirectUrl = actionData.redirectUrl;
 			var provider = actionData.provider;
 
+			var externalAuth = _config2.default.externalAuth[app.name] ? _config2.default.externalAuth[app.name] : null;
 			this.app = app;
 			this.provider = provider;
-			var externalAuth = _config2.default.externalAuth[this.app.name] ? _config2.default.externalAuth[this.app.name] : null;
 			this.redirectUrl = externalAuth ? externalAuth.redirectUrl : '/oauthcallback';
 			if (redirectUrl) {
 				this.redirectUrl = redirectUrl;
 			}
 		}
+		/** External provider login
+	  * @example
+	  * //Login to account that was started through external account signup (Google, Facebook, Github)
+	  * matter.login('google').then(function(loginRes){
+	  * 		console.log('Successful login:', loginRes)
+	  * }, function(err){
+	  * 		console.error('Error with provider login:', err);
+	  * });
+	  */
 
 		_createClass(ProviderAuth, [{
-			key: 'getAuthUrl',
-			value: function getAuthUrl() {
-				var endpointUrl = this.app.endpoint + '/authUrl?provider=' + this.provider + '&redirectUrl=' + this.redirectUrl;
-				_logger2.default.log({
-					description: 'Requesting Auth url.', endpointUrl: endpointUrl,
-					func: 'getAuthUrl', obj: 'providerAuth'
-				});
-				return _request2.default.get(endpointUrl).then(function (authUrl) {
-					_logger2.default.log({
-						description: 'Get auth url request successful.', authUrl: authUrl,
-						func: 'getAuthUrl', obj: 'providerAuth'
-					});
-					return authUrl;
-				})['catch'](function (error) {
-					_logger2.default.error({
-						description: 'Error requesting auth url.', error: error,
-						func: 'getAuthUrl', obj: 'providerAuth'
-					});
-					return Promise.reject('External authentication not available.');
-				});
-			}
-		}, {
-			key: 'accountFromCode',
-			value: function accountFromCode(code) {
-				_logger2.default.log({
-					description: 'Requesting Auth url.', code: code,
-					func: 'accountFromCode', obj: 'providerAuth'
-				});
-				return _request2.default.post(this.app.endpoint + '/oauth2', { code: code }).then(function (account) {
-					_logger2.default.log({
-						description: 'Get auth url request successful.', account: account,
-						func: 'accountFromCode', obj: 'providerAuth'
-					});
-					return account;
-				})['catch'](function (error) {
-					_logger2.default.error({
-						description: 'Error requesting auth url.', error: error,
-						func: 'accountFromCode', obj: 'providerAuth'
-					});
-					return Promise.reject('External authentication not available.');
-				});
-			}
-			/** External provider login
-	   * @example
-	   * //Login to account that was started through external account signup (Google, Facebook, Github)
-	   * matter.login('google').then(function(loginRes){
-	   * 		console.log('Successful login:', loginRes)
-	   * }, function(err){
-	   * 		console.error('Error with provider login:', err);
-	   * });
-	   */
-
-		}, {
 			key: 'login',
 			value: function login() {
 				return this.getAuthUrl().then(function (url) {
@@ -1864,15 +1840,60 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'signup',
 			value: function signup() {
+				var _this = this;
+
 				if (this.provider === 'google') {
-					return this.googleAuth();
+					return this.googleAuth().then(function (googleAccount) {
+						if (!googleAccount) {
+							return Promise.reject('Error loading Google account.');
+						}
+						var image = googleAccount.image;
+						var emails = googleAccount.emails;
+
+						var email = emails && emails[0] && emails[0].value ? emails[0].value : '';
+						var account = {
+							image: image, email: email,
+							username: email.split('@')[0],
+							provider: _this.provider,
+							providerAccount: googleAccount
+						};
+						_logger2.default.info({
+							description: 'Google account loaded, signing up.', account: account,
+							googleAccount: googleAccount, func: 'signup', obj: 'providerAuth'
+						});
+						return new _request2.default.post(_this.app.endpoint + '/signup', account).then(function (newAccount) {
+							_logger2.default.info({
+								description: 'Signup with external account successful.',
+								newAccount: newAccount, func: 'signup', obj: 'providerAuth'
+							});
+							return newAccount;
+						}, function (error) {
+							_logger2.default.error({
+								description: 'Error loading google account.', account: account,
+								googleAccount: googleAccount, error: error, func: 'signup', obj: 'providerAuth'
+							});
+							return Promise.reject(error);
+						});
+					}, function (error) {
+						_logger2.default.error({
+							description: 'Error authenticating with Google.', error: error,
+							func: 'signup', obj: 'providerAuth'
+						});
+						return Promise.reject('Error getting external account.');
+					});
 				} else {
+					_logger2.default.error({
+						description: 'Invalid provider.',
+						func: 'signup', obj: 'providerAuth'
+					});
 					return Promise.reject('Invalid provider');
 				}
 			}
 		}, {
 			key: 'googleAuth',
 			value: function googleAuth() {
+				var _this2 = this;
+
 				var clientId = this.app && this.app.name && _config2.default.externalAuth[this.app.name] ? _config2.default.externalAuth[this.app.name].google : null;
 				if (!clientId) {
 					_logger2.default.error({
@@ -1881,44 +1902,55 @@ return /******/ (function(modules) { // webpackBootstrap
 					});
 					return Promise.reject('Client id is required to authenticate with Google.');
 				}
-				if (typeof window !== 'undefined') {
-					window.OnLoadCallback = function (data) {
-						_logger2.default.log({
-							description: 'Google load callback:', data: data,
-							func: 'googleSignup', obj: 'providerAuth'
-						});
-					};
+				if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
+					return this.addGoogleLib().then(function () {
+						return _this2.googleAuth();
+					});
 				}
-				var scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
 				return new Promise(function (resolve, reject) {
-					dom.asyncLoadJs(scriptSrc).then(function () {
-						window.gapi.auth.authorize({ client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me' }, function (auth) {
-							if (!auth || auth.error || auth.message) {
-								_logger2.default.error({
-									description: 'Error authorizing with google',
-									func: 'googleSignup', obj: 'providerAuth'
-								});
-								return reject(auth.error || auth.message);
-							}
-							_logger2.default.log({
-								description: 'Auth with google successful.', auth: auth,
+					window.gapi.auth.authorize({ client_id: clientId, scope: 'email profile' }, function (auth) {
+						if (!auth || auth.error || auth.message) {
+							_logger2.default.error({
+								description: 'Error authorizing with google',
 								func: 'googleSignup', obj: 'providerAuth'
 							});
-							window.gapi.client.load('plus', 'v1', function () {
-								var request = gapi.client.plus.people.get({
-									'userId': 'me'
+							return reject(auth.error || auth.message);
+						}
+						_logger2.default.log({
+							description: 'Auth with google successful.', auth: auth,
+							func: 'googleSignup', obj: 'providerAuth'
+						});
+						window.gapi.client.load('plus', 'v1', function () {
+							var request = gapi.client.plus.people.get({
+								'userId': 'me'
+							});
+							request.execute(function (account) {
+								_logger2.default.log({
+									description: 'Account loaded from google.', account: account,
+									func: 'googleSignup', obj: 'providerAuth'
 								});
-								request.execute(function (account) {
-									_logger2.default.log({
-										description: 'Account loaded from google.', account: account,
-										func: 'googleSignup', obj: 'providerAuth'
-									});
-									//TODO: Signup/Login to Tessellate server with this information
-									resolve(account);
-								});
+								//TODO: Signup/Login to Tessellate server with this information
+								resolve(account);
 							});
 						});
 					});
+				});
+			}
+		}, {
+			key: 'addGoogleLib',
+			value: function addGoogleLib() {
+				var scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
+				return new Promise(function (resolve) {
+					dom.asyncLoadJs(scriptSrc);
+					if (typeof window !== 'undefined') {
+						window.OnLoadCallback = function () {
+							_logger2.default.log({
+								description: 'Google library loaded',
+								func: 'googleSignup', obj: 'providerAuth'
+							});
+							resolve();
+						};
+					}
 				});
 			}
 		}]);
@@ -1930,10 +1962,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Base64 = __webpack_require__(12);
+	var Base64 = __webpack_require__(13);
 
 	function b64DecodeUnicode(str) {
 	  return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
@@ -1969,13 +2001,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var base64_url_decode = __webpack_require__(9);
-	var json_parse = __webpack_require__(11);
+	var base64_url_decode = __webpack_require__(10);
+	var json_parse = __webpack_require__(12);
 
 	module.exports = function (token) {
 	  if (!token) {
@@ -1987,7 +2019,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	module.exports = function (str) {
@@ -2002,7 +2034,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	;(function () {
@@ -2063,7 +2095,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -16467,18 +16499,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18)(module), (function() { return this; }())))
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(15);
-	var reduce = __webpack_require__(16);
+	var Emitter = __webpack_require__(16);
+	var reduce = __webpack_require__(17);
 
 	/**
 	 * Root reference for iframes.
@@ -17677,7 +17709,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports) {
 
 	
@@ -17847,7 +17879,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports) {
 
 	
@@ -17876,7 +17908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {

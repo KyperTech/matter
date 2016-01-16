@@ -1,59 +1,19 @@
 import request from './request';
 import logger from './logger';
 import * as dom from './dom';
+import { waitUntilDefined } from './index';
 import config from '../config';
 // import hello from 'hellojs'; //Modifies objects to have id parameter?
 export default class ProviderAuth {
 	constructor(actionData) {
 		const { app, redirectUrl, provider } = actionData;
+		const externalAuth = config.externalAuth[app.name] ? config.externalAuth[app.name] : null;
 		this.app = app;
 		this.provider = provider;
-		const externalAuth = config.externalAuth[this.app.name] ? config.externalAuth[this.app.name] : null;
 		this.redirectUrl = externalAuth ? externalAuth.redirectUrl : '/oauthcallback';
-		if(redirectUrl){
+		if (redirectUrl) {
 			this.redirectUrl = redirectUrl;
 		}
-	}
-	getAuthUrl() {
-		const endpointUrl = `${this.app.endpoint}/authUrl?provider=${this.provider}&redirectUrl=${this.redirectUrl}`;
-		logger.log({
-			description: 'Requesting Auth url.',  endpointUrl,
-			func: 'getAuthUrl', obj: 'providerAuth'
-		});
-		return request.get(endpointUrl).then((authUrl) => {
-			logger.log({
-				description: 'Get auth url request successful.',  authUrl,
-				func: 'getAuthUrl', obj: 'providerAuth'
-			});
-			return authUrl;
-		})
-		['catch'](error => {
-			logger.error({
-				description: 'Error requesting auth url.', error,
-				func: 'getAuthUrl', obj: 'providerAuth'
-			});
-			return Promise.reject('External authentication not available.');
-		});
-	}
-	accountFromCode(code) {
-		logger.log({
-			description: 'Requesting Auth url.',  code,
-			func: 'accountFromCode', obj: 'providerAuth'
-		});
-		return request.post(`${this.app.endpoint}/oauth2`, { code }).then(account => {
-			logger.log({
-				description: 'Get auth url request successful.',  account,
-				func: 'accountFromCode', obj: 'providerAuth'
-			});
-			return account;
-		})
-		['catch'](error => {
-			logger.error({
-				description: 'Error requesting auth url.', error,
-				func: 'accountFromCode', obj: 'providerAuth'
-			});
-			return Promise.reject('External authentication not available.');
-		});
 	}
 	/** External provider login
 	 * @example
@@ -65,19 +25,50 @@ export default class ProviderAuth {
 	 * });
 	 */
 	login() {
-		return this.getAuthUrl().then(url => {
-			logger.info({
-				description: 'Login response.', url,
-				func: 'login', obj: 'providerAuth'
+		if(this.provider === 'google'){
+			return this.googleAuth().then(googleAccount => {
+				if(!googleAccount){
+					return Promise.reject('Error loading Google account.');
+				}
+				const { image, emails } = googleAccount;
+				const email = (emails && emails[0] && emails[0].value) ? emails[0].value : '';
+				const account = {
+					image, email,
+					username: email.split('@')[0],
+					provider: this.provider,
+					providerAccount: googleAccount
+				};
+				logger.info({
+					description: 'Google account loaded, signing up.', account,
+					googleAccount, func: 'signup', obj: 'providerAuth'
+				});
+				return new request.post(`${this.app.endpoint}/signup`, account).then(newAccount => {
+					logger.info({
+						description: 'Signup with external account successful.',
+						newAccount, func: 'signup', obj: 'providerAuth'
+					});
+					return newAccount;
+				}, error => {
+					logger.error({
+						description: 'Error loading google account.', account,
+						googleAccount, error, func: 'signup', obj: 'providerAuth'
+					});
+					return Promise.reject(error);
+				});
+			}, error => {
+				logger.error({
+					description: 'Error authenticating with Google.', error,
+					func: 'signup', obj: 'providerAuth'
+				});
+				return Promise.reject('Error getting external account.');
 			});
-			return url;
-		}, error => {
+		} else {
 			logger.error({
-				description: 'Error initalizing hellojs.', error,
-				func: 'login', obj: 'providerAuth'
+				description: 'Invalid provider.',
+				func: 'signup', obj: 'providerAuth'
 			});
-			return Promise.reject('Error with third party login.');
-		});
+			return Promise.reject('Invalid provider');
+		}
 	}
 	/** Signup using external provider account (Google, Facebook, Github)
 	 * @example
@@ -90,8 +81,47 @@ export default class ProviderAuth {
 	 */
 	signup() {
 		if(this.provider === 'google'){
-			return this.googleAuth();
+			return this.googleAuth().then(googleAccount => {
+				if(!googleAccount){
+					return Promise.reject('Error loading Google account.');
+				}
+				const { image, emails } = googleAccount;
+				const email = (emails && emails[0] && emails[0].value) ? emails[0].value : '';
+				const account = {
+					image, email,
+					username: email.split('@')[0],
+					provider: this.provider,
+					providerAccount: googleAccount
+				};
+				logger.info({
+					description: 'Google account loaded, signing up.', account,
+					googleAccount, func: 'signup', obj: 'providerAuth'
+				});
+				return new request.post(`${this.app.endpoint}/signup`, account).then(newAccount => {
+					logger.info({
+						description: 'Signup with external account successful.',
+						newAccount, func: 'signup', obj: 'providerAuth'
+					});
+					return newAccount;
+				}, error => {
+					logger.error({
+						description: 'Error loading google account.', account,
+						googleAccount, error, func: 'signup', obj: 'providerAuth'
+					});
+					return Promise.reject(error);
+				});
+			}, error => {
+				logger.error({
+					description: 'Error authenticating with Google.', error,
+					func: 'signup', obj: 'providerAuth'
+				});
+				return Promise.reject('Error getting external account.');
+			});
 		} else {
+			logger.error({
+				description: 'Invalid provider.',
+				func: 'signup', obj: 'providerAuth'
+			});
 			return Promise.reject('Invalid provider');
 		}
 	}
@@ -104,44 +134,53 @@ export default class ProviderAuth {
 			});
 			return Promise.reject('Client id is required to authenticate with Google.');
 		}
-		if(typeof window !== 'undefined'){
-			window.OnLoadCallback = (data) => {
-				logger.log({
-					description: 'Google load callback:', data,
-					func: 'googleSignup', obj: 'providerAuth'
-				});
-			};
+		if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
+			return this.addGoogleLib().then(() => {
+				return this.googleAuth();
+			});
 		}
-		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback'
 		return new Promise((resolve, reject) => {
-			dom.asyncLoadJs(scriptSrc).then(() => {
-				window.gapi.auth.authorize({client_id: clientId, scope: 'https://www.googleapis.com/auth/plus.me'}, (auth) => {
-					if(!auth || auth.error || auth.message){
-						logger.error({
-							description: 'Error authorizing with google',
-							func: 'googleSignup', obj: 'providerAuth'
-						});
-						return reject(auth.error || auth.message);
-					}
-					logger.log({
-						description: 'Auth with google successful.', auth,
+			window.gapi.auth.authorize({client_id: clientId, scope: 'email profile'}, (auth) => {
+				if(!auth || auth.error || auth.message){
+					logger.error({
+						description: 'Error authorizing with google',
 						func: 'googleSignup', obj: 'providerAuth'
 					});
-					window.gapi.client.load('plus', 'v1', () => {
-	          let request = gapi.client.plus.people.get({
-	            'userId': 'me'
-	          });
-	          request.execute((account) => {
-							logger.log({
-								description: 'Account loaded from google.', account,
-								func: 'googleSignup', obj: 'providerAuth'
-							});
-							//TODO: Signup/Login to Tessellate server with this information
-							resolve(account);
-	          });
-	        });
+					return reject(auth.error || auth.message);
+				}
+				logger.log({
+					description: 'Auth with google successful.', auth,
+					func: 'googleSignup', obj: 'providerAuth'
 				});
+				window.gapi.client.load('plus', 'v1', () => {
+          let request = gapi.client.plus.people.get({
+            'userId': 'me'
+          });
+          request.execute(account => {
+						logger.log({
+							description: 'Account loaded from google.', account,
+							func: 'googleSignup', obj: 'providerAuth'
+						});
+						//TODO: Signup/Login to Tessellate server with this information
+						resolve(account);
+          });
+        });
 			});
+		});
+	}
+	addGoogleLib() {
+		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
+		return new Promise((resolve) => {
+			dom.asyncLoadJs(scriptSrc);
+			if (typeof window !== 'undefined') {
+				window.OnLoadCallback = () => {
+					logger.log({
+						description: 'Google library loaded',
+						func: 'googleSignup', obj: 'providerAuth'
+					});
+					resolve();
+				};
+			}
 		});
 	}
 }
