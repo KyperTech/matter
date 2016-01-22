@@ -1,5 +1,5 @@
 import log from './logger';
-import lodash from 'lodash';
+import { includes } from 'lodash';
 
 let cookiesUtil = {
 	/**
@@ -17,7 +17,7 @@ let cookiesUtil = {
 			var c = ca[i];
 			while (c.charAt(0) == ' ') {c = c.substring(1);}
 			try {
-				if (lodash.contains(c, name)) {return c.substring(name.length, c.length);}
+				if (includes(c, name)) {return c.substring(name.length, c.length);}
 			} catch (err) {
 				log.warn({description: 'Cookie cannot be loaded', cookieName: cookieName, error: err, func: 'getCookie', obj: 'cookiesUtil'});
 				return '';
