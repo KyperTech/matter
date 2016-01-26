@@ -12,17 +12,21 @@ import {
 } from 'lodash';
 export default class Matter {
 	/** Constructor
-	 * @param {String} appName Name of application
+	 * @param {String} project Name of application
 	 */
-	constructor(appName, opts) {
-		if (!appName) {
+	constructor(project, opts) {
+		if (!project) {
 			logger.error({
 				description: 'Application name required to use Matter.',
 				func: 'constructor', obj: 'Matter'
 			});
 			throw new Error('Application name is required to use Matter');
+		}
+		if(isObject(project)){
+			this.name = project.name;
+			this.owner = project.owner || null;
 		} else {
-			this.name = appName;
+			this.name = project;
 		}
 		if (opts) {
 			this.options = opts;
@@ -66,11 +70,11 @@ export default class Matter {
 				config.envName = this.options.env;
 				logger.log({
 					description: 'Environment set based on provided environment.',
-					config: config, func: 'endpoint', obj: 'Matter'
+					config, func: 'endpoint', obj: 'Matter'
 				});
 			}
 		}
-		let appEndpoint = `${config.serverUrl}/apps/${this.name}`;
+		let appEndpoint = `${config.serverUrl}/projects/${this.name}`;
 		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
@@ -265,8 +269,8 @@ export default class Matter {
 					}
 					let userAccount = {};
 					//Get user data either directly from response or from token
-					if (has(response, 'account')) {
-						userAccount = response.account;
+					if (has(response, 'user') || has(response, 'account')) {
+						userAccount = response.user || response.account;
 					} else if (this.token.data) {
 						//TODO: Handle more Auth Provider tokens
 						//Check for AuthRocket style token

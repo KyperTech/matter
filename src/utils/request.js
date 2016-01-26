@@ -4,7 +4,7 @@ import superagent from 'superagent';
 
 let request = {
 	get(endpoint, queryData) {
-		var req = superagent.get(endpoint);
+		let req = superagent.get(endpoint);
 		if (queryData) {
 			req.query(queryData);
 		}
@@ -12,17 +12,17 @@ let request = {
 		return handleResponse(req);
 	},
 	post(endpoint, data) {
-		var req = superagent.post(endpoint).send(data);
+		let req = superagent.post(endpoint).send(data);
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	},
 	put(endpoint, data) {
-		var req = superagent.put(endpoint, data);
+		let req = superagent.put(endpoint, data);
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	},
 	del(endpoint, data) {
-		var req = superagent.put(endpoint, data);
+		let req = superagent.put(endpoint, data);
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	}
@@ -40,22 +40,21 @@ function handleResponse(req) {
 		}
 		req.end((errorRes, res) => {
 			if (errorRes) {
-				let error = errorRes.response.body.error ? errorRes.response.body.error : errorRes.response.body;
-				logger.warn({
-					description: 'Error in request.', error,
-					errorRes, func: 'handleResponse'
-				});
 				if (errorRes.status == 401) {
 					logger.warn({
 						description: 'Unauthorized. You must be signed into make this request.',
 						func: 'handleResponse'
 					});
 				}
+				const { response } = errorRes;
+				const error = (response && response.body) ? response.body.error : errorRes;
+				logger.error({
+					description: 'Error in request.', error, func: 'handleResponse'
+				});
 				return reject(error.message || error);
 			}
 			try {
-				let response = JSON.parse(res.body);
-				resolve(response);
+				resolve(JSON.parse(res.body));
 			} catch(err) {
 				resolve(res.body);
 			}

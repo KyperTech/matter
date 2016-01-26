@@ -10,8 +10,9 @@ import logger from '../../src/utils/logger';
 import ProviderAuth from '../../src/utils/providerAuth';
 
 let responseState = 'success';
-let exampleAppName = 'exampleApp';
-let matter = new Matter(exampleAppName);
+let name = 'exampleApp';
+let owner = 'test';
+let matter = new Matter({name, owner});
 let mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
 let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 let mockGet = sinon.stub(request, 'get', () => {
@@ -93,7 +94,7 @@ describe('Matter', () => {
 	});
 	describe('Config', () => {
 		it('sets correct serverUrl', () => {
-			expect(matter.endpoint).to.equal(`${config.serverUrl}/apps/${exampleAppName}`);
+			expect(matter.endpoint).to.equal(`${config.serverUrl}/users/${owner}/projects/${name}`);
 		});
 	});
 	describe('Constructor', () => {
@@ -125,7 +126,7 @@ describe('Matter', () => {
 				logger.error({description: 'Error testing options capability.'});
 			}
 			expect(matterWithOptions.endpoint).to.exist;
-			expect(matterWithOptions.endpoint).to.equal(`http://localhost:4000/apps/${exampleAppName}`);
+			expect(matterWithOptions.endpoint).to.equal(`http://localhost:4000/projects/${exampleAppName}`);
 		});
 		// it('handles tessellate as app name', () => {
 		//	 let matterWithOptions;
