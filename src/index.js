@@ -10,6 +10,7 @@ import {
 	isObject, has,
 	some, every
 } from 'lodash';
+
 export default class Matter {
 	/** Constructor
 	 * @param {String} project Name of application
@@ -40,6 +41,7 @@ export default class Matter {
 			func: 'constructor', obj: 'Matter'
 		});
 	}
+
 	/** Get current logged in status
 	 * @return {Boolean}
 	 * @example
@@ -53,6 +55,7 @@ export default class Matter {
 	get isLoggedIn() {
 		return this.token.string ? true : false;
 	}
+
 	/** Endpoint generation that handles default/provided settings and environment
 	 * @return {String} endpoint - endpoint for tessellate application
 	 */
@@ -74,7 +77,7 @@ export default class Matter {
 				});
 			}
 		}
-		let appEndpoint = `${config.serverUrl}/projects/${this.name}`;
+		let appEndpoint = this.owner ? `${config.serverUrl}/users/${this.owner}/projects/${this.name}` : `${config.serverUrl}/projects/${this.name}`;
 		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
@@ -98,6 +101,7 @@ export default class Matter {
 		});
 		return appEndpoint;
 	}
+
 	get urls() {
 		if(this.token && this.token.data && this.token.data.username){
 			return {
@@ -109,6 +113,62 @@ export default class Matter {
 		return {
 			recover: `${this.endpoint}/recover`
 		};
+	}
+
+	/** Save current user (handled automatically by default)
+	 * @param {Object} userData - Account data to set for current user
+	 * @example
+	 * //Save account response to current user
+	 * matter.currentUser = {username: 'testuser1', email: 'test@email.com'};
+	 * console.log('New current user set:', matter.currentUser);
+	 */
+	set currentUser(userData) {
+		logger.debug({
+			description: 'Current User set.', user: userData,
+			func: 'currentUser', obj: 'Matter'
+		});
+		this.storage.setItem(config.tokenUserDataName, userData);
+	}
+
+  /** Get currently logged in user or returns null
+   * @return {Object|null}
+   * @example
+   * //Return account if logged in
+   * if(matter.isLoggedIn){
+   * console.log('Current user account: ', matter.currentUser);
+   * } else {
+   * console.log('No current user. Current user: ', matter.currentUser)
+   * }
+   * matter.currentUser
+   * console.log('New current user set:', matter.currentUser);
+   */
+	get currentUser() {
+		if (this.storage.getItem(config.tokenUserDataName)) {
+			return this.storage.getItem(config.tokenUserDataName);
+		} else {
+			return null;
+		}
+	}
+
+	/* Utility to handle safley writing to localStorage, sessionStorage, and cookies
+	 * @return {Object}
+	 */
+	get storage() {
+		return envStorage;
+	}
+
+	/** Utility to handle token writing/deleting/decoding
+	 * @return {Object}
+	 */
+	get token() {
+		return token;
+	}
+
+	/** Utils placed in base library
+	 * @return {Object}
+	 */
+	get utils() {
+		return {logger, request, storage: envStorage, dom};
 	}
 	/** Signup a new user
 	 * @param {Object} signupData - Object containing data to use while signing up to application.
@@ -127,7 +187,7 @@ export default class Matter {
 	 */
 	signup(signupData) {
 		logger.debug({
-			description: 'Signup called.', signupData: signupData,
+			description: 'Signup called.', signupData,
 			func: 'signup', obj: 'Matter'
 		});
 		if (!signupData || (!isObject(signupData) && !isString(signupData))) {
@@ -140,72 +200,49 @@ export default class Matter {
 				status: 'NULL_DATA'
 			});
 		}
-		if (isObject(signupData)) {
-			//Handle no username or email
-			if (!signupData.username && !signupData.email) {
-				logger.error({
-					description: 'Email or Username required to signup.',
-					func: 'signup', obj: 'Matter'
-				});
-				return Promise.reject({
-					message: 'Email or Username required to signup.',
-					status: 'ID_REQUIRED'
-				});
-			}
-			if (!signupData.password) {
-				logger.error({
-					description: 'Password is required to signup.',
-					func: 'signup', obj: 'Matter'
-				});
-				return Promise.reject({
-					message: 'Password is required to signup.',
-					status: 'PASS_REQUIRED'
-				});
-			}
-			return request.post(this.endpoint + '/signup', signupData).then(res => {
-				logger.info({
-					description: 'Signup successful.',
-					signupData, res, func: 'signup', obj: 'Matter'
-				});
-				if (has(res, 'account')) {
-					return res.account;
-				} else {
-					logger.warn({
-						description: 'Account was not contained in signup res.',
-						signupData, res, func: 'signup', obj: 'Matter'
-					});
-					return res;
-				}
-			})['catch'](error => {
-				logger.error({
-					description: 'Error requesting signup.', error,
-					signupData, func: 'signup', obj: 'Matter'
-				});
-				return Promise.reject(error);
+		//Handle no username or email
+		if (!signupData.username || !signupData.email) {
+			logger.error({
+				description: 'Email and Username required to signup.',
+				func: 'signup', obj: 'Matter'
 			});
-		} else {
-			//Handle 3rd Party signups
-			logger.debug({
-				description: 'Third party signup called.',
-				provider: signupData, func: 'signup', obj: 'Matter'
-			});
-			let auth = new ProviderAuth({provider: signupData, app: this});
-			return auth.signup(signupData).then((res) => {
-				logger.info({
-					description: 'Provider signup successful.', provider: signupData,
-					res, func: 'signup', obj: 'Matter'
-				});
-				return res;
-			}, error => {
-				logger.error({
-					description: 'Error with provider authentication.',
-					provider: signupData, error, func: 'signup', obj: 'Matter'
-				});
-				return Promise.reject(error);
+			return Promise.reject({
+				message: 'Email and Username required to signup.',
+				status: 'EMPTY_DATA'
 			});
 		}
+		if (!signupData.password) {
+			logger.error({
+				description: 'Password is required to signup.',
+				func: 'signup', obj: 'Matter'
+			});
+			return Promise.reject({
+				message: 'Password is required to signup.',
+				status: 'PASS_REQUIRED'
+			});
+		}
+		return request.post(this.endpoint + '/signup', signupData).then(response => {
+			if (response.token) {
+				this.token.string = response.token;
+			}
+			if (response.user) {
+				this.currentUser = response.user;
+			}
+			logger.info({
+				description: 'Signup successful.', user: this.currentUser,
+				func: 'signup', obj: 'Matter'
+			});
+			return this.currentUser;
+		})['catch'](error => {
+			logger.error({
+				description: 'Error requesting signup.', error,
+				signupData, func: 'signup', obj: 'Matter'
+			});
+			return Promise.reject(error);
+		});
 	}
-	/** Login by username/email or external provider
+
+	/** Login by username/email
 	 * @param {Object} loginData - Object containing data to use while logging in to application.
 	 * @param {String} loginData.username - Username of user to login as
 	 * @param {String} loginData.email - Email of new user (Optional instead of username)
@@ -215,7 +252,7 @@ export default class Matter {
 	 * //Login as 'testuser1'
 	 * var loginData = {username: 'testuser1', password: 'testpassword'};
 	 * matter.login(loginData).then(function(loginRes){
-	 *  console.log('New user logged in succesfully. Account: ', loginRes.account);
+	 *  console.log('New user logged in succesfully. Account: ', loginRes.user);
 	 * }, function(err){
 	 *  console.error('Error logging in:', err);
 	 * });
@@ -231,107 +268,57 @@ export default class Matter {
 				status: 'DATA_REQUIRED'
 			});
 		}
-		if (isObject(loginData)) {
-			//Handle no username or email
-			if (!loginData.username && !loginData.email) {
-				logger.error({
-					description: 'Email or Username required to login.',
-					func: 'login', obj: 'Matter'
-				});
-				return Promise.reject({
-					message: 'Email or Username required to login.',
-					status: 'ID_REQUIRED'
-				});
-			}
-			//Handle null or invalid password
-			if (!loginData.password || loginData.password === '') {
-				return Promise.reject({
-					message: 'Password is required to login.',
-					status: 'PASS_REQUIRED'
-				});
-			}
-			//Username/Email Login
-			return request.put(this.endpoint + '/login', loginData)
-			.then((response) => {
-				if (has(response, 'data') && has(response.data, 'status') && response.data.status == 409) {
-					logger.error({
-						description: 'Account not found.',response: response,
-						func: 'login', obj: 'Matter'
-					});
-					return Promise.reject(response.data);
-				} else {
-					logger.info({
-						description: 'Successful login.', response: response,
-						func: 'login', obj: 'Matter'
-					});
-					if (has(response, 'token')) {
-						this.token.string = response.token;
-					}
-					let userAccount = {};
-					//Get user data either directly from response or from token
-					if (has(response, 'user') || has(response, 'account')) {
-						userAccount = response.user || response.account;
-					} else if (this.token.data) {
-						//TODO: Handle more Auth Provider tokens
-						//Check for AuthRocket style token
-						logger.debug({
-							description: 'User data available from token.',
-							tokenData: this.token.data, type: typeof this.token.data,
-							func: 'login', obj: 'Matter'
-						});
-						if (this.token.data.un) {
-							logger.log({
-								description: 'Token is AuthRocket format.',
-								func: 'login', obj: 'Matter'
-							});
-							userAccount = {
-								username: this.token.data.un,
-								name: this.token.data.n || null,
-								authrocketId: this.token.data.uid || null
-							};
-						} else {
-							logger.debug({
-								description: 'Token is default format.',
-								func: 'login', obj: 'Matter'
-							});
-							//Default token style
-							userAccount = this.token.data;
-						}
-					} else {
-						logger.error({
-							description: 'User data not available from response or token.',
-							func: 'login', obj: 'Matter'
-						});
-						userAccount = {token: this.token.string};
-					}
-					//Set userdata to local storage
-					this.storage.setItem(config.tokenUserDataName, userAccount);
-					return userAccount;
-				}
-			})['catch']((errRes) => {
-				logger.error({
-					description: 'Error requesting login.',
-					error: errRes, status: errRes.status,
-					func: 'login', obj: 'Matter'
-				});
-				if (errRes.status == 409 || errRes.status == 400) {
-					errRes = errRes.response.text;
-				}
-				return Promise.reject(errRes);
+		//Handle no username or email
+		if (!loginData.username && !loginData.email) {
+			logger.error({
+				description: 'Email or Username required to login.',
+				func: 'login', obj: 'Matter'
 			});
-		} else {
-			//Provider login
-			let auth = new ProviderAuth({provider: loginData, app: this});
-			return auth.login().then((res) => {
-				logger.info({
-					description: 'Provider login successful.',
-					provider: loginData, res,
-					func: 'login', obj: 'Matter'
-				});
-				return res;
+			return Promise.reject({
+				message: 'Email or Username required to login.',
+				status: 'ID_REQUIRED'
 			});
 		}
+		//Handle null or invalid password
+		if (!loginData.password || loginData.password === '') {
+			return Promise.reject({
+				message: 'Password is required to login.',
+				status: 'PASS_REQUIRED'
+			});
+		}
+		//Username/Email Login
+		return request.put(this.endpoint + '/login', loginData)
+		.then(response => {
+			if (response.data && response.data.status && response.data.status == 409) {
+				logger.error({
+					description: 'User not found.', response,
+					func: 'login', obj: 'Matter'
+				});
+				return Promise.reject(response.data);
+			}
+			if (response.token) {
+				this.token.string = response.token;
+			}
+			if (response.user) {
+				this.currentUser = response.user;
+			}
+			logger.info({
+				description: 'Successful login.', user: this.currentUser,
+				func: 'login', obj: 'Matter'
+			});
+			return this.currentUser;
+		})['catch'](error => {
+			logger.error({
+				description: 'Error requesting login.',
+				error, func: 'login', obj: 'Matter'
+			});
+			if (error.status == 409 || error.status == 400) {
+				error = error.response.text;
+			}
+			return Promise.reject(error);
+		});
 	}
+
 	/** logout
 	 * @description Log out of currently logged in user account
 	 * @return {Promise}
@@ -355,43 +342,79 @@ export default class Matter {
 				status: 'NULL_ACCOUNT'
 			});
 		}
-		return request.put(this.endpoint + '/logout').then((response) => {
+		return request.put(`${this.endpoint}/logout`).then(response => {
 			logger.info({
 				description: 'Logout successful.',
-				response: response, func: 'logout', obj: 'Matter'
+				response, func: 'logout', obj: 'Matter'
 			});
 			this.currentUser = null;
 			this.token.delete();
 			return response;
-		})['catch']((errRes) => {
+		})['catch'](error => {
 			logger.error({
 				description: 'Error requesting log out: ',
-				error: errRes, func: 'logout', obj: 'Matter'
+				error, func: 'logout', obj: 'Matter'
 			});
 			this.storage.removeItem(config.tokenUserDataName);
 			this.token.delete();
-			return Promise.reject(errRes);
+			return Promise.reject(error);
 		});
 	}
-	providerSignup(providerData) {
-		if (!providerData) {
-			return Promise.reject('Provider data is required to signup.');
-		}
-		const { provider, code } = providerData;
-		if (!provider) {
-			return Promise.reject('Provider name is required to signup.');
-		}
-		if (!code) {
-			return Promise.reject('Provider code is required to signup.');
-		}
+
+	/** Login using external provider
+	 * @param {String} provider - Provider name
+	 * @return {Promise}
+	 * @example
+	 * matter.loginWithProvider('google').then(function(loginRes){
+	 *  console.log('New user logged in succesfully. Account: ', loginRes.user);
+	 * }, function(err){
+	 *  console.error('Error logging in:', err);
+	 * });
+	 */
+	loginUsingProvider(provider) {
+		//Handle 3rd Party signups
+		logger.debug({
+			description: 'Third party signup called.',
+			provider, func: 'signup', obj: 'Matter'
+		});
 		let auth = new ProviderAuth({provider, app: this});
-		return auth.accountFromCode(code).then(res => {
+		return auth.signup(provider).then(res => {
 			logger.info({
-				description: 'Provider login successful.',
-				providerData, res,
-				func: 'providerSignup', obj: 'Matter'
+				description: 'Provider signup successful.', provider,
+				res, func: 'signup', obj: 'Matter'
 			});
 			return res;
+		}, error => {
+			logger.error({
+				description: 'Error with provider authentication.',
+				provider, error, func: 'signup', obj: 'Matter'
+			});
+			return Promise.reject(error);
+		});
+	}
+
+	/** Signup using external provider
+	 * @param {String} provider - Provider name
+	 * @return {Promise}
+	 * @example
+	 * //Signup using google
+	 * matter.signupUsingProvider('google').then(function(signupRes){
+	 *  console.log('New user logged in succesfully. Account: ', signupRes.user);
+	 * }, function(err){
+	 *  console.error('Error logging in:', err);
+	 * });
+	 */
+	signupUsingProvider(provider) {
+		if (!provider) {
+			return Promise.reject('Provider data is required to signup.');
+		}
+		let auth = new ProviderAuth({provider, app: this});
+		return auth.signup(provider).then(response => {
+			logger.info({
+				description: 'Provider login successful.',
+				response, func: 'providerSignup', obj: 'Matter'
+			});
+			return response;
 		}, error => {
 			logger.error({
 				description: 'Provider signup error.', error,
@@ -400,6 +423,7 @@ export default class Matter {
 			return Promise.reject(error);
 		});
 	}
+
 	/** getCurrentUser
 	 * @return {Promise}
 	 * @example
@@ -449,6 +473,7 @@ export default class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+
 	/** updateAccount
 	 * @param {Object} updateData - Data to update within profile (only provided data will be modified).
 	 * @return {Promise}
@@ -496,6 +521,7 @@ export default class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+
 	/** uploadImage
 	 * @description Upload image to Tessellate
 	 * @param {Object} file - File object to upload
@@ -529,11 +555,10 @@ export default class Matter {
 			});
 		}
 		//Send update request
-		const uploadUrl = `${this.endpoint}/user/${this.token.data.username}`;
-		return request.put(this.urls.upload, fileData).then((response) => {
+		return request.put(this.urls.upload, fileData).then(response => {
 			logger.info({
 				description: 'Upload image request responded.',
-				responseData: response, func: 'uploadImage', obj: 'Matter'
+				response, func: 'uploadImage', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;
@@ -545,6 +570,7 @@ export default class Matter {
 			return Promise.reject(errRes);
 		});
 	}
+
 	/** uploadAccountImage
 	 * @description Upload image and add url to currently logged in account
 	 * @param {Object} file - File object to upload
@@ -558,10 +584,11 @@ export default class Matter {
 	 * });
 	 */
 	uploadAccountImage(fileData) {
-		return this.uploadImage(fileData).then((imgUrl) => {
+		return this.uploadImage(fileData).then(imgUrl => {
 			return this.updateAccount({image:{url: imgUrl}});
 		});
 	}
+
 	/** changePassword
 	 * @param {String} updateData New password for account.
 	 * @return {Promise}
@@ -599,6 +626,7 @@ export default class Matter {
 			return Promise.reject(error);
 		});
 	}
+
 	/** recoverAccount
 	 * @param {String} updateData New password for account.
 	 * @return {Promise}
@@ -644,57 +672,6 @@ export default class Matter {
 		});
 	}
 
-	/** Save current user (handled automatically by default)
-	 * @param {Object} userData - Account data to set for current user
-	 * @example
-	 * //Save account response to current user
-	 * matter.currentUser = {username: 'testuser1', email: 'test@email.com'};
-	 * console.log('New current user set:', matter.currentUser);
-	 */
-	set currentUser(userData) {
-		logger.debug({
-			description: 'Current User set.', user: userData,
-			func: 'currentUser', obj: 'Matter'
-		});
-		this.storage.setItem(config.tokenUserDataName, userData);
-	}
-  /** Get currently logged in user or returns null
-   * @return {Object|null}
-   * @example
-   * //Return account if logged in
-   * if(matter.isLoggedIn){
-   * console.log('Current user account: ', matter.currentUser);
-   * } else {
-   * console.log('No current user. Current user: ', matter.currentUser)
-   * }
-   * matter.currentUser
-   * console.log('New current user set:', matter.currentUser);
-   */
-	get currentUser() {
-		if (this.storage.getItem(config.tokenUserDataName)) {
-			return this.storage.getItem(config.tokenUserDataName);
-		} else {
-			return null;
-		}
-	}
-	/* Utility to handle safley writing to localStorage, sessionStorage, and cookies
-	 * @return {Object}
-	 */
-	get storage() {
-		return envStorage;
-	}
-	/** Utility to handle token writing/deleting/decoding
-	 * @return {Object}
-	 */
-	get token() {
-		return token;
-	}
-	/** Utils placed in base library
-	 * @return {Object}
-	 */
-	get utils() {
-		return {logger, request, storage: envStorage, dom};
-	}
 
 	/** Check that user is in a single group or in all of a list of groups
 	 * @param {Array} checkGroups - List of groups to check for account membership
@@ -723,11 +700,11 @@ export default class Matter {
 			});
 			return false;
 		}
-		//Check if user is
+		//Check if user is within groups
 		if (isString(checkGroups)) {
-			let groupName = checkGroups;
+			const groupName = checkGroups;
 			//Single role or string list of roles
-			let groupsArray = groupName.split(',');
+			const groupsArray = groupName.split(',');
 			if (groupsArray.length > 1) {
 				//String list of groupts
 				logger.info({
@@ -735,30 +712,24 @@ export default class Matter {
 					func: 'isInGroup', obj: 'Matter'
 				});
 				return this.isInGroups(groupsArray);
-			} else {
-				//Single group
-				let groups = this.token.data.groups || [];
-				logger.log({
-					description: 'Checking if user is in group.',
-					group: groupName, userGroups: this.token.data.groups,
-					func: 'isInGroup', obj: 'Matter'
-				});
-				return some(groups, (group) =>  {
-					return groupName == group.name;
-				});
 			}
-		} else if (isArray(checkGroups)) {
-			//Array of groups/roles
-			//Check that user is in every group
-			logger.info({
-				description: 'Array of groups.', list: checkGroups,
+			//Single group
+			let groups = this.token.data.groups || [];
+			logger.log({
+				description: 'Checking if user is in group.',
+				group: groupName, userGroups: this.token.data.groups,
 				func: 'isInGroup', obj: 'Matter'
 			});
-			return this.isInGroups(checkGroups);
-		} else {
-			return false;
+			return some(groups, (group) =>  {
+				return groupName == group.name;
+			});
 		}
+		if (isArray(checkGroups)) {
+			return this.isInGroups(checkGroups);
+		}
+		return false;
 	}
+
 	/** Check that user is in all of a list of groups
 	 * @param {Array|String} checkGroups - List of groups to check for account membership
 	 * @return {Boolean}
@@ -770,7 +741,6 @@ export default class Matter {
 	 * } else {
 	 * console.warn('Current account is not both an admin and a user')
 	 * }
-	 *
 	 */
 	isInGroups(checkGroups) {
 		if (!this.isLoggedIn) {
@@ -789,36 +759,35 @@ export default class Matter {
 		}
 		//Check if user is in some of the provided groups
 		if (isArray(checkGroups)) {
-			return every(checkGroups.map((group) => {
+			return every(checkGroups.map(group => {
 				if (isString(group)) {
 					//Group is string
 					return this.isInGroup(group);
-				} else {
-					//Group is object
-					if (has(group, 'name')) {
-						return this.isInGroup(group.name);
-					} else {
-						logger.error({
-							description: 'Invalid group object.',
-							group: group, func: 'isInGroups', obj: 'Matter'
-						});
-						return false;
-					}
 				}
+				//Group is object
+				if (has(group, 'name')) {
+					return this.isInGroup(group.name);
+				}
+				logger.error({
+					description: 'Invalid group object.',
+					group: group, func: 'isInGroups', obj: 'Matter'
+				});
+				return false;
 			}), true);
-		} else if (isString(checkGroups)) {
+		}
+		if (isString(checkGroups)) {
 			//TODO: Handle spaces within string list
-			let groupsArray = checkGroups.split(',');
+			const groupsArray = checkGroups.split(',');
 			if (groupsArray.length > 1) {
 				return this.isInGroups(groupsArray);
 			}
 			return this.isInGroup(groupsArray[0]);
-		} else {
-			logger.error({
-				description: 'Invalid groups list.',
-				func: 'isInGroups', obj: 'Matter'
-			});
-			return false;
 		}
+		logger.error({
+			description: 'Invalid groups list.',
+			func: 'isInGroups', obj: 'Matter'
+		});
+		return false;
 	}
+
 }
