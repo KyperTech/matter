@@ -988,8 +988,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _lodash = __webpack_require__(2);
 
-	var _lodash2 = _interopRequireDefault(_lodash);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var logger = {
@@ -1040,41 +1038,35 @@ return /******/ (function(modules) { // webpackBootstrap
 		var msgObj = {};
 		//TODO: Attach time stamp
 		//Attach location information to the beginning of message
-		if (_lodash2.default.isObject(logData)) {
-			if (_config2.default.logLevel !== 'error') {
-				if (_lodash2.default.has(logData, 'func')) {
-					if (_lodash2.default.has(logData, 'obj')) {
+		if ((0, _lodash.isObject)(logData)) {
+			(function () {
+				if (logData.func) {
+					if (logData.obj) {
 						//Object and function provided
 						msgStr += '[' + logData.obj + '.' + logData.func + '()]\n ';
-					} else if (_lodash2.default.has(logData, 'file')) {
+					} else if (logData.file) {
 						msgStr += '[' + logData.file + ' > ' + logData.func + '()]\n ';
 					} else {
 						msgStr += '[' + logData.func + '()]\n ';
 					}
 				}
-			}
-			//Print each key and its value other than obj and func
-			_lodash2.default.each(_lodash2.default.omit(_lodash2.default.keys(logData)), function (key) {
-				if (key != 'func' && key != 'obj') {
-					if (key == 'description' || key == 'message') {
-						msgStr += logData[key];
-					} else if (_lodash2.default.isString(logData[key])) {
-						// msgStr += key + ': ' + logData[key] + ', ';
-						msgObj[key] = logData[key];
-					} else {
-						//Print objects differently
-						// msgStr += key + ': ' + logData[key] + ', ';
+				var hideList = ['func', 'obj', 'file'];
+				//Print each key and its value other than obj and func
+				(0, _lodash.each)((0, _lodash.omit)((0, _lodash.keys)(logData)), function (key) {
+					if (hideList.indexOf(key) === -1) {
+						if (key == 'description' || key == 'message') {
+							return msgStr += logData[key];
+						}
 						msgObj[key] = logData[key];
 					}
-				}
-			});
-			msgStr += '\n';
-		} else if (_lodash2.default.isString(logData)) {
+				});
+				msgStr += '\n';
+			})();
+		} else if (_.isString(logData)) {
 			msgStr = logData;
 		}
-		var msg = [msgStr, msgObj];
 
-		return msg;
+		return [msgStr, msgObj];
 	}
 	module.exports = exports['default'];
 
@@ -1524,6 +1516,10 @@ return /******/ (function(modules) { // webpackBootstrap
 				return reject('req.end is not a function');
 			}
 			req.end(function (errorRes, res) {
+				_logger2.default.debug({
+					message: 'Response recieved.', response: res, errorResponse: errorRes,
+					func: 'addAuthHeader', file: 'request'
+				});
 				if (errorRes) {
 					if (errorRes.status == 401) {
 						_logger2.default.warn({
@@ -1533,11 +1529,12 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 					var response = errorRes.response;
 
-					var error = response && response.body ? response.body.error : errorRes;
+					var error = response && response.body ? response.body : errorRes;
 					_logger2.default.error({
-						description: 'Error in request.', error: error, func: 'handleResponse'
+						description: 'Error in request.', error: error,
+						file: 'request', func: 'handleResponse'
 					});
-					return reject(error.message || error);
+					return reject(error || errorRes);
 				}
 				try {
 					resolve(JSON.parse(res.body));
@@ -1550,7 +1547,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	function addAuthHeader(req) {
 		if (_token2.default.string) {
 			req = req.set('Authorization', 'Bearer ' + _token2.default.string);
-			// logger.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
+			_logger2.default.debug({
+				message: 'Set auth header', token: _token2.default.string,
+				func: 'addAuthHeader', file: 'request'
+			});
 		}
 		return req;
 	}

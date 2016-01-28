@@ -1,5 +1,5 @@
 import config from '../config';
-import _ from 'lodash';
+import { each, omit, keys, isObject } from 'lodash';
 
 let logger = {
 	log(logData) {
@@ -49,39 +49,31 @@ function buildMessageArgs(logData) {
 	var msgObj = {};
 	//TODO: Attach time stamp
 	//Attach location information to the beginning of message
-	if (_.isObject(logData)) {
-		if (config.logLevel !== 'error') {
-			if (_.has(logData, 'func')) {
-				if (_.has(logData, 'obj')) {
-					//Object and function provided
-					msgStr += `[${logData.obj}.${logData.func}()]\n `;
-				} else if (_.has(logData, 'file')) {
-					msgStr += `[${logData.file} > ${logData.func}()]\n `;
-				} else {
-					msgStr += `[${logData.func}()]\n `;
-				}
+	if (isObject(logData)) {
+		if (logData.func) {
+			if (logData.obj) {
+				//Object and function provided
+				msgStr += `[${logData.obj}.${logData.func}()]\n `;
+			} else if (logData.file) {
+				msgStr += `[${logData.file} > ${logData.func}()]\n `;
+			} else {
+				msgStr += `[${logData.func}()]\n `;
 			}
 		}
+		const hideList = ['func', 'obj', 'file'];
 		//Print each key and its value other than obj and func
-		_.each(_.omit(_.keys(logData)), (key) => {
-			if (key != 'func' && key != 'obj') {
+		each(omit(keys(logData)), key => {
+			if (hideList.indexOf(key) === -1) {
 				if (key == 'description' || key == 'message') {
-					msgStr += logData[key];
-				} else if (_.isString(logData[key])) {
-					// msgStr += key + ': ' + logData[key] + ', ';
-					msgObj[key] = logData[key];
-				} else {
-					//Print objects differently
-					// msgStr += key + ': ' + logData[key] + ', ';
-					msgObj[key] = logData[key];
+					return msgStr += logData[key];
 				}
+				msgObj[key] = logData[key];
 			}
 		});
 		msgStr += '\n';
 	} else if (_.isString(logData)) {
 		msgStr = logData;
 	}
-	var msg = [msgStr, msgObj];
 
-	return msg;
+	return [msgStr, msgObj];
 }

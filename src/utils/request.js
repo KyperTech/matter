@@ -39,6 +39,10 @@ function handleResponse(req) {
 			return reject('req.end is not a function');
 		}
 		req.end((errorRes, res) => {
+			logger.debug({
+				message: 'Response recieved.', response: res, errorResponse: errorRes,
+				func: 'addAuthHeader', file: 'request'
+			});
 			if (errorRes) {
 				if (errorRes.status == 401) {
 					logger.warn({
@@ -47,11 +51,12 @@ function handleResponse(req) {
 					});
 				}
 				const { response } = errorRes;
-				const error = (response && response.body) ? response.body.error : errorRes;
+				const error = (response && response.body) ? response.body : errorRes;
 				logger.error({
-					description: 'Error in request.', error, func: 'handleResponse'
+					description: 'Error in request.', error,
+					file: 'request', func: 'handleResponse'
 				});
-				return reject(error.message || error);
+				return reject(error || errorRes);
 			}
 			try {
 				resolve(JSON.parse(res.body));
@@ -64,7 +69,10 @@ function handleResponse(req) {
 function addAuthHeader(req) {
 	if (token.string) {
 		req = req.set('Authorization', 'Bearer ' + token.string);
-		// logger.info({message: 'Set auth header', func: 'addAuthHeader', file: 'request'});
+		logger.debug({
+			message: 'Set auth header', token: token.string,
+			func: 'addAuthHeader', file: 'request'
+		});
 	}
 	return req;
 }
