@@ -22,7 +22,8 @@
     "watch:lib": "npm run build:lib -- --stats --progress --colors --watch",
     "watch": "npm run watch:umd",
     "dev": "browser-sync start --server --port 5000",
-    "prepublish": "npm run clean && npm run build"
+    "prepublish": "npm run clean && npm run build",
+    "upload": "node ./bin/upload"
   },
   "repository": {
     "type": "git",
