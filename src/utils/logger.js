@@ -1,5 +1,11 @@
 import config from '../config';
-import { each, omit, keys, isObject } from 'lodash';
+import {
+	each,
+	omit,
+	keys,
+	isObject,
+	isString
+} from 'lodash';
 
 let logger = {
 	log(logData) {
@@ -45,8 +51,8 @@ function runConsoleMethod(methodName, methodData) {
 	}
 }
 function buildMessageArgs(logData) {
-	var msgStr = '';
-	var msgObj = {};
+	let msgStr = '';
+	let msgObj = {};
 	//TODO: Attach time stamp
 	//Attach location information to the beginning of message
 	if (isObject(logData)) {
@@ -62,7 +68,7 @@ function buildMessageArgs(logData) {
 		}
 		const hideList = ['func', 'obj', 'file'];
 		//Print each key and its value other than obj and func
-		each(omit(keys(logData)), key => {
+		each(omit(keys(logData), hideList), key => {
 			if (hideList.indexOf(key) === -1) {
 				if (key == 'description' || key == 'message') {
 					return msgStr += logData[key];
@@ -71,9 +77,8 @@ function buildMessageArgs(logData) {
 			}
 		});
 		msgStr += '\n';
-	} else if (_.isString(logData)) {
+	} else if (isString(logData)) {
 		msgStr = logData;
 	}
-
 	return [msgStr, msgObj];
 }

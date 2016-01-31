@@ -1,6 +1,6 @@
 {
   "name": "kyper-matter",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
