@@ -61,10 +61,10 @@ function handleResponse(req) {
 				});
 				return reject(res.error);
 			}
-			logger.debug({
-				message: 'Successful response recieved.', response: res.body,
-				func: 'addAuthHeader', file: 'request'
-			});
+			// logger.debug({
+			// 	message: 'Successful response recieved.', response: res.body,
+			// 	func: 'handleResponse', file: 'request'
+			// });
 			resolve(res.body);
 		});
 	});
@@ -72,10 +72,10 @@ function handleResponse(req) {
 function addAuthHeader(req) {
 	if (token.string) {
 		req = req.set('Authorization', 'Bearer ' + token.string);
-		logger.debug({
-			message: 'Set auth header', token: token.string,
-			func: 'addAuthHeader', file: 'request'
-		});
+		// logger.debug({
+		// 	message: 'Set auth header', token: token.string,
+		// 	func: 'addAuthHeader', file: 'request'
+		// });
 	}
 	return req;
 }

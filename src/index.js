@@ -377,7 +377,7 @@ export default class Matter {
 			description: 'Third party signup called.',
 			provider, func: 'signup', obj: 'Matter'
 		});
-		let auth = new ProviderAuth({provider, app: this});
+		const auth = new ProviderAuth({provider, app: this});
 		return auth.login(provider).then(response => {
 			logger.info({
 				description: 'Provider signup successful.', provider,
@@ -418,7 +418,7 @@ export default class Matter {
 			});
 			return Promise.reject({message: 'Provider data is required to signup.'});
 		}
-		let auth = new ProviderAuth({provider, app: this});
+		const auth = new ProviderAuth({provider, app: this});
 		return auth.signup(provider).then(response => {
 			logger.info({
 				description: 'Provider login successful.',

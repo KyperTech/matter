@@ -27,7 +27,7 @@ Using Matter requires having created an application on [Build](http://build.kype
 
     ```html
     <!-- Matter Library Bundle -->
-    <script src="http://cdn.kyper.io/js/matter/0.2.2/matter.js"></script>
+    <script src="http://cdn.kyper.io/js/matter/latest/matter.js"></script>
     ```
   #### Bower
   Run `bower install --save kyper-matter`
