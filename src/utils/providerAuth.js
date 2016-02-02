@@ -25,50 +25,37 @@ export default class ProviderAuth {
 	 * });
 	 */
 	login() {
-		if(this.provider === 'google'){
-			return this.googleAuth().then(googleAccount => {
-				if(!googleAccount){
-					return Promise.reject('Error loading Google account.');
-				}
-				const { image, emails } = googleAccount;
-				const email = (emails && emails[0] && emails[0].value) ? emails[0].value : '';
-				const account = {
-					image, email,
-					username: email.split('@')[0],
-					provider: this.provider,
-					providerAccount: googleAccount
-				};
-				logger.info({
-					description: 'Google account loaded, signing up.', account,
-					googleAccount, func: 'signup', obj: 'providerAuth'
-				});
-				return new request.post(`${this.app.endpoint}/signup`, account).then(newAccount => {
-					logger.info({
-						description: 'Signup with external account successful.',
-						newAccount, func: 'signup', obj: 'providerAuth'
-					});
-					return newAccount;
-				}, error => {
-					logger.error({
-						description: 'Error loading google account.', account,
-						googleAccount, error, func: 'signup', obj: 'providerAuth'
-					});
-					return Promise.reject(error);
-				});
-			}, error => {
-				logger.error({
-					description: 'Error authenticating with Google.', error,
-					func: 'signup', obj: 'providerAuth'
-				});
-				return Promise.reject('Error getting external account.');
-			});
-		} else {
+		if(this.provider !== 'google'){
 			logger.error({
 				description: 'Invalid provider.',
 				func: 'signup', obj: 'providerAuth'
 			});
-			return Promise.reject('Invalid provider');
+			return Promise.reject({message: 'Invalid provider'});
 		}
+		return this.googleAuth().then(googleAccount => {
+			if(!googleAccount){
+				return Promise.reject({message: 'Error loading Google account.'});
+			}
+			const { image, emails } = googleAccount;
+			const email = (emails && emails[0] && emails[0].value) ? emails[0].value : '';
+			const account = {
+				image, email,
+				username: email.split('@')[0],
+				provider: this.provider,
+				google: googleAccount
+			};
+			logger.info({
+				description: 'Google account loaded, signing up.', account,
+				googleAccount, func: 'signup', obj: 'providerAuth'
+			});
+			return request.post(`${this.app.endpoint}/login`, account);
+		}, error => {
+			logger.error({
+				description: 'Error authenticating with Google.', error,
+				func: 'signup', obj: 'providerAuth'
+			});
+			return Promise.reject({message: 'Error getting external account.'});
+		});
 	}
 	/** Signup using external provider account (Google, Facebook, Github)
 	 * @example
@@ -80,50 +67,37 @@ export default class ProviderAuth {
 	 * });
 	 */
 	signup() {
-		if(this.provider === 'google'){
-			return this.googleAuth().then(googleAccount => {
-				if(!googleAccount){
-					return Promise.reject('Error loading Google account.');
-				}
-				const { image, emails } = googleAccount;
-				const email = (emails && emails[0] && emails[0].value) ? emails[0].value : '';
-				const account = {
-					image, email,
-					username: email.split('@')[0],
-					provider: this.provider,
-					providerAccount: googleAccount
-				};
-				logger.info({
-					description: 'Google account loaded, signing up.', account,
-					googleAccount, func: 'signup', obj: 'providerAuth'
-				});
-				return new request.post(`${this.app.endpoint}/signup`, account).then(newAccount => {
-					logger.info({
-						description: 'Signup with external account successful.',
-						newAccount, func: 'signup', obj: 'providerAuth'
-					});
-					return newAccount;
-				}, error => {
-					logger.error({
-						description: 'Error loading google account.', account,
-						googleAccount, error, func: 'signup', obj: 'providerAuth'
-					});
-					return Promise.reject(error);
-				});
-			}, error => {
-				logger.error({
-					description: 'Error authenticating with Google.', error,
-					func: 'signup', obj: 'providerAuth'
-				});
-				return Promise.reject('Error getting external account.');
-			});
-		} else {
+		if(this.provider !== 'google'){
 			logger.error({
 				description: 'Invalid provider.',
 				func: 'signup', obj: 'providerAuth'
 			});
-			return Promise.reject('Invalid provider');
+			return Promise.reject({message: 'Invalid provider'});
 		}
+		return this.googleAuth().then(googleAccount => {
+			if(!googleAccount){
+				return Promise.reject({message: 'Error loading Google account.'});
+			}
+			const { image, emails } = googleAccount;
+			const email = (emails && emails[0] && emails[0].value) ? emails[0].value : '';
+			const account = {
+				image, email,
+				username: email.split('@')[0],
+				provider: this.provider,
+				google: googleAccount
+			};
+			logger.info({
+				description: 'Google account loaded, signing up.', account,
+				googleAccount, func: 'signup', obj: 'providerAuth'
+			});
+			return request.post(`${this.app.endpoint}/signup`, account);
+		}, error => {
+			logger.error({
+				description: 'Error authenticating with Google.', error,
+				func: 'signup', obj: 'providerAuth'
+			});
+			return Promise.reject({message: 'Error getting external account.'});
+		});
 	}
 	googleAuth() {
 		const clientId = (this.app && this.app.name && config.externalAuth[this.app.name]) ? config.externalAuth[this.app.name].google : null;

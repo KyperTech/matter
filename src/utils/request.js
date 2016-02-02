@@ -22,7 +22,7 @@ let request = {
 		return handleResponse(req);
 	},
 	del(endpoint, data) {
-		let req = superagent.put(endpoint, data);
+		let req = superagent.del(endpoint, data);
 		req = addAuthHeader(req);
 		return handleResponse(req);
 	}
@@ -39,10 +39,6 @@ function handleResponse(req) {
 			return reject('req.end is not a function');
 		}
 		req.end((errorRes, res) => {
-			logger.debug({
-				message: 'Response recieved.', response: res, errorResponse: errorRes,
-				func: 'addAuthHeader', file: 'request'
-			});
 			if (errorRes) {
 				if (errorRes.status == 401) {
 					logger.warn({
@@ -58,11 +54,18 @@ function handleResponse(req) {
 				});
 				return reject(error || errorRes);
 			}
-			try {
-				resolve(JSON.parse(res.body));
-			} catch(err) {
-				resolve(res.body);
+			if(res.error){
+				logger.error({
+					description: 'Error in request.', error,
+					file: 'request', func: 'handleResponse'
+				});
+				return reject(res.error);
 			}
+			logger.debug({
+				message: 'Successful response recieved.', response: res.body,
+				func: 'addAuthHeader', file: 'request'
+			});
+			resolve(res.body);
 		});
 	});
 }

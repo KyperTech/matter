@@ -378,12 +378,18 @@ export default class Matter {
 			provider, func: 'signup', obj: 'Matter'
 		});
 		let auth = new ProviderAuth({provider, app: this});
-		return auth.signup(provider).then(res => {
+		return auth.login(provider).then(response => {
 			logger.info({
 				description: 'Provider signup successful.', provider,
-				res, func: 'signup', obj: 'Matter'
+				response, func: 'signup', obj: 'Matter'
 			});
-			return res;
+			if (response.token) {
+				this.token.string = response.token;
+			}
+			if (response.user) {
+				this.currentUser = response.user;
+			}
+			return this.currentUser;
 		}, error => {
 			logger.error({
 				description: 'Error with provider authentication.',
@@ -406,7 +412,11 @@ export default class Matter {
 	 */
 	signupUsingProvider(provider) {
 		if (!provider) {
-			return Promise.reject('Provider data is required to signup.');
+			logger.info({
+				description: 'Provider required to sign up.',
+				func: 'providerSignup', obj: 'Matter'
+			});
+			return Promise.reject({message: 'Provider data is required to signup.'});
 		}
 		let auth = new ProviderAuth({provider, app: this});
 		return auth.signup(provider).then(response => {
@@ -414,7 +424,13 @@ export default class Matter {
 				description: 'Provider login successful.',
 				response, func: 'providerSignup', obj: 'Matter'
 			});
-			return response;
+			if (response.token) {
+				this.token.string = response.token;
+			}
+			if (response.user) {
+				this.currentUser = response.user;
+			}
+			return this.currentUser;
 		}, error => {
 			logger.error({
 				description: 'Provider signup error.', error,

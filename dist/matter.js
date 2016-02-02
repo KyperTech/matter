@@ -386,18 +386,26 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'loginUsingProvider',
 			value: function loginUsingProvider(provider) {
+				var _this4 = this;
+
 				//Handle 3rd Party signups
 				_logger2.default.debug({
 					description: 'Third party signup called.',
 					provider: provider, func: 'signup', obj: 'Matter'
 				});
 				var auth = new _providerAuth2.default({ provider: provider, app: this });
-				return auth.signup(provider).then(function (res) {
+				return auth.login(provider).then(function (response) {
 					_logger2.default.info({
 						description: 'Provider signup successful.', provider: provider,
-						res: res, func: 'signup', obj: 'Matter'
+						response: response, func: 'signup', obj: 'Matter'
 					});
-					return res;
+					if (response.token) {
+						_this4.token.string = response.token;
+					}
+					if (response.user) {
+						_this4.currentUser = response.user;
+					}
+					return _this4.currentUser;
 				}, function (error) {
 					_logger2.default.error({
 						description: 'Error with provider authentication.',
@@ -422,8 +430,14 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'signupUsingProvider',
 			value: function signupUsingProvider(provider) {
+				var _this5 = this;
+
 				if (!provider) {
-					return Promise.reject('Provider data is required to signup.');
+					_logger2.default.info({
+						description: 'Provider required to sign up.',
+						func: 'providerSignup', obj: 'Matter'
+					});
+					return Promise.reject({ message: 'Provider data is required to signup.' });
 				}
 				var auth = new _providerAuth2.default({ provider: provider, app: this });
 				return auth.signup(provider).then(function (response) {
@@ -431,7 +445,13 @@ return /******/ (function(modules) { // webpackBootstrap
 						description: 'Provider login successful.',
 						response: response, func: 'providerSignup', obj: 'Matter'
 					});
-					return response;
+					if (response.token) {
+						_this5.token.string = response.token;
+					}
+					if (response.user) {
+						_this5.currentUser = response.user;
+					}
+					return _this5.currentUser;
 				}, function (error) {
 					_logger2.default.error({
 						description: 'Provider signup error.', error: error,
@@ -455,7 +475,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'getCurrentUser',
 			value: function getCurrentUser() {
-				var _this4 = this;
+				var _this6 = this;
 
 				if (this.currentUser) {
 					_logger2.default.debug({
@@ -477,7 +497,7 @@ return /******/ (function(modules) { // webpackBootstrap
 						description: 'Current User Request responded.',
 						responseData: response, func: 'currentUser', obj: 'Matter'
 					});
-					_this4.currentUser = response;
+					_this6.currentUser = response;
 					return response;
 				})['catch'](function (errRes) {
 					if (errRes.status == 401) {
@@ -511,7 +531,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'updateAccount',
 			value: function updateAccount(updateData) {
-				var _this5 = this;
+				var _this7 = this;
 
 				if (!this.isLoggedIn) {
 					_logger2.default.error({
@@ -538,7 +558,7 @@ return /******/ (function(modules) { // webpackBootstrap
 						description: 'Update profile request responded.',
 						responseData: response, func: 'updateAccount', obj: 'Matter'
 					});
-					_this5.currentUser = response;
+					_this7.currentUser = response;
 					return response;
 				})['catch'](function (errRes) {
 					_logger2.default.error({
@@ -565,7 +585,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'uploadImage',
 			value: function uploadImage(fileData) {
-				var _this6 = this;
+				var _this8 = this;
 
 				if (!this.isLoggedIn) {
 					_logger2.default.error({
@@ -592,7 +612,7 @@ return /******/ (function(modules) { // webpackBootstrap
 						description: 'Upload image request responded.',
 						response: response, func: 'uploadImage', obj: 'Matter'
 					});
-					_this6.currentUser = response;
+					_this8.currentUser = response;
 					return response;
 				})['catch'](function (errRes) {
 					_logger2.default.error({
@@ -619,10 +639,10 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'uploadAccountImage',
 			value: function uploadAccountImage(fileData) {
-				var _this7 = this;
+				var _this9 = this;
 
 				return this.uploadImage(fileData).then(function (imgUrl) {
-					return _this7.updateAccount({ image: { url: imgUrl } });
+					return _this9.updateAccount({ image: { url: imgUrl } });
 				});
 			}
 
@@ -731,7 +751,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'isInGroup',
 			value: function isInGroup(checkGroups) {
-				var _this8 = this;
+				var _this10 = this;
 
 				if (!this.isLoggedIn) {
 					_logger2.default.error({
@@ -760,14 +780,14 @@ return /******/ (function(modules) { // webpackBootstrap
 								func: 'isInGroup', obj: 'Matter'
 							});
 							return {
-								v: _this8.isInGroups(groupsArray)
+								v: _this10.isInGroups(groupsArray)
 							};
 						}
 						//Single group
-						var groups = _this8.token.data.groups || [];
+						var groups = _this10.token.data.groups || [];
 						_logger2.default.log({
 							description: 'Checking if user is in group.',
-							group: groupName, userGroups: _this8.token.data.groups,
+							group: groupName, userGroups: _this10.token.data.groups,
 							func: 'isInGroup', obj: 'Matter'
 						});
 						return {
@@ -801,7 +821,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'isInGroups',
 			value: function isInGroups(checkGroups) {
-				var _this9 = this;
+				var _this11 = this;
 
 				if (!this.isLoggedIn) {
 					_logger2.default.log({
@@ -822,11 +842,11 @@ return /******/ (function(modules) { // webpackBootstrap
 					return (0, _every2.default)(checkGroups.map(function (group) {
 						if ((0, _isString2.default)(group)) {
 							//Group is string
-							return _this9.isInGroup(group);
+							return _this11.isInGroup(group);
 						}
 						//Group is object
 						if ((0, _has2.default)(group, 'name')) {
-							return _this9.isInGroup(group.name);
+							return _this11.isInGroup(group.name);
 						}
 						_logger2.default.error({
 							description: 'Invalid group object.',
@@ -2648,7 +2668,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			return handleResponse(req);
 		},
 		del: function del(endpoint, data) {
-			var req = _superagent2.default.put(endpoint, data);
+			var req = _superagent2.default.del(endpoint, data);
 			req = addAuthHeader(req);
 			return handleResponse(req);
 		}
@@ -2665,10 +2685,6 @@ return /******/ (function(modules) { // webpackBootstrap
 				return reject('req.end is not a function');
 			}
 			req.end(function (errorRes, res) {
-				_logger2.default.debug({
-					message: 'Response recieved.', response: res, errorResponse: errorRes,
-					func: 'addAuthHeader', file: 'request'
-				});
 				if (errorRes) {
 					if (errorRes.status == 401) {
 						_logger2.default.warn({
@@ -2678,18 +2694,25 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 					var response = errorRes.response;
 
-					var error = response && response.body ? response.body : errorRes;
+					var _error = response && response.body ? response.body : errorRes;
+					_logger2.default.error({
+						description: 'Error in request.', error: _error,
+						file: 'request', func: 'handleResponse'
+					});
+					return reject(_error || errorRes);
+				}
+				if (res.error) {
 					_logger2.default.error({
 						description: 'Error in request.', error: error,
 						file: 'request', func: 'handleResponse'
 					});
-					return reject(error || errorRes);
+					return reject(res.error);
 				}
-				try {
-					resolve(JSON.parse(res.body));
-				} catch (err) {
-					resolve(res.body);
-				}
+				_logger2.default.debug({
+					message: 'Successful response recieved.', response: res.body,
+					func: 'addAuthHeader', file: 'request'
+				});
+				resolve(res.body);
 			});
 		});
 	}
@@ -3734,52 +3757,39 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: function login() {
 				var _this = this;
 
-				if (this.provider === 'google') {
-					return this.googleAuth().then(function (googleAccount) {
-						if (!googleAccount) {
-							return Promise.reject('Error loading Google account.');
-						}
-						var image = googleAccount.image;
-						var emails = googleAccount.emails;
-
-						var email = emails && emails[0] && emails[0].value ? emails[0].value : '';
-						var account = {
-							image: image, email: email,
-							username: email.split('@')[0],
-							provider: _this.provider,
-							providerAccount: googleAccount
-						};
-						_logger2.default.info({
-							description: 'Google account loaded, signing up.', account: account,
-							googleAccount: googleAccount, func: 'signup', obj: 'providerAuth'
-						});
-						return new _request2.default.post(_this.app.endpoint + '/signup', account).then(function (newAccount) {
-							_logger2.default.info({
-								description: 'Signup with external account successful.',
-								newAccount: newAccount, func: 'signup', obj: 'providerAuth'
-							});
-							return newAccount;
-						}, function (error) {
-							_logger2.default.error({
-								description: 'Error loading google account.', account: account,
-								googleAccount: googleAccount, error: error, func: 'signup', obj: 'providerAuth'
-							});
-							return Promise.reject(error);
-						});
-					}, function (error) {
-						_logger2.default.error({
-							description: 'Error authenticating with Google.', error: error,
-							func: 'signup', obj: 'providerAuth'
-						});
-						return Promise.reject('Error getting external account.');
-					});
-				} else {
+				if (this.provider !== 'google') {
 					_logger2.default.error({
 						description: 'Invalid provider.',
 						func: 'signup', obj: 'providerAuth'
 					});
-					return Promise.reject('Invalid provider');
+					return Promise.reject({ message: 'Invalid provider' });
 				}
+				return this.googleAuth().then(function (googleAccount) {
+					if (!googleAccount) {
+						return Promise.reject({ message: 'Error loading Google account.' });
+					}
+					var image = googleAccount.image;
+					var emails = googleAccount.emails;
+
+					var email = emails && emails[0] && emails[0].value ? emails[0].value : '';
+					var account = {
+						image: image, email: email,
+						username: email.split('@')[0],
+						provider: _this.provider,
+						google: googleAccount
+					};
+					_logger2.default.info({
+						description: 'Google account loaded, signing up.', account: account,
+						googleAccount: googleAccount, func: 'signup', obj: 'providerAuth'
+					});
+					return _request2.default.post(_this.app.endpoint + '/login', account);
+				}, function (error) {
+					_logger2.default.error({
+						description: 'Error authenticating with Google.', error: error,
+						func: 'signup', obj: 'providerAuth'
+					});
+					return Promise.reject({ message: 'Error getting external account.' });
+				});
 			}
 			/** Signup using external provider account (Google, Facebook, Github)
 	   * @example
@@ -3796,52 +3806,39 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: function signup() {
 				var _this2 = this;
 
-				if (this.provider === 'google') {
-					return this.googleAuth().then(function (googleAccount) {
-						if (!googleAccount) {
-							return Promise.reject('Error loading Google account.');
-						}
-						var image = googleAccount.image;
-						var emails = googleAccount.emails;
-
-						var email = emails && emails[0] && emails[0].value ? emails[0].value : '';
-						var account = {
-							image: image, email: email,
-							username: email.split('@')[0],
-							provider: _this2.provider,
-							providerAccount: googleAccount
-						};
-						_logger2.default.info({
-							description: 'Google account loaded, signing up.', account: account,
-							googleAccount: googleAccount, func: 'signup', obj: 'providerAuth'
-						});
-						return new _request2.default.post(_this2.app.endpoint + '/signup', account).then(function (newAccount) {
-							_logger2.default.info({
-								description: 'Signup with external account successful.',
-								newAccount: newAccount, func: 'signup', obj: 'providerAuth'
-							});
-							return newAccount;
-						}, function (error) {
-							_logger2.default.error({
-								description: 'Error loading google account.', account: account,
-								googleAccount: googleAccount, error: error, func: 'signup', obj: 'providerAuth'
-							});
-							return Promise.reject(error);
-						});
-					}, function (error) {
-						_logger2.default.error({
-							description: 'Error authenticating with Google.', error: error,
-							func: 'signup', obj: 'providerAuth'
-						});
-						return Promise.reject('Error getting external account.');
-					});
-				} else {
+				if (this.provider !== 'google') {
 					_logger2.default.error({
 						description: 'Invalid provider.',
 						func: 'signup', obj: 'providerAuth'
 					});
-					return Promise.reject('Invalid provider');
+					return Promise.reject({ message: 'Invalid provider' });
 				}
+				return this.googleAuth().then(function (googleAccount) {
+					if (!googleAccount) {
+						return Promise.reject({ message: 'Error loading Google account.' });
+					}
+					var image = googleAccount.image;
+					var emails = googleAccount.emails;
+
+					var email = emails && emails[0] && emails[0].value ? emails[0].value : '';
+					var account = {
+						image: image, email: email,
+						username: email.split('@')[0],
+						provider: _this2.provider,
+						google: googleAccount
+					};
+					_logger2.default.info({
+						description: 'Google account loaded, signing up.', account: account,
+						googleAccount: googleAccount, func: 'signup', obj: 'providerAuth'
+					});
+					return _request2.default.post(_this2.app.endpoint + '/signup', account);
+				}, function (error) {
+					_logger2.default.error({
+						description: 'Error authenticating with Google.', error: error,
+						func: 'signup', obj: 'providerAuth'
+					});
+					return Promise.reject({ message: 'Error getting external account.' });
+				});
 			}
 		}, {
 			key: 'googleAuth',
