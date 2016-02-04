@@ -6,10 +6,7 @@
 		"docs": "docs"
 	},
 	"cdn":{
-		"bucketName":"kyper-cdn",
-		"path":"js/matter"
-	},
-	"linkedModules":{
-
+		"bucket":"kyper-cdn",
+		"prefix":"js/matter"
 	}
 }

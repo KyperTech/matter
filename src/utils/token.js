@@ -2,7 +2,7 @@ import config from '../config';
 import logger from './logger';
 import storage from './envStorage';
 import jwtDecode from 'jwt-decode';
-import _ from 'lodash';
+import { isString, isObject } from 'lodash';
 
 let token = {
 	/** Get string value of token
@@ -28,8 +28,8 @@ let token = {
 	/** Set token data
 	 */
 	set data(tokenData) {
-		if (_.isString(tokenData)) {
-			let tokenStr = tokenData;
+		if (isString(tokenData)) {
+			const tokenStr = tokenData;
 			tokenData = decodeToken(tokenStr);
 			logger.info({
 				description: 'Token data was set as string. Decoding token.',
@@ -48,13 +48,13 @@ let token = {
 	set string(tokenData) {
 		let tokenStr;
 		//Handle object being passed
-		if (!_.isString(tokenData)) {
+		if (!isString(tokenData)) {
 			//Token is included in object
 			logger.log({
 				description: 'Token data is not string.',
 				token: tokenData, func: 'string', obj: 'token'
 			});
-			if (_.isObject(tokenData) && _.has(tokenData, 'token')) {
+			if (isObject(tokenData) && tokenData.token) {
 				tokenStr = tokenData.token;
 			} else {
 				//Input is either not an string or object that contains nessesary info

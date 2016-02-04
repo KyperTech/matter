@@ -10,7 +10,7 @@ sudo: false
 script: "npm run test:cov"
 addons:
   code_climate:
-    repo_token: 4ee6d5da5ef16374c4007cfbfceada7477e3085739db13454a67a7d96dc89764
+    repo_token: $CODECLIMATE_REPO_TOKEN
 after_script:
   - npm install -g codeclimate-test-reporter
   - codeclimate-test-reporter < coverage/lcov.info

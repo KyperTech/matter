@@ -1,5 +1,5 @@
 import logger from './logger';
-import _ from 'lodash';
+import { isObject } from 'lodash';
 
 let data = {};
 
@@ -48,7 +48,7 @@ let storage = {
 		data[itemName] = itemValue;
 		if (this.localExists) {
 			//Convert object to string
-			if (_.isObject(itemValue)) {
+			if (isObject(itemValue)) {
 				itemValue = JSON.stringify(itemValue);
 			}
 			window.sessionStorage.setItem(itemName, itemValue);

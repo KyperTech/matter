@@ -1,9 +1,8 @@
 import request from './request';
 import logger from './logger';
 import * as dom from './dom';
-import { waitUntilDefined } from './index';
 import config from '../config';
-// import hello from 'hellojs'; //Modifies objects to have id parameter?
+
 export default class ProviderAuth {
 	constructor(actionData) {
 		const { app, redirectUrl, provider } = actionData;
