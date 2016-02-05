@@ -50,7 +50,7 @@ function signup(signupData){
     signupData.email = document.getElementById('signup-email').value;
     signupData.password = document.getElementById('signup-password').value;
   }
-  matter.signup(signupData).then(function(signupRes){
+  matter.signupUsingProvider('google').then(function(signupRes){
     console.log('successful signup', signupRes);
     setStatus();
   }, function(err){

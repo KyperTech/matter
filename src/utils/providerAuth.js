@@ -107,39 +107,70 @@ export default class ProviderAuth {
 			});
 			return Promise.reject('Client id is required to authenticate with Google.');
 		}
-		if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
-			return this.addGoogleLib().then(() => {
-				return this.googleAuth();
-			});
-		}
-		return new Promise((resolve, reject) => {
-			window.gapi.auth.authorize({client_id: clientId, scope: 'email profile'}, (auth) => {
-				if(!auth || auth.error || auth.message){
-					logger.error({
-						description: 'Error authorizing with google',
-						func: 'googleSignup', obj: 'providerAuth'
-					});
-					return reject(auth.error || auth.message);
-				}
-				logger.log({
-					description: 'Auth with google successful.', auth,
-					func: 'googleSignup', obj: 'providerAuth'
-				});
-				window.gapi.client.load('plus', 'v1', () => {
-          let request = gapi.client.plus.people.get({
-            'userId': 'me'
-          });
-          request.execute(account => {
-						logger.log({
-							description: 'Account loaded from google.', account,
-							func: 'googleSignup', obj: 'providerAuth'
-						});
-						//TODO: Signup/Login to Tessellate server with this information
-						resolve(account);
-          });
-        });
-			});
-		});
+		// if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
+		// 	return this.addGoogleLib().then(() => {
+		// 		return this.googleAuth();
+		// 	});
+		// }
+		const _url = 'http://localhost:3000/auth/google';
+		let win = window.open(_url, 'Google Auth', 'width=800, height=600');
+    let pollTimer = window.setInterval(() => {
+      try {
+        console.log(win.document.URL);
+        if (win.document.URL.indexOf(REDIRECT) != -1) {
+          window.clearInterval(pollTimer);
+          const url =   win.document.URL;
+          acToken =   gup(url, 'access_token');
+          tokenType = gup(url, 'token_type');
+          expiresIn = gup(url, 'expires_in');
+          win.close();
+          validateToken(acToken);
+        }
+      } catch(e) {
+				// console.error('error:', e);
+      }
+    }, 100);
+		function validateToken(token) {
+			console.log('token:', token);
+    }
+		function gup(url, name) {
+      name = name.replace(/[[]/,'\[').replace(/[]]/,'\]');
+      const regexS = '[\?&]'+ name +'=([^&#]*)';
+      const regex = new RegExp( regexS );
+      let results = regex.exec( url );
+      if( results == null )
+        return '';
+      else
+        return results[1];
+    }
+		// return new Promise((resolve, reject) => {
+		// 	window.gapi.auth.authorize({client_id: clientId, scope: 'email profile'}, (auth) => {
+		// 		if(!auth || auth.error || auth.message){
+		// 			logger.error({
+		// 				description: 'Error authorizing with google',
+		// 				func: 'googleSignup', obj: 'providerAuth'
+		// 			});
+		// 			return reject(auth.error || auth.message);
+		// 		}
+		// 		logger.log({
+		// 			description: 'Auth with google successful.', auth,
+		// 			func: 'googleSignup', obj: 'providerAuth'
+		// 		});
+		// 		window.gapi.client.load('plus', 'v1', () => {
+    //       let request = gapi.client.plus.people.get({
+    //         'userId': 'me'
+    //       });
+    //       request.execute(account => {
+		// 				logger.log({
+		// 					description: 'Account loaded from google.', account,
+		// 					func: 'googleSignup', obj: 'providerAuth'
+		// 				});
+		// 				//TODO: Signup/Login to Tessellate server with this information
+		// 				resolve(account);
+    //       });
+    //     });
+		// 	});
+		// });
 	}
 	addGoogleLib() {
 		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
