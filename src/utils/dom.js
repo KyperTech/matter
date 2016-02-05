@@ -71,7 +71,34 @@ export function asyncLoadJs(src) {
 }
 export function getQueryParam(name) {
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-  var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
-      results = regex.exec(location.search);
+  const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+	let results = regex.exec(location.search);
   return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+}
+
+/**
+ * @description Open popup at provided url
+ */
+export function openPopup(url, options) {
+	const { title, width, height } = options;
+	return window.open(url, `${title || 'Auth'}`, `width=${ width || 800 }, height=${ height || 600 }`);
+}
+
+export function setCloseTimerCb(win, cb) {
+	if(!win){
+		throw new Error('Window is required to set close timer');
+	}
+	return window.setInterval(() => {
+		try {
+			console.log('Url received in set interval', win.document.URL);
+			if (win.document.URL.indexOf(REDIRECT) != -1) {
+				window.clearInterval(pollTimer);
+				const url = win.document.URL;
+				win.close();
+				cb(url);
+			}
+		} catch(e) {
+			console.debug('interval e', e);
+		}
+	}, 100);
 }

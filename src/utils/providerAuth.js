@@ -5,15 +5,16 @@ import config from '../config';
 
 export default class ProviderAuth {
 	constructor(actionData) {
-		const { app, redirectUrl, provider } = actionData;
-		const externalAuth = config.externalAuth[app.name] ? config.externalAuth[app.name] : null;
-		this.app = app;
+		const { project, redirectUrl, provider } = actionData;
+		const externalAuth = config.externalAuth[project.name] ? config.externalAuth[project.name] : null;
+		this.project = project;
 		this.provider = provider;
 		this.redirectUrl = externalAuth ? externalAuth.redirectUrl : '/oauthcallback';
 		if (redirectUrl) {
 			this.redirectUrl = redirectUrl;
 		}
 	}
+
 	/** External provider login
 	 * @example
 	 * //Login to account that was started through external account signup (Google, Facebook, Github)
@@ -23,11 +24,11 @@ export default class ProviderAuth {
 	 * 		console.error('Error with provider login:', err);
 	 * });
 	 */
-	login() {
+	localGoogleLogin() {
 		if(this.provider !== 'google'){
 			logger.error({
 				description: 'Invalid provider.',
-				func: 'signup', obj: 'providerAuth'
+				func: 'localGoogleLogin', obj: 'providerAuth'
 			});
 			return Promise.reject({message: 'Invalid provider'});
 		}
@@ -45,9 +46,9 @@ export default class ProviderAuth {
 			};
 			logger.info({
 				description: 'Google account loaded, signing up.', account,
-				googleAccount, func: 'signup', obj: 'providerAuth'
+				googleAccount, func: 'localGoogleLogin', obj: 'providerAuth'
 			});
-			return request.post(`${this.app.endpoint}/login`, account);
+			return request.post(`${this.project.endpoint}/login`, account);
 		}, error => {
 			logger.error({
 				description: 'Error authenticating with Google.', error,
@@ -56,6 +57,7 @@ export default class ProviderAuth {
 			return Promise.reject({message: 'Error getting external account.'});
 		});
 	}
+	
 	/** Signup using external provider account (Google, Facebook, Github)
 	 * @example
 	 * //Signup using external account (Google, Facebook, Github)
@@ -65,11 +67,11 @@ export default class ProviderAuth {
 	 * 		console.error('Error with provider signup:', err);
 	 * });
 	 */
-	signup() {
+	localGoogleSignup() {
 		if(this.provider !== 'google'){
 			logger.error({
 				description: 'Invalid provider.',
-				func: 'signup', obj: 'providerAuth'
+				func: 'localGoogleSignup', obj: 'providerAuth'
 			});
 			return Promise.reject({message: 'Invalid provider'});
 		}
@@ -88,8 +90,8 @@ export default class ProviderAuth {
 			logger.info({
 				description: 'Google account loaded, signing up.', account,
 				googleAccount, func: 'signup', obj: 'providerAuth'
-			});
-			return request.post(`${this.app.endpoint}/signup`, account);
+			});localGoogleSignup
+			return request.post(`${this.project.endpoint}/signup`, account);
 		}, error => {
 			logger.error({
 				description: 'Error authenticating with Google.', error,
@@ -98,8 +100,12 @@ export default class ProviderAuth {
 			return Promise.reject({message: 'Error getting external account.'});
 		});
 	}
+
+	/**
+	 * @description Authenticate with Google on client side (using Google Library)
+	 */
 	googleAuth() {
-		const clientId = (this.app && this.app.name && config.externalAuth[this.app.name]) ? config.externalAuth[this.app.name].google : null;
+		const clientId = (this.project && this.project.name && config.externalAuth[this.project.name]) ? config.externalAuth[this.project.name].google : null;
 		if(!clientId){
 			logger.error({
 				description: 'ClientId is required to authenticate with Google.',
@@ -107,71 +113,44 @@ export default class ProviderAuth {
 			});
 			return Promise.reject('Client id is required to authenticate with Google.');
 		}
-		// if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
-		// 	return this.addGoogleLib().then(() => {
-		// 		return this.googleAuth();
-		// 	});
-		// }
-		const _url = 'http://localhost:3000/auth/google';
-		let win = window.open(_url, 'Google Auth', 'width=800, height=600');
-    let pollTimer = window.setInterval(() => {
-      try {
-        console.log(win.document.URL);
-        if (win.document.URL.indexOf(REDIRECT) != -1) {
-          window.clearInterval(pollTimer);
-          const url =   win.document.URL;
-          acToken =   gup(url, 'access_token');
-          tokenType = gup(url, 'token_type');
-          expiresIn = gup(url, 'expires_in');
-          win.close();
-          validateToken(acToken);
-        }
-      } catch(e) {
-				// console.error('error:', e);
-      }
-    }, 100);
-		function validateToken(token) {
-			console.log('token:', token);
-    }
-		function gup(url, name) {
-      name = name.replace(/[[]/,'\[').replace(/[]]/,'\]');
-      const regexS = '[\?&]'+ name +'=([^&#]*)';
-      const regex = new RegExp( regexS );
-      let results = regex.exec( url );
-      if( results == null )
-        return '';
-      else
-        return results[1];
-    }
-		// return new Promise((resolve, reject) => {
-		// 	window.gapi.auth.authorize({client_id: clientId, scope: 'email profile'}, (auth) => {
-		// 		if(!auth || auth.error || auth.message){
-		// 			logger.error({
-		// 				description: 'Error authorizing with google',
-		// 				func: 'googleSignup', obj: 'providerAuth'
-		// 			});
-		// 			return reject(auth.error || auth.message);
-		// 		}
-		// 		logger.log({
-		// 			description: 'Auth with google successful.', auth,
-		// 			func: 'googleSignup', obj: 'providerAuth'
-		// 		});
-		// 		window.gapi.client.load('plus', 'v1', () => {
-    //       let request = gapi.client.plus.people.get({
-    //         'userId': 'me'
-    //       });
-    //       request.execute(account => {
-		// 				logger.log({
-		// 					description: 'Account loaded from google.', account,
-		// 					func: 'googleSignup', obj: 'providerAuth'
-		// 				});
-		// 				//TODO: Signup/Login to Tessellate server with this information
-		// 				resolve(account);
-    //       });
-    //     });
-		// 	});
-		// });
+		if (typeof window !== 'undefined' && typeof window.gapi === 'undefined') {
+			return this.addGoogleLib().then(() => {
+				return this.googleAuth();
+			});
+		}
+		return new Promise((resolve, reject) => {
+			window.gapi.auth.authorize({client_id: clientId, scope: 'email profile'}, (auth) => {
+				if(!auth || auth.error || auth.message){
+					logger.error({
+						description: 'Error authorizing with google',
+						func: 'googleSignup', obj: 'providerAuth'
+					});
+					return reject(auth.error || auth.message);
+				}
+				logger.log({
+					description: 'Auth with google successful.', auth,
+					func: 'googleSignup', obj: 'providerAuth'
+				});
+				window.gapi.client.load('plus', 'v1', () => {
+          let request = gapi.client.plus.people.get({
+            'userId': 'me'
+          });
+          request.execute(account => {
+						logger.log({
+							description: 'Account loaded from google.', account,
+							func: 'googleSignup', obj: 'providerAuth'
+						});
+						//TODO: Signup/Login to Tessellate server with this information
+						resolve(account);
+          });
+        });
+			});
+		});
 	}
+
+	/**
+	 * @description Add Google API lib script tag to DOM
+	 */
 	addGoogleLib() {
 		const scriptSrc = 'https://apis.google.com/js/client.js?onload=OnLoadCallback';
 		return new Promise((resolve) => {
