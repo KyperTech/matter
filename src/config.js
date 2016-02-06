@@ -22,20 +22,10 @@ let defaultConfig = {
 	tokenName: 'tessellate',
 	tokenDataName: 'tessellate-tokenData',
 	tokenUserDataName: 'tessellate-currentUser',
-	externalAuth: {
-		tessellate: {
-			google: '582741153619-9b3vifnmv2a32v49l63got889tgmnrhs.apps.googleusercontent.com',
-			// redirectUrl: 'http://tessellate.kyper.io/#/oauth'
-			redirectUrl: 'http://localhost:3000/oauth'
-		},
-		devshare: {
-			google: '54741256621-d511263ke51ni32g1jalb9or85ckf5gr.apps.googleusercontent.com',
-			redirectUrl: 'http://devshare.io/oauth'
-		}
-	}
+	oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU'
 };
 let instance = null;
-let envName = 'prod';
+let envName = 'local';
 let level = null;
 class Config {
 	constructor() {

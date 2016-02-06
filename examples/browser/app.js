@@ -1,4 +1,4 @@
-var matter = new Matter('tessellate', {logLevel: 'trace', localServer: false});
+var matter = new Matter('tessellate', {logLevel: 'trace', env: 'local', localServer: true});
 // console.log('matter:', matter);
 //Set logged in status when dom is loaded
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -50,7 +50,7 @@ function signup(signupData){
     signupData.email = document.getElementById('signup-email').value;
     signupData.password = document.getElementById('signup-password').value;
   }
-  matter.signup(signupData).then(function(signupRes){
+  matter.signupUsingProvider(signupData).then(function(signupRes){
     console.log('successful signup', signupRes);
     setStatus();
   }, function(err){

@@ -4,7 +4,7 @@ import * as dom from './utils/dom';
 import request from './utils/request';
 import token from './utils/token';
 import envStorage from './utils/envStorage';
-import ProviderAuth from './utils/providerAuth';
+import * as ProviderAuth from './utils/providerAuth';
 import {
 	isString, isArray,
 	isObject, has,
@@ -31,6 +31,7 @@ export default class Matter {
 		}
 		if (opts) {
 			this.options = opts;
+			config.applySettings(opts);
 			if(this.options.logLevel){
 				config.logLevel = this.options.logLevel;
 			}
@@ -418,8 +419,7 @@ export default class Matter {
 			});
 			return Promise.reject({message: 'Provider data is required to signup.'});
 		}
-		const auth = new ProviderAuth({provider, app: this});
-		return auth.signup(provider).then(response => {
+		return ProviderAuth.signup(provider).then(response => {
 			logger.info({
 				description: 'Provider login successful.',
 				response, func: 'providerSignup', obj: 'Matter'
@@ -427,8 +427,8 @@ export default class Matter {
 			if (response.token) {
 				this.token.string = response.token;
 			}
-			if (response.user) {
-				this.currentUser = response.user;
+			if (response.user || response.data) {
+				this.currentUser = response.data || response.user;
 			}
 			return this.currentUser;
 		}, error => {
