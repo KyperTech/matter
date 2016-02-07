@@ -1,8 +1,8 @@
 'use strict'
-const fs = require('fs');
-const path = require('path');
-const webpack = require('webpack');
-const pkg = require('./package.json');
+var fs = require('fs');
+var path = require('path');
+var webpack = require('webpack');
+var pkg = require('./package.json');
 
 module.exports = {
   module: {
