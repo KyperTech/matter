@@ -203,8 +203,8 @@ export default class Matter {
 				status: 'NULL_DATA'
 			});
 		}
-		if(isString(signupDate)){
-			return ProviderAuth.signup(signupData);
+		if(isString(signupData)){
+			return this.authUsingProvider(signupData);
 		}
 		//Handle no username or email
 		if (!signupData.username || !signupData.email) {
@@ -275,8 +275,8 @@ export default class Matter {
 			});
 		}
 		//Handle provider logins
-		if(isString(signupDate)){
-			return ProviderAuth.login(signupData);
+		if(isString(loginData)){
+			return this.authUsingProvider(loginData);
 		}
 		//Handle no username or email
 		if (!loginData.username && !loginData.email) {
@@ -394,7 +394,7 @@ export default class Matter {
 			});
 			return Promise.reject({message: 'Provider data is required to signup.'});
 		}
-		return ProviderAuth.signupWithServer(provider).then(response => {
+		return ProviderAuth.authWithServer(provider).then(response => {
 			logger.info({
 				description: 'Provider login successful.',
 				response, func: 'providerSignup', obj: 'Matter'

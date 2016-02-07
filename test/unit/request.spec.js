@@ -1,5 +1,3 @@
-import sinon from 'sinon';
-import { expect } from 'chai';
 import Matter from '../../src';
 import * as request from '../../src/utils/request';
 import superagent from 'superagent';

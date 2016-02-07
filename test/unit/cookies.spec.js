@@ -1,8 +1,6 @@
-import cookiesUtil from '../../src/utils/cookies';
+import * as cookiesUtil from '../../src/utils/cookies';
 import logger from '../../src/utils/logger';
-global.sinon = require('sinon');
-global.chai = require('chai');
-global.expect = require('chai').expect;
+
 let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
 let error;

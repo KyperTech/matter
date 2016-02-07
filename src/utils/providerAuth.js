@@ -103,7 +103,7 @@ export function currentlyLoggedIn() {
 /**
  * @description Signup using a token generated from the server (so server and client are both aware of auth state)
  */
-export async function signupWithServer(provider) {
+export async function authWithServer(provider) {
 	try {
 		const params = await get(`${config.serverUrl}/stateToken`);
 		const result = await OAuth.popup(provider, { state: params.token });
