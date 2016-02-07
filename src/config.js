@@ -1,4 +1,4 @@
-import {merge, has, find} from 'lodash';
+import { merge, has, find } from 'lodash';
 
 let defaultConfig = {
 	envs: {

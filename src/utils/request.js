@@ -2,33 +2,32 @@ import logger from './logger';
 import token from './token';
 import superagent from 'superagent';
 
-let request = {
-	get(endpoint, queryData) {
-		let req = superagent.get(endpoint);
-		if (queryData) {
-			req.query(queryData);
-		}
-		req = addAuthHeader(req);
-		return handleResponse(req);
-	},
-	post(endpoint, data) {
-		let req = superagent.post(endpoint).send(data);
-		req = addAuthHeader(req);
-		return handleResponse(req);
-	},
-	put(endpoint, data) {
-		let req = superagent.put(endpoint, data);
-		req = addAuthHeader(req);
-		return handleResponse(req);
-	},
-	del(endpoint, data) {
-		let req = superagent.del(endpoint, data);
-		req = addAuthHeader(req);
-		return handleResponse(req);
+export function get(endpoint, queryData) {
+	let req = superagent.get(endpoint);
+	if (queryData) {
+		req.query(queryData);
 	}
-};
+	req = addAuthHeader(req);
+	return handleResponse(req);
+}
 
-export default request;
+export function post(endpoint, data) {
+	let req = superagent.post(endpoint).send(data);
+	req = addAuthHeader(req);
+	return handleResponse(req);
+}
+
+export function put(endpoint, data) {
+	let req = superagent.put(endpoint, data);
+	req = addAuthHeader(req);
+	return handleResponse(req);
+}
+
+export function del(endpoint, data) {
+	let req = superagent.del(endpoint, data);
+	req = addAuthHeader(req);
+	return handleResponse(req);
+}
 
 function handleResponse(req) {
 	return new Promise((resolve, reject) => {
@@ -36,7 +35,7 @@ function handleResponse(req) {
 			logger.warn({
 				description: 'req.end is not a function', func: 'handleResponse'
 			});
-			return reject('req.end is not a function');
+			return reject({message: 'req.end is not a function'});
 		}
 		req.end((errorRes, res) => {
 			if (errorRes) {

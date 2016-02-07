@@ -1,7 +1,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import Matter from '../../src';
-import request from '../../src/utils/request';
+import * as request from '../../src/utils/request';
 import superagent from 'superagent';
 import logger from '../../src/utils/logger';
 let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
