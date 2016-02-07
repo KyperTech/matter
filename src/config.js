@@ -25,7 +25,7 @@ let defaultConfig = {
 	oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU'
 };
 let instance = null;
-let envName = 'local';
+let envName = 'prod';
 let level = null;
 class Config {
 	constructor() {
@@ -70,7 +70,9 @@ class Config {
 		}
 	}
 	applySettings(settings) {
-		merge(instance, settings);
+		if(settings){
+			merge(instance, settings);
+		}
 	}
 
 }
