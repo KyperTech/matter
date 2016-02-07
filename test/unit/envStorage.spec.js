@@ -1,5 +1,4 @@
 import storage from '../../src/utils/envStorage';
-import { expect } from 'chai';
 import logger from '../../src/utils/logger';
 let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
@@ -53,7 +52,7 @@ describe('envStorage Util', () => {
   describe('localExists', () => {
     it('handles no document', () => {
       if (typeof window !== 'undefined') {
-        expect(storage.localExists).to.be.true;
+        expect(storage.localExists).to.be.false;
       }
     });
   });

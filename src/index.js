@@ -1,10 +1,11 @@
 import config from './config';
 import logger from './utils/logger';
 import * as dom from './utils/dom';
-import request from './utils/request';
+import * as request from './utils/request';
+import * as ProviderAuth from './utils/providerAuth';
 import token from './utils/token';
 import envStorage from './utils/envStorage';
-import ProviderAuth from './utils/providerAuth';
+
 import {
 	isString, isArray,
 	isObject, has,
@@ -31,6 +32,7 @@ export default class Matter {
 		}
 		if (opts) {
 			this.options = opts;
+			config.applySettings(opts);
 			if(this.options.logLevel){
 				config.logLevel = this.options.logLevel;
 			}
@@ -170,6 +172,7 @@ export default class Matter {
 	get utils() {
 		return {logger, request, storage: envStorage, dom};
 	}
+
 	/** Signup a new user
 	 * @param {Object} signupData - Object containing data to use while signing up to application.
 	 * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
@@ -199,6 +202,9 @@ export default class Matter {
 				message: 'Signup data is required to signup.',
 				status: 'NULL_DATA'
 			});
+		}
+		if(isString(signupData)){
+			return this.authUsingProvider(signupData);
 		}
 		//Handle no username or email
 		if (!signupData.username || !signupData.email) {
@@ -267,6 +273,10 @@ export default class Matter {
 				message: 'Login data is required to login.',
 				status: 'DATA_REQUIRED'
 			});
+		}
+		//Handle provider logins
+		if(isString(loginData)){
+			return this.authUsingProvider(loginData);
 		}
 		//Handle no username or email
 		if (!loginData.username && !loginData.email) {
@@ -349,7 +359,11 @@ export default class Matter {
 			});
 			this.currentUser = null;
 			this.token.delete();
-			return response;
+			return ProviderAuth.logout().then(() => {
+				return response;
+			}, () => {
+				return response;
+			});
 		})['catch'](error => {
 			logger.error({
 				description: 'Error requesting log out: ',
@@ -361,45 +375,7 @@ export default class Matter {
 		});
 	}
 
-	/** Login using external provider
-	 * @param {String} provider - Provider name
-	 * @return {Promise}
-	 * @example
-	 * matter.loginWithProvider('google').then(function(loginRes){
-	 *  console.log('New user logged in succesfully. Account: ', loginRes.user);
-	 * }, function(err){
-	 *  console.error('Error logging in:', err);
-	 * });
-	 */
-	loginUsingProvider(provider) {
-		//Handle 3rd Party signups
-		logger.debug({
-			description: 'Third party signup called.',
-			provider, func: 'signup', obj: 'Matter'
-		});
-		const auth = new ProviderAuth({provider, app: this});
-		return auth.login(provider).then(response => {
-			logger.info({
-				description: 'Provider signup successful.', provider,
-				response, func: 'signup', obj: 'Matter'
-			});
-			if (response.token) {
-				this.token.string = response.token;
-			}
-			if (response.user) {
-				this.currentUser = response.user;
-			}
-			return this.currentUser;
-		}, error => {
-			logger.error({
-				description: 'Error with provider authentication.',
-				provider, error, func: 'signup', obj: 'Matter'
-			});
-			return Promise.reject(error);
-		});
-	}
-
-	/** Signup using external provider
+	/** Authenticate using external provider
 	 * @param {String} provider - Provider name
 	 * @return {Promise}
 	 * @example
@@ -410,7 +386,7 @@ export default class Matter {
 	 *  console.error('Error logging in:', err);
 	 * });
 	 */
-	signupUsingProvider(provider) {
+	authUsingProvider(provider) {
 		if (!provider) {
 			logger.info({
 				description: 'Provider required to sign up.',
@@ -418,8 +394,7 @@ export default class Matter {
 			});
 			return Promise.reject({message: 'Provider data is required to signup.'});
 		}
-		const auth = new ProviderAuth({provider, app: this});
-		return auth.signup(provider).then(response => {
+		return ProviderAuth.authWithServer(provider).then(response => {
 			logger.info({
 				description: 'Provider login successful.',
 				response, func: 'providerSignup', obj: 'Matter'
@@ -427,8 +402,8 @@ export default class Matter {
 			if (response.token) {
 				this.token.string = response.token;
 			}
-			if (response.user) {
-				this.currentUser = response.user;
+			if (response.user || response.data) {
+				this.currentUser = response.data || response.user;
 			}
 			return this.currentUser;
 		}, error => {

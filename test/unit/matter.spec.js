@@ -1,13 +1,7 @@
-global.sinon = require('sinon');
-global.chai = require('chai');
-global.expect = require('chai').expect;
-var chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
 import Matter from '../../src';
-import request from '../../src/utils/request';
+import * as request from '../../src/utils/request';
 import config from '../../src/config';
 import logger from '../../src/utils/logger';
-import ProviderAuth from '../../src/utils/providerAuth';
 
 let responseState = 'success';
 let name = 'exampleApp';
@@ -47,32 +41,6 @@ let mockPost = sinon.stub(request, 'post', (url, postData) => {
 	 }
 	 resolve({body: {token: mockToken, account: {username: 'testUser'}}});
  });
-});
-
-let auth = new ProviderAuth({app: matter, provider: 'google'});
-let mockProviderAuthSignup = sinon.stub(auth, 'signup', () => {
- // console.log('mock get called with:', arguments);
- return new Promise((resolve, reject) => {
-		if (responseState == 'success') {
-			resolve({body: {}});
-		} else {
-			//reset response state
-			responseState = 'success';
-			reject({message: 'Error'});
-		}
-	});
-});
-let mockProviderAuthLogin = sinon.stub(auth, 'login', () => {
- // console.log('mock get called with:', arguments);
- return new Promise((resolve, reject) => {
-		if (responseState == 'success') {
-			resolve({body: {}});
-		} else {
-			//reset response state
-			responseState = 'success';
-			reject({message: 'Error'});
-		}
-	});
 });
 
 
@@ -220,38 +188,21 @@ describe('Matter', () => {
 			});
 		});
 	});
-	describe('Provider signup method', () => {
+	describe('Provider auth method', () => {
 		beforeEach(() => {
-			sinon.spy(matter, 'signupUsingProvider');
+			sinon.spy(matter, 'authUsingProvider');
 		});
 		afterEach(() => {
-			matter.signupUsingProvider.restore();
+			matter.authUsingProvider.restore();
 		});
 		it('handles no input', () => {
-			expect(matter.signupUsingProvider()).to.be.rejectedWith('Provider data is required to signup.');
+			expect(matter.authUsingProvider()).to.be.rejectedWith('Provider data is required to signup.');
 		});
 		it('handles incorrectly formatted data', () => {
-			expect(matter.signupUsingProvider([''])).to.eventually.have.property('message');
+			expect(matter.authUsingProvider([''])).to.eventually.have.property('message');
 		});
 		it('accepts third party signupUsingProvider/login', () => {
-			expect(matter.signupUsingProvider('google')).to.be.rejectedWith('Client id is required to authenticate with Google.');
-		});
-	});
-	describe('Provider login method', () => {
-		beforeEach(() => {
-			sinon.spy(matter, 'loginUsingProvider');
-		});
-		afterEach(() => {
-			matter.loginUsingProvider.restore();
-		});
-		it('handles no input', () => {
-			expect(matter.loginUsingProvider()).to.be.rejectedWith('Provider data is required to signup.');
-		});
-		it('handles incorrectly formatted data', () => {
-			expect(matter.loginUsingProvider([''])).to.eventually.have.property('message');
-		});
-		it('accepts third party loginUsingProvider/login', () => {
-			expect(matter.loginUsingProvider('google')).to.be.rejectedWith('Client id is required to authenticate with Google.');
+			expect(matter.authUsingProvider('google')).to.be.rejectedWith('Client id is required to authenticate with Google.');
 		});
 	});
 	describe('Logout method', () => {
@@ -302,12 +253,8 @@ describe('Matter', () => {
 			expect(matter.currentUser).to.be.defined;
 		});
 		it('returns user data based on token', () => {
-			if (typeof window == 'undefined') {
-				matter.token.string = mockToken;
-				expect(matter.currentUser).to.be.an('object');
-			} else {
-				expect(matter.currentUser).to.equal(null);
-			}
+			matter.token.string = mockToken;
+			expect(matter.currentUser).to.be.an('object');
 		});
 		// it.skip('returns null if no current user', () =>	{
 		//	 matter.token.delete();
