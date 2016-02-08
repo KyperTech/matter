@@ -356,11 +356,12 @@ export default class Matter {
 			});
 			this.currentUser = null;
 			this.token.delete();
-			return ProviderAuth.logout().then(() => {
-				return response;
-			}, () => {
-				return response;
-			});
+			return response;
+			// return ProviderAuth.logout().then(() => {
+			// 	return response;
+			// }, () => {
+			// 	return response;
+			// });
 		})['catch'](error => {
 			logger.error({
 				description: 'Error requesting log out: ',

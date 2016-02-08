@@ -1,6 +1,6 @@
 {
   "name": "kyper-matter",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
@@ -71,7 +71,7 @@
     "eslint-plugin-react": "^3.6.3",
     "isparta": "^4.0.0",
     "jsdom": "^8.0.2",
-    "json-loader": "^0.5.4",
+    "legacy-loader": "0.0.2",
     "mocha": "^2.2.5",
     "rimraf": "^2.4.4",
     "s3-cli": "^0.13.0",

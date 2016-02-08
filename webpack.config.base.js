@@ -7,7 +7,11 @@ var pkg = require('./package.json');
 module.exports = {
   module: {
     loaders: [
-      { test: /\.js$/, loaders: ['babel-loader'], exclude: /node_modules/ }
+      { test: /\.js$/, loaders: ['babel-loader'], exclude: /node_modules/ },
+    //   {
+    //      test: /[\/\\]node_modules[\/\\]oauthio-web[\/\\]dist[\/\\]oauth.min\.js$/,
+    //      loader: "legacy"
+    //  }
     ]
   },
   plugins: [
@@ -18,6 +22,9 @@ module.exports = {
     libraryTarget: 'umd'
   },
   resolve: {
-    extensions: ['', '.js']
+    extensions: ['', '.js'],
+    // alias: {
+    //   'oauthio-web': path.resolve(__dirname, 'node_modules/oauthio-web/dist/oauth.js')
+    // }
   }
 }
