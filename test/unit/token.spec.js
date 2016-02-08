@@ -33,15 +33,12 @@ describe('token Util', () => {
   });
   describe('data()', () => {
     it('sets token data', () => {
-      token.data = {some: 'data'};
       expect(token.data).to.be.a('object');
     });
     it('gets token data', () => {
-      token.data = {message: 'test'};
       expect(token.data).to.be.a('object');
     });
     it('set token data from string', () => {
-      token.data = mockToken;
       expect(token.data).to.be.a('object');
     });
   });

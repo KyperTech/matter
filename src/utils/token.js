@@ -1,91 +1,83 @@
 import config from '../config';
 import logger from './logger';
-import storage from './envStorage';
+import * as cookiesUtil from './cookies';
+import * as envStorage from './envStorage';
 import jwtDecode from 'jwt-decode';
-import { isString, isObject } from 'lodash';
+import { isString } from 'lodash';
 
 let token = {
+
 	/** Get string value of token
 	 * @return {String}
 	 * @example
 	 * console.log('String value of current token', token.string);
 	 */
 	get string() {
-		return storage.getItem(config.tokenName);
+		const cookie = cookiesUtil.getCookie(config.tokenName);
+		if(cookie === '') return null;
+		return cookie;
 	},
-	/** Get decoded data within token (unencrypted data only)
+
+	/**
+	 * @description Get decoded data within token (unencrypted data only)
 	 * @return {Object}
 	 * @example
 	 * console.log('Data of current token:', token.data);
 	 */
 	get data() {
-		if (storage.getItem(config.tokenDataName)) {
-			return storage.getItem(config.tokenDataName);
+		if(!this.string) return null;
+		if (envStorage.getItem(config.tokenDataName)) {
+			return envStorage.getItem(config.tokenDataName);
 		} else {
 			return decodeToken(this.string);
 		}
 	},
-	/** Set token data
+
+	/**
+	 * @description Set token data
 	 */
 	set data(tokenData) {
-		if (isString(tokenData)) {
-			const tokenStr = tokenData;
-			tokenData = decodeToken(tokenStr);
-			logger.info({
-				description: 'Token data was set as string. Decoding token.',
-				token: tokenStr, tokenData: tokenData, func: 'data', obj: 'token'
-			});
-		} else {
-			logger.log({
-				description: 'Token data was set.', data: tokenData,
-				func: 'data', obj: 'token'
-			});
-			storage.setItem(config.tokenDataName, tokenData);
-		}
+		envStorage.setItem(config.tokenDataName, tokenData);
+		logger.debug({
+			description: 'Token data was set to session storage.', tokenData,
+			func: 'data', obj: 'token'
+		});
 	},
-	/** Set token value as a string
+
+	/**
+	 * @description Set token value as a string
 	 */
-	set string(tokenData) {
-		let tokenStr;
+	set string(tokenStr) {
 		//Handle object being passed
-		if (!isString(tokenData)) {
+		if (!isString(tokenStr)) {
 			//Token is included in object
 			logger.log({
 				description: 'Token data is not string.',
-				token: tokenData, func: 'string', obj: 'token'
+				tokenStr, func: 'string', obj: 'token'
 			});
-			if (isObject(tokenData) && tokenData.token) {
-				tokenStr = tokenData.token;
-			} else {
-				//Input is either not an string or object that contains nessesary info
-				logger.error({
-					description: 'Invalid value set to token.',
-					token: tokenData, func: 'string', obj: 'token'
-				});
-				return;
-			}
-		} else {
-			tokenStr = tokenData;
+			throw new Error('Token data should be a string');
 		}
-		logger.log({
-			description: 'Token was set.', token: tokenData,
-			tokenStr: tokenStr, func: 'string', obj: 'token'
+		cookiesUtil.setCookie(config.tokenName, tokenStr, 7);
+		this.data = decodeToken(tokenStr);
+		logger.debug({
+			description: 'Token was set to cookies.',
+			func: 'string', obj: 'token'
 		});
-		storage.setItem(config.tokenName, tokenStr);
-		this.data = jwtDecode(tokenStr);
 	},
+
 	/** Save token data
 	 */
 	save(tokenStr) {
 		this.string = tokenStr;
 	},
+
 	/** Delete token data
 	 */
 	delete() {
 		//Remove string token
-		storage.removeItem(config.tokenName);
+		cookiesUtil.deleteCookie(config.tokenName);
 		//Remove user data
-		storage.removeItem(config.tokenDataName);
+		envStorage.removeItem(config.tokenDataName);
 		logger.log({
 			description: 'Token was removed.',
 			func: 'delete', obj: 'token'
@@ -94,22 +86,20 @@ let token = {
 };
 
 export default token;
+
 /** Safley decode a JWT string
  * @private
  * @return {Object}
  */
 function decodeToken(tokenStr) {
-	let tokenData;
-	if (tokenStr && tokenStr != '') {
-		try {
-			tokenData = jwtDecode(tokenStr);
-		} catch (err) {
-			logger.error({
-				description: 'Error decoding token.', data: tokenData,
-				error: err, func: 'decodeToken', file: 'token'
-			});
-			throw new Error('Invalid token string.');
-		}
+	if(!tokenStr || tokenStr === '') return null;
+	try {
+		return jwtDecode(tokenStr);
+	} catch (error) {
+		logger.error({
+			description: 'Error decoding token.',
+			error, func: 'decodeToken', file: 'token'
+		});
+		return null;
 	}
-	return tokenData;
 }

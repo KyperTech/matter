@@ -4,7 +4,7 @@ import * as dom from './utils/dom';
 import * as request from './utils/request';
 import * as ProviderAuth from './utils/providerAuth';
 import token from './utils/token';
-import envStorage from './utils/envStorage';
+import * as envStorage from './utils/envStorage';
 
 import {
 	isString, isArray,
@@ -79,24 +79,23 @@ export default class Matter {
 				});
 			}
 		}
-		let appEndpoint = this.owner ? `${config.serverUrl}/users/${this.owner}/projects/${this.name}` : `${config.serverUrl}/projects/${this.name}`;
 		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
 			if (typeof window !== 'undefined' && has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
-				appEndpoint = '';
+				return '';
 				logger.info({
-					description: 'Host is Tessellate Server, serverUrl simplified!',
-					url: appEndpoint, func: 'endpoint', obj: 'Matter'
-				});
-			} else {
-				appEndpoint = config.serverUrl;
-				logger.info({
-					description: 'App is tessellate, serverUrl set as main tessellate server.',
-					url: appEndpoint, func: 'endpoint', obj: 'Matter'
+					description: 'App is Tessellate and Host is Tessellate Server, serverUrl simplified!',
+					func: 'endpoint', obj: 'Matter'
 				});
 			}
+			logger.info({
+				description: 'App is tessellate, serverUrl set as main tessellate server.',
+				url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+			});
+			return config.serverUrl;
 		}
+		const appEndpoint = this.owner ? `${config.serverUrl}/users/${this.owner}/projects/${this.name}` : `${config.serverUrl}/projects/${this.name}`;
 		logger.log({
 			description: 'Endpoint created.', url: appEndpoint,
 			func: 'endpoint', obj: 'Matter'
@@ -105,11 +104,9 @@ export default class Matter {
 	}
 
 	get urls() {
-		if(this.token && this.token.data && this.token.data.username){
+		if(this.isLoggedIn){
 			return {
-				update: `${this.endpoint}/account/${this.token.data.username}`,
-				upload: `${this.endpoint}/account/${this.token.data.username}/upload`,
-				recover: `${this.endpoint}/recover`
+				update: `${this.endpoint}/account/${this.currentUser.username}`
 			};
 		}
 		return {
@@ -129,7 +126,7 @@ export default class Matter {
 			description: 'Current User set.', user: userData,
 			func: 'currentUser', obj: 'Matter'
 		});
-		this.storage.setItem(config.tokenUserDataName, userData);
+		envStorage.setItem(config.tokenUserDataName, userData);
 	}
 
   /** Get currently logged in user or returns null
@@ -448,20 +445,20 @@ export default class Matter {
 			});
 			this.currentUser = response;
 			return response;
-		})['catch']((errRes) => {
-			if (errRes.status == 401) {
+		})['catch'](error => {
+			if (error.status == 401) {
 				logger.warn({
 					description: 'Called for current user without token.',
-					error: errRes, func: 'currentUser', obj: 'Matter'
+					error, func: 'currentUser', obj: 'Matter'
 				});
 				token.delete();
 				return Promise.resolve(null);
 			}
 			logger.error({
 				description: 'Error requesting current user.',
-				error: errRes, func: 'currentUser', obj: 'Matter'
+				error, func: 'currentUser', obj: 'Matter'
 			});
-			return Promise.reject(errRes);
+			return Promise.reject(error);
 		});
 	}
 
@@ -497,35 +494,35 @@ export default class Matter {
 			});
 		}
 		//Send update request
-		return request.put(this.urls.update, updateData).then((response) => {
+		return request.put(`${this.endpoint}/users/${this.currentUser.username}`, updateData).then((response) => {
 			logger.info({
 				description: 'Update profile request responded.',
 				responseData: response, func: 'updateAccount', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;
-		})['catch']((errRes) => {
+		})['catch'](error => {
 			logger.error({
 				description: 'Error requesting current user.',
-				error: errRes, func: 'updateAccount', obj: 'Matter'
+				error, func: 'updateAccount', obj: 'Matter'
 			});
-			return Promise.reject(errRes);
+			return Promise.reject(error);
 		});
 	}
 
 	/** uploadImage
-	 * @description Upload image to Tessellate
+	 * @description Upload account avatar to Tessellate
 	 * @param {Object} file - File object to upload
 	 * @return {Promise}
 	 * @example
 	 * //Upload image to tessellate
-	 * matter.uploadImage(file).then(function(imgUrl){
+	 * matter.uploadAvatar(file).then(function(imgUrl){
 	 *  console.log('Currently logged in account:', imgUrl);
 	 * }, function(err){
 	 *  console.error('Error uploading image:', err);
 	 * });
 	 */
-	uploadImage(fileData) {
+	uploadAvatar(fileData) {
 		if (!this.isLoggedIn) {
 			logger.error({
 				description: 'Must be logged in to upload an image.',
@@ -546,19 +543,20 @@ export default class Matter {
 			});
 		}
 		//Send update request
-		return request.put(this.urls.upload, fileData).then(response => {
+		return request.put(`${this.endpoint}/users/${this.currentUser.username}/avatar`, fileData)
+		.then(response => {
 			logger.info({
 				description: 'Upload image request responded.',
 				response, func: 'uploadImage', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;
-		})['catch']((errRes) => {
+		})['catch'](error => {
 			logger.error({
 				description: 'Error requesting current user.',
-				error: errRes, func: 'uploadImage', obj: 'Matter'
+				error, func: 'uploadImage', obj: 'Matter'
 			});
-			return Promise.reject(errRes);
+			return Promise.reject(error);
 		});
 	}
 
@@ -603,19 +601,7 @@ export default class Matter {
 			});
 		}
 		//Send update request
-		return request.put(this.urls.changePassword, newPassword).then(updatedAccount => {
-			logger.log({
-				description: 'Update password request responded.',
-				updatedAccount, func: 'changePassword', obj: 'Matter'
-			});
-			return updatedAccount;
-		})['catch'](error => {
-			logger.error({
-				description: 'Error requesting password change.',
-				error, func: 'changePassword', obj: 'Matter'
-			});
-			return Promise.reject(error);
-		});
+		return request.put(`${this.endpoint}/user/password`, newPassword);
 	}
 
 	/** recoverAccount
@@ -648,19 +634,7 @@ export default class Matter {
 			func: 'recoverAccount', obj: 'Matter'
 		});
 		//Send update request
-		return request.post(this.urls.recover, account).then(res => {
-			logger.info({
-				description: 'Recover account request responded.',
-				res, func: 'recoverAccount', obj: 'Matter'
-			});
-			return res;
-		})['catch']((errRes) => {
-			logger.error({
-				description: 'Error requesting password recovery.',
-				error: errRes, func: 'recoverAccount', obj: 'Matter'
-			});
-			return Promise.reject(errRes);
-		});
+		return request.put(`${this.endpoint}/user/recover`);
 	}
 
 

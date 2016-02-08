@@ -1,4 +1,4 @@
-import storage from '../../src/utils/envStorage';
+import * as storage from '../../src/utils/envStorage';
 import logger from '../../src/utils/logger';
 let mockLog; let mockWarn; let mockInfo; let mockError; let mockDebug;
 
@@ -52,18 +52,9 @@ describe('envStorage Util', () => {
   describe('localExists', () => {
     it('handles no document', () => {
       if (typeof window !== 'undefined') {
-        expect(storage.localExists).to.be.false;
-      }
-    });
-  });
-  describe('item', () => {
-    it('exists', () => {
-      expect(storage).to.respondTo('item');
-    });
-    it('loads an item from storage', () => {
-      storage.item('test', {message: 'test'});
-      if (typeof window !== 'undefined') {
-        expect(storage.getItem('test')).to.be.a('object');
+        expect(storage.localExists()).to.be.false;
+      } else {
+        expect(storage.localExists()).to.be.true;
       }
     });
   });
