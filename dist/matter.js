@@ -559,7 +559,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!this.isLoggedIn) {
 					_logger2.default.error({
 						description: 'Must be logged in to upload an image.',
-						func: 'uploadImage', obj: 'Matter'
+						func: 'uploadAvatar', obj: 'Matter'
 					});
 					return Promise.reject({
 						message: 'Must be logged in to upload image.'
@@ -568,50 +568,28 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!fileData) {
 					_logger2.default.error({
 						description: 'Data is required to update profile.',
-						func: 'uploadImage', obj: 'Matter'
+						func: 'uploadAvatar', obj: 'Matter'
 					});
 					return Promise.reject({
 						message: 'Data required to update profile.',
 						status: 'NULL_DATA'
 					});
 				}
+				var reqData = { files: [{ key: 'image', file: fileData }] };
 				//Send update request
-				return request.put(this.endpoint + '/users/' + this.currentUser.username + '/avatar', fileData).then(function (response) {
+				return request.put(this.endpoint + '/users/' + this.currentUser.username + '/avatar', reqData).then(function (response) {
 					_logger2.default.info({
 						description: 'Upload image request responded.',
-						response: response, func: 'uploadImage', obj: 'Matter'
+						response: response, func: 'uploadAvatar', obj: 'Matter'
 					});
 					_this7.currentUser = response;
 					return response;
 				})['catch'](function (error) {
 					_logger2.default.error({
-						description: 'Error requesting current user.',
-						error: error, func: 'uploadImage', obj: 'Matter'
+						description: 'Error uploading avatar image.',
+						error: error, func: 'uploadAvatar', obj: 'Matter'
 					});
 					return Promise.reject(error);
-				});
-			}
-
-			/** uploadAccountImage
-	   * @description Upload image and add url to currently logged in account
-	   * @param {Object} file - File object to upload
-	   * @return {Promise}
-	   * @example
-	   * //Upload image and set it to account
-	   * matter.uploadAccountImage(file).then(function(updatedAccount){
-	   *  console.log('Account with image:', updatedAccount);
-	   * }, function(err){
-	   *  console.error('Error uploading account image:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'uploadAccountImage',
-			value: function uploadAccountImage(fileData) {
-				var _this8 = this;
-
-				return this.uploadImage(fileData).then(function (imgUrl) {
-					return _this8.updateAccount({ image: { url: imgUrl } });
 				});
 			}
 
@@ -696,7 +674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'isInGroup',
 			value: function isInGroup(checkGroups) {
-				var _this9 = this;
+				var _this8 = this;
 
 				if (!this.isLoggedIn) {
 					_logger2.default.error({
@@ -725,14 +703,14 @@ return /******/ (function(modules) { // webpackBootstrap
 								func: 'isInGroup', obj: 'Matter'
 							});
 							return {
-								v: _this9.isInGroups(groupsArray)
+								v: _this8.isInGroups(groupsArray)
 							};
 						}
 						//Single group
-						var groups = _this9.token.data.groups || [];
+						var groups = _this8.token.data.groups || [];
 						_logger2.default.log({
 							description: 'Checking if user is in group.',
-							group: groupName, userGroups: _this9.token.data.groups,
+							group: groupName, userGroups: _this8.token.data.groups,
 							func: 'isInGroup', obj: 'Matter'
 						});
 						return {
@@ -766,7 +744,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: 'isInGroups',
 			value: function isInGroups(checkGroups) {
-				var _this10 = this;
+				var _this9 = this;
 
 				if (!this.isLoggedIn) {
 					_logger2.default.log({
@@ -787,11 +765,11 @@ return /******/ (function(modules) { // webpackBootstrap
 					return (0, _every2.default)(checkGroups.map(function (group) {
 						if ((0, _isString2.default)(group)) {
 							//Group is string
-							return _this10.isInGroup(group);
+							return _this9.isInGroup(group);
 						}
 						//Group is object
 						if ((0, _has2.default)(group, 'name')) {
-							return _this10.isInGroup(group.name);
+							return _this9.isInGroup(group.name);
 						}
 						_logger2.default.error({
 							description: 'Invalid group object.',
@@ -3495,12 +3473,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	function post(endpoint, data) {
 		var req = _superagent2.default.post(endpoint).send(data);
 		req = addAuthHeader(req);
+		if (data && data.files) {
+			data.files.forEach(function (fileObj) {
+				if (fileObj.key && fileObj.file) {
+					req = req.attach(fileObj.key, fileObj.file);
+				}
+			});
+		}
 		return handleResponse(req);
 	}
 
 	function put(endpoint, data) {
 		var req = _superagent2.default.put(endpoint, data);
 		req = addAuthHeader(req);
+		if (data && data.files) {
+			data.files.forEach(function (fileObj) {
+				if (fileObj.key && fileObj.file) {
+					req = req.attach(fileObj.key, fileObj.file);
+				}
+			});
+		}
 		return handleResponse(req);
 	}
 

@@ -14,12 +14,26 @@ export function get(endpoint, queryData) {
 export function post(endpoint, data) {
 	let req = superagent.post(endpoint).send(data);
 	req = addAuthHeader(req);
+	if(data && data.files){
+		data.files.forEach((fileObj) => {
+			if(fileObj.key && fileObj.file){
+				req = req.attach(fileObj.key, fileObj.file);
+			}
+		});
+	}
 	return handleResponse(req);
 }
 
 export function put(endpoint, data) {
 	let req = superagent.put(endpoint, data);
 	req = addAuthHeader(req);
+	if(data && data.files){
+		data.files.forEach((fileObj) => {
+			if(fileObj.key && fileObj.file){
+				req = req.attach(fileObj.key, fileObj.file);
+			}
+		});
+	}
 	return handleResponse(req);
 }
 

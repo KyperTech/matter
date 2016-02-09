@@ -517,7 +517,7 @@ export default class Matter {
 		if (!this.isLoggedIn) {
 			logger.error({
 				description: 'Must be logged in to upload an image.',
-				func: 'uploadImage', obj: 'Matter'
+				func: 'uploadAvatar', obj: 'Matter'
 			});
 			return Promise.reject({
 				message: 'Must be logged in to upload image.'
@@ -526,46 +526,29 @@ export default class Matter {
 		if (!fileData) {
 			logger.error({
 				description: 'Data is required to update profile.',
-				func: 'uploadImage', obj: 'Matter'
+				func: 'uploadAvatar', obj: 'Matter'
 			});
 			return Promise.reject({
 				message: 'Data required to update profile.',
 				status: 'NULL_DATA'
 			});
 		}
+		const reqData = {files: [ {key: 'image', file: fileData }]};
 		//Send update request
-		return request.put(`${this.endpoint}/users/${this.currentUser.username}/avatar`, fileData)
+		return request.put(`${this.endpoint}/users/${this.currentUser.username}/avatar`, reqData)
 		.then(response => {
 			logger.info({
 				description: 'Upload image request responded.',
-				response, func: 'uploadImage', obj: 'Matter'
+				response, func: 'uploadAvatar', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;
 		})['catch'](error => {
 			logger.error({
-				description: 'Error requesting current user.',
-				error, func: 'uploadImage', obj: 'Matter'
+				description: 'Error uploading avatar image.',
+				error, func: 'uploadAvatar', obj: 'Matter'
 			});
 			return Promise.reject(error);
-		});
-	}
-
-	/** uploadAccountImage
-	 * @description Upload image and add url to currently logged in account
-	 * @param {Object} file - File object to upload
-	 * @return {Promise}
-	 * @example
-	 * //Upload image and set it to account
-	 * matter.uploadAccountImage(file).then(function(updatedAccount){
-	 *  console.log('Account with image:', updatedAccount);
-	 * }, function(err){
-	 *  console.error('Error uploading account image:', err);
-	 * });
-	 */
-	uploadAccountImage(fileData) {
-		return this.uploadImage(fileData).then(imgUrl => {
-			return this.updateAccount({image:{url: imgUrl}});
 		});
 	}
 
