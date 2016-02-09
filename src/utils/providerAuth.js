@@ -2,20 +2,61 @@ import 'babel-polyfill';
 import { put, get } from './request';
 import logger from './logger';
 import config from '../config';
-// import { OAuth, User } from 'oauthio-web'; // window undefined error
-// OAuth.initialize(config.oauthioKey);
+import { isBrowser, asyncLoadJs } from './dom';
 
-const isBrowser = typeof window !== 'undefined';
-const OAuthLib = isBrowser ? require('oauthio-web') : undefined;
-initializeOAuth();
+// import { OAuth, User } from 'oauthio-web'; // window/document undefined error
+// const OAuthLib = isBrowser ? require('oauthio-web') : undefined; //document undefined error
 
-function initializeOAuth() {
-	if(isBrowser){
-		OAuthLib.OAuth.initialize(config.oauthioKey);
-	}
-	return undefined;
+
+if(isBrowser()){
+	loadOAuthio().then(() => {
+		logger.debug({description: 'OAuthIo script loaded:'});
+		initializeOAuth();
+	});
 }
-//Run initial setup of OAuth Library
+
+/**
+ * @description Signup using a token generated from the server (so server and client are both aware of auth state)
+ */
+export async function authWithServer(provider) {
+	initializeOAuth();
+	try {
+		const params = await get(`${config.serverUrl}/stateToken`);
+		const result = await OAuth.popup(provider, { state: params.token });
+		return await put(`${config.serverUrl}/auth`, { provider, code: result.code, stateToken: params.token });
+	} catch(error) {
+		logger.error({
+			description: 'error with request', error,
+			func: 'authWithServer', obj: 'providerAuth'
+		});
+		throw error;
+	}
+}
+
+/**
+ * @description Run initial setup of OAuth Library
+ */
+function initializeOAuth() {
+	if(isBrowser() && window.OAuth){
+		console.log('initializing oauth');
+		window.OAuth.initialize(config.oauthioKey);
+	}
+}
+
+/**
+ * @description Load OAuthio-web Library into body as script element
+ */
+function loadOAuthio() {
+	console.log('loading oauthio into script tag:', config.oauthioCDN);
+	if(typeof window.OAuth !== 'undefined'){
+		return Promise.resolve();
+	}
+	return asyncLoadJs(config.oauthioCDN).then(() => {
+		if(window.OAuth){
+			window.OAuth.initialize(config.oauthioKey);
+		}
+	});
+}
 
 /**
  * @description Signup with external provider
@@ -106,17 +147,3 @@ function initializeOAuth() {
 // export function currentlyLoggedIn() {
 // 	return User.isLogged();
 // }
-
-/**
- * @description Signup using a token generated from the server (so server and client are both aware of auth state)
- */
-export async function authWithServer(provider) {
-	try {
-		const params = await get(`${config.serverUrl}/stateToken`);
-		const result = await OAuth.popup(provider, { state: params.token });
-		return await put(`${config.serverUrl}/auth`, { provider, code: result.code, stateToken: params.token });
-	} catch(error) {
-		logger.error({description: 'error with request', error });
-		// return err;
-	}
-}

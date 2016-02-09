@@ -9,6 +9,9 @@ import { includes } from 'lodash';
  *
  */
 export function getCookie(cookieName) {
+	if (typeof window === 'undefined' || typeof document === 'undefined') {
+		return '';
+	}
 	let name = cookieName + '=';
 	let ca = document.cookie.split(';');
 	for (let i = 0; i < ca.length; i++) {

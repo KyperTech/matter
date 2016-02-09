@@ -1,5 +1,10 @@
 import logger from './logger';
 import { has } from 'lodash';
+
+export function isBrowser() {
+	return typeof window !== 'undefined';
+}
+
 /**
  * @description
  * Appends given css source to DOM head.
@@ -69,6 +74,8 @@ export function asyncLoadJs(src) {
 		});
 	}
 }
+
+
 export function getQueryParam(name) {
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
   var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),

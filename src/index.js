@@ -103,17 +103,6 @@ export default class Matter {
 		return appEndpoint;
 	}
 
-	get urls() {
-		if(this.isLoggedIn){
-			return {
-				update: `${this.endpoint}/account/${this.currentUser.username}`
-			};
-		}
-		return {
-			recover: `${this.endpoint}/recover`
-		};
-	}
-
 	/** Save current user (handled automatically by default)
 	 * @param {Object} userData - Account data to set for current user
 	 * @example
@@ -224,7 +213,7 @@ export default class Matter {
 				status: 'PASS_REQUIRED'
 			});
 		}
-		return request.post(this.endpoint + '/signup', signupData).then(response => {
+		return request.post(`${this.endpoint}/signup`, signupData).then(response => {
 			if (response.token) {
 				this.token.string = response.token;
 			}
@@ -294,7 +283,7 @@ export default class Matter {
 			});
 		}
 		//Username/Email Login
-		return request.put(this.endpoint + '/login', loginData)
+		return request.put(`${this.endpoint}/login`, loginData)
 		.then(response => {
 			if (response.data && response.data.status && response.data.status == 409) {
 				logger.error({
@@ -438,11 +427,11 @@ export default class Matter {
 			});
 			return Promise.resolve(null);
 		}
-		return request.get(this.endpoint + '/user').then((response) => {
+		return request.get(`${this.endpoint}/user`).then(response => {
 			//TODO: Save user information locally
 			logger.log({
 				description: 'Current User Request responded.',
-				responseData: response, func: 'currentUser', obj: 'Matter'
+				response, func: 'currentUser', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;
@@ -495,10 +484,11 @@ export default class Matter {
 			});
 		}
 		//Send update request
-		return request.put(`${this.endpoint}/users/${this.currentUser.username}`, updateData).then((response) => {
+		return request.put(`${this.endpoint}/users/${this.currentUser.username}`, updateData)
+		.then(response => {
 			logger.info({
 				description: 'Update profile request responded.',
-				responseData: response, func: 'updateAccount', obj: 'Matter'
+				response, func: 'updateAccount', obj: 'Matter'
 			});
 			this.currentUser = response;
 			return response;

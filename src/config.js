@@ -22,7 +22,8 @@ let defaultConfig = {
 	tokenName: 'tessellate',
 	tokenDataName: 'tessellate-tokenData',
 	tokenUserDataName: 'tessellate-currentUser',
-	oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU'
+	oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU',
+	oauthioCDN: 'https://s3.amazonaws.com/kyper-cdn/js/libs/oauthio-web/v0.5.0/oauth.min.js'
 };
 let instance = null;
 let envName = 'prod';

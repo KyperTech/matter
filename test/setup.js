@@ -5,6 +5,7 @@ var chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 var Promise = require('es6-promise').Promise;
 global.Promise = Promise;
+// If window or document is needed
 var jsdom = require('jsdom');
 var doc = jsdom.jsdom("<html><body></body></html>");
 var win = doc.defaultView;
