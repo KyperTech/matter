@@ -1,3 +1,4 @@
+import 'babel-polyfill';
 import logger from './logger';
 import token from './token';
 import superagent from 'superagent';
@@ -33,44 +34,38 @@ export function del(endpoint, data) {
 	return handleResponse(req);
 }
 
-function handleResponse(req) {
-	return new Promise((resolve, reject) => {
-		if (typeof req.end !== 'function') {
-			logger.warn({
-				description: 'req.end is not a function', func: 'handleResponse'
-			});
-			return reject({message: 'req.end is not a function'});
-		}
-		req.end((errorRes, res) => {
-			if (errorRes) {
-				if (errorRes.status == 401) {
-					logger.warn({
-						description: 'Unauthorized. You must be signed into make this request.',
-						func: 'handleResponse'
-					});
-				}
-				const { response } = errorRes;
-				const error = (response && response.body) ? response.body : errorRes;
-				logger.error({
-					description: 'Error in request.', error,
-					file: 'request', func: 'handleResponse'
-				});
-				return reject(error || errorRes);
-			}
-			if(res.error){
-				logger.error({
-					description: 'Error in request.', error,
-					file: 'request', func: 'handleResponse'
-				});
-				return reject(res.error);
-			}
-			// logger.debug({
-			// 	message: 'Successful response recieved.', response: res.body,
-			// 	func: 'handleResponse', file: 'request'
-			// });
-			resolve(res.body);
+async function handleResponse(req) {
+	if (typeof req.end !== 'function') {
+		logger.warn({
+			description: 'req.end is not a function', func: 'handleResponse'
 		});
-	});
+		throw new Error('req.end is not a function');
+	}
+	try {
+		const res = await req.end();
+		if(res.error){
+			logger.error({
+				description: 'Error in request.', error: res.error,
+				file: 'request', func: 'handleResponse'
+			});
+			throw new Error(res.error.toString() || res.error);
+		}
+		return res.body;
+	} catch(errorRes) {
+		if (errorRes.status == 401) {
+			logger.warn({
+				description: 'Unauthorized. You must be signed into make this request.',
+				func: 'handleResponse'
+			});
+		}
+		const { response } = errorRes;
+		const error = (response && response.body) ? response.body : errorRes;
+		logger.error({
+			description: 'Error in request.', error,
+			file: 'request', func: 'handleResponse'
+		});
+		throw error || errorRes;
+	}
 }
 /**
  * @description Add auth header to request
