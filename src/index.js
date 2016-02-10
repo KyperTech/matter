@@ -32,12 +32,11 @@ export default class Matter {
 		}
 		if (opts) {
 			this.options = opts;
-			config.applySettings(opts);
-			if(this.options.logLevel){
-				config.logLevel = this.options.logLevel;
-			}
+			// config.applySettings(opts);
+			if(opts.env) config.envName = opts.env;
+			if(opts.envName) config.envName = opts.envName;
+			if(opts.logLevel) config.logLevel = opts.logLevel;
 		}
-		this.config = config;
 		logger.debug({
 			description: 'Matter object built.', matter: this,
 			func: 'constructor', obj: 'Matter'
@@ -79,6 +78,8 @@ export default class Matter {
 				});
 			}
 		}
+		//Create an endpoint that is namespaced to the specific project
+		let namespacedEndpoint = this.owner ? `${config.serverUrl}/users/${this.owner}/projects/${this.name}` : `${config.serverUrl}/projects/${this.name}`;
 		//Handle tessellate as name
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
@@ -93,14 +94,13 @@ export default class Matter {
 				description: 'App is tessellate, serverUrl set as main tessellate server.',
 				url: config.serverUrl, func: 'endpoint', obj: 'Matter'
 			});
-			return config.serverUrl;
+			namespacedEndpoint = config.serverUrl;
 		}
-		const appEndpoint = this.owner ? `${config.serverUrl}/users/${this.owner}/projects/${this.name}` : `${config.serverUrl}/projects/${this.name}`;
-		logger.log({
-			description: 'Endpoint created.', url: appEndpoint,
+		logger.debug({
+			description: 'Endpoint created.', url: namespacedEndpoint,
 			func: 'endpoint', obj: 'Matter'
 		});
-		return appEndpoint;
+		return namespacedEndpoint;
 	}
 
 	/** Save current user (handled automatically by default)
@@ -501,7 +501,7 @@ export default class Matter {
 		});
 	}
 
-	/** uploadImage
+	/** uploadAvatar
 	 * @description Upload account avatar to Tessellate
 	 * @param {Object} file - File object to upload
 	 * @return {Promise}
@@ -513,7 +513,7 @@ export default class Matter {
 	 *  console.error('Error uploading image:', err);
 	 * });
 	 */
-	uploadAvatar(fileData) {
+	uploadAvatar(file) {
 		if (!this.isLoggedIn) {
 			logger.error({
 				description: 'Must be logged in to upload an image.',
@@ -523,9 +523,9 @@ export default class Matter {
 				message: 'Must be logged in to upload image.'
 			});
 		}
-		if (!fileData) {
+		if (!file) {
 			logger.error({
-				description: 'Data is required to update profile.',
+				description: 'File is required to upload Avatar.',
 				func: 'uploadAvatar', obj: 'Matter'
 			});
 			return Promise.reject({
@@ -533,23 +533,9 @@ export default class Matter {
 				status: 'NULL_DATA'
 			});
 		}
-		const reqData = {files: [ {key: 'image', file: fileData }]};
+		const reqData = {files: [ {key: 'image', file }]};
 		//Send update request
-		return request.put(`${this.endpoint}/users/${this.currentUser.username}/avatar`, reqData)
-		.then(response => {
-			logger.info({
-				description: 'Upload image request responded.',
-				response, func: 'uploadAvatar', obj: 'Matter'
-			});
-			this.currentUser = response;
-			return response;
-		})['catch'](error => {
-			logger.error({
-				description: 'Error uploading avatar image.',
-				error, func: 'uploadAvatar', obj: 'Matter'
-			});
-			return Promise.reject(error);
-		});
+		return request.put(`${this.endpoint}/users/${this.currentUser.username}/avatar`, reqData);
 	}
 
 	/** changePassword

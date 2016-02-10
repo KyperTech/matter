@@ -12,28 +12,18 @@ export function get(endpoint, queryData) {
 }
 
 export function post(endpoint, data) {
-	let req = superagent.post(endpoint).send(data);
+	const imageData = (data && data.files) ? handleFiles(data) : null;
+	let req = superagent.post(endpoint);
 	req = addAuthHeader(req);
-	if(data && data.files){
-		data.files.forEach((fileObj) => {
-			if(fileObj.key && fileObj.file){
-				req = req.attach(fileObj.key, fileObj.file);
-			}
-		});
-	}
+	req.send(imageData || data);
 	return handleResponse(req);
 }
 
 export function put(endpoint, data) {
-	let req = superagent.put(endpoint, data);
+	const imageData = (data && data.files) ? handleFiles(data) : null;
+	let req = superagent.put(endpoint);
 	req = addAuthHeader(req);
-	if(data && data.files){
-		data.files.forEach((fileObj) => {
-			if(fileObj.key && fileObj.file){
-				req = req.attach(fileObj.key, fileObj.file);
-			}
-		});
-	}
+	req.send(imageData || data);
 	return handleResponse(req);
 }
 
@@ -82,6 +72,10 @@ function handleResponse(req) {
 		});
 	});
 }
+/**
+ * @description Add auth header to request
+ * @param {Object} request - Request object on which to add auth header
+ */
 function addAuthHeader(req) {
 	if (token.string) {
 		req = req.set('Authorization', 'Bearer ' + token.string);
@@ -91,4 +85,17 @@ function addAuthHeader(req) {
 		// });
 	}
 	return req;
+}
+/**
+ * @description Turn array of files into FormData for a server request
+ * @param {Array} files Array of file objects
+ */
+function handleFiles(files) {
+	let filesData = new FormData();
+	files.forEach((fileObj, i) => {
+		if(fileObj.key && fileObj.file){
+			filesData.append(fileObj.key || 'image', fileObj.file);
+		}
+	});
+	return filesData;
 }
