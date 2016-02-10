@@ -1,6 +1,6 @@
 {
   "name": "kyper-matter",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "rimraf lib dist coverage",
     "lint": "eslint src test",
-    "test": "mocha --compilers js:babel-core/register --require babel-polyfill --reporter spec ./test/*.js ./test/**/*.js",
+    "test": "mocha --compilers js:babel-core/register --reporter spec ./test/*.js ./test/**/*.js",
     "test:cov": "babel-node $(npm bin)/isparta cover --report lcov ./node_modules/mocha/bin/_mocha -- ./test --recursive",
     "build:lib": "babel src --out-dir lib",
     "build:umd": "webpack src/index.js dist/matter.js --config webpack.config.development.js",
@@ -80,7 +80,6 @@
     "webpack": "^1.12.13"
   },
   "dependencies": {
-    "babel-polyfill": "^6.5.0",
     "jwt-decode": "^1.5.1",
     "lodash": "^4.3.0",
     "superagent": "^1.7.2"

@@ -23,8 +23,5 @@ module.exports = {
   },
   resolve: {
     extensions: ['', '.js'],
-    // alias: {
-    //   'oauthio-web': path.resolve(__dirname, 'node_modules/oauthio-web/dist/oauth.js')
-    // }
   }
 }

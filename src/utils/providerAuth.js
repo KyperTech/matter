@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import { put, get } from './request';
 import logger from './logger';
 import config from '../config';
@@ -18,19 +17,25 @@ if(isBrowser()){
 /**
  * @description Signup using a token generated from the server (so server and client are both aware of auth state)
  */
-export async function authWithServer(provider) {
+export function authWithServer(provider) {
 	initializeOAuth();
-	try {
-		const params = await get(`${config.serverUrl}/stateToken`);
-		const result = await OAuth.popup(provider, { state: params.token });
-		return await put(`${config.serverUrl}/auth`, { provider, code: result.code, stateToken: params.token });
-	} catch(error) {
+	return get(`${config.serverUrl}/stateToken`).then(params => {
+		OAuth.popup(provider, { state: params.token }).done(result => {
+			return put(`${config.serverUrl}/auth`, { provider, code: result.code, stateToken: params.token });
+		}).fail(error => {
+			logger.error({
+				description: 'error with request', error,
+				func: 'authWithServer', obj: 'providerAuth'
+			});
+			return new Promise.reject(error);
+		});
+	}, error => {
 		logger.error({
 			description: 'error with request', error,
 			func: 'authWithServer', obj: 'providerAuth'
 		});
-		throw error;
-	}
+		return new Promise.reject(error);
+	});
 }
 
 /**
