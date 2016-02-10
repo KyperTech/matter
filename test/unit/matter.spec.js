@@ -25,7 +25,7 @@ let mockPut = sinon.stub(request, 'put', (putData) => {
  // console.log('mock put called with:', arguments);
  return new Promise((resolve, reject) => {
 		if (responseState == 'success') {
-			resolve({body: {token: mockToken, account: {username: 'testUser'}}});
+			resolve({body: {token: mockToken, user: {username: 'testUser'}}});
 		} else {
 			//reset response state
 			responseState = 'success';
