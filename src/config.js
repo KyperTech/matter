@@ -1,9 +1,6 @@
-import {
-	merge, has,
-	find, each
-} from 'lodash';
+import { merge, find } from 'lodash';
 
-let defaultConfig = {
+const defaultConfig = {
 	envs: {
 		local: {
 			serverUrl: 'http://localhost:4000',
@@ -28,6 +25,7 @@ let defaultConfig = {
 	oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU',
 	oauthioCDN: 'https://s3.amazonaws.com/kyper-cdn/js/libs/oauthio-web/v0.5.0/oauth.min.js'
 };
+
 let instance = null;
 let envName = 'prod';
 let level = null;
@@ -37,7 +35,6 @@ class Config {
 			merge(this, defaultConfig);
 			instance = this;
 		}
-		// console.log({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
 		return instance;
 	}
 
@@ -50,7 +47,6 @@ class Config {
 				return '';
 			}
 		}
-
 		return defaultConfig.envs[this.envName].serverUrl;
 	}
 
@@ -82,12 +78,6 @@ class Config {
 	applySettings(settings) {
 		if(settings){
 			merge(this, settings);
-			// each(settings, (key, val) => {
-			// 	console.log('setting key' + key + ' val:' + val);
-			// 	if(val){
-			// 		this[key] = val;
-			// 	}
-			// });
 		}
 	}
 

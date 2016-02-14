@@ -14,15 +14,15 @@ import {
 
 export default class Matter {
 	/** Constructor
-	 * @param {String} project Name of application
+	 * @param {String|Object} project Project name or object containing project name and owner
 	 */
 	constructor(project, opts) {
 		if (!project) {
 			logger.error({
-				description: 'Application name required to use Matter.',
+				description: 'Project name required to use Matter.',
 				func: 'constructor', obj: 'Matter'
 			});
-			throw new Error('Application name is required to use Matter');
+			throw new Error('Project name is required to use Matter');
 		}
 		if(isObject(project)){
 			this.name = project.name;
@@ -84,17 +84,18 @@ export default class Matter {
 		if (this.name == 'tessellate') {
 			//Remove url if host is a tessellate server
 			if (typeof window !== 'undefined' && has(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
-				return '';
+				namespacedEndpoint = '';
 				logger.info({
 					description: 'App is Tessellate and Host is Tessellate Server, serverUrl simplified!',
 					func: 'endpoint', obj: 'Matter'
 				});
+			} else {
+				logger.info({
+					description: 'App is tessellate, serverUrl set as main tessellate server.',
+					url: config.serverUrl, func: 'endpoint', obj: 'Matter'
+				});
+				namespacedEndpoint = config.serverUrl;
 			}
-			logger.info({
-				description: 'App is tessellate, serverUrl set as main tessellate server.',
-				url: config.serverUrl, func: 'endpoint', obj: 'Matter'
-			});
-			namespacedEndpoint = config.serverUrl;
 		}
 		logger.debug({
 			description: 'Endpoint created.', url: namespacedEndpoint,
@@ -367,7 +368,7 @@ export default class Matter {
 	 * @return {Promise}
 	 * @example
 	 * //Signup using google
-	 * matter.signupUsingProvider('google').then(function(signupRes){
+	 * matter.authUsingProvider('google').then(function(signupRes){
 	 *  console.log('New user logged in succesfully. Account: ', signupRes.user);
 	 * }, function(err){
 	 *  console.error('Error logging in:', err);
@@ -377,26 +378,26 @@ export default class Matter {
 		if (!provider) {
 			logger.info({
 				description: 'Provider required to sign up.',
-				func: 'providerSignup', obj: 'Matter'
+				func: 'authUsingProvider', obj: 'Matter'
 			});
 			return Promise.reject({message: 'Provider data is required to signup.'});
 		}
 		return ProviderAuth.authWithServer(provider).then(response => {
 			logger.info({
 				description: 'Provider login successful.',
-				response, func: 'providerSignup', obj: 'Matter'
+				response, func: 'authUsingProvider', obj: 'Matter'
 			});
-			if (response.token) {
+			if (response && response.token) {
 				this.token.string = response.token;
 			}
-			if (response.user || response.data) {
+			if (response && response.user || response.data) {
 				this.currentUser = response.data || response.user;
 			}
 			return this.currentUser;
 		}, error => {
 			logger.error({
 				description: 'Provider signup error.', error,
-				func: 'providerSignup', obj: 'Matter'
+				func: 'authUsingProvider', obj: 'Matter'
 			});
 			return Promise.reject(error);
 		});

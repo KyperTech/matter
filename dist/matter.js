@@ -124,7 +124,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Matter = function () {
 		/** Constructor
-	  * @param {String} project Name of application
+	  * @param {String|Object} project Project name or object containing project name and owner
 	  */
 
 		function Matter(project, opts) {
@@ -132,10 +132,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 			if (!project) {
 				_logger2.default.error({
-					description: 'Application name required to use Matter.',
+					description: 'Project name required to use Matter.',
 					func: 'constructor', obj: 'Matter'
 				});
-				throw new Error('Application name is required to use Matter');
+				throw new Error('Project name is required to use Matter');
 			}
 			if ((0, _isObject2.default)(project)) {
 				this.name = project.name;
@@ -391,7 +391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @return {Promise}
 	   * @example
 	   * //Signup using google
-	   * matter.signupUsingProvider('google').then(function(signupRes){
+	   * matter.authUsingProvider('google').then(function(signupRes){
 	   *  console.log('New user logged in succesfully. Account: ', signupRes.user);
 	   * }, function(err){
 	   *  console.error('Error logging in:', err);
@@ -406,26 +406,26 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!provider) {
 					_logger2.default.info({
 						description: 'Provider required to sign up.',
-						func: 'providerSignup', obj: 'Matter'
+						func: 'authUsingProvider', obj: 'Matter'
 					});
 					return Promise.reject({ message: 'Provider data is required to signup.' });
 				}
 				return ProviderAuth.authWithServer(provider).then(function (response) {
 					_logger2.default.info({
 						description: 'Provider login successful.',
-						response: response, func: 'providerSignup', obj: 'Matter'
+						response: response, func: 'authUsingProvider', obj: 'Matter'
 					});
-					if (response.token) {
+					if (response && response.token) {
 						_this4.token.string = response.token;
 					}
-					if (response.user || response.data) {
+					if (response && response.user || response.data) {
 						_this4.currentUser = response.data || response.user;
 					}
 					return _this4.currentUser;
 				}, function (error) {
 					_logger2.default.error({
 						description: 'Provider signup error.', error: error,
-						func: 'providerSignup', obj: 'Matter'
+						func: 'authUsingProvider', obj: 'Matter'
 					});
 					return Promise.reject(error);
 				});
@@ -814,17 +814,18 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (this.name == 'tessellate') {
 					//Remove url if host is a tessellate server
 					if (typeof window !== 'undefined' && (0, _has2.default)(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
-						return '';
+						namespacedEndpoint = '';
 						_logger2.default.info({
 							description: 'App is Tessellate and Host is Tessellate Server, serverUrl simplified!',
 							func: 'endpoint', obj: 'Matter'
 						});
+					} else {
+						_logger2.default.info({
+							description: 'App is tessellate, serverUrl set as main tessellate server.',
+							url: _config2.default.serverUrl, func: 'endpoint', obj: 'Matter'
+						});
+						namespacedEndpoint = _config2.default.serverUrl;
 					}
-					_logger2.default.info({
-						description: 'App is tessellate, serverUrl set as main tessellate server.',
-						url: _config2.default.serverUrl, func: 'endpoint', obj: 'Matter'
-					});
-					namespacedEndpoint = _config2.default.serverUrl;
 				}
 				_logger2.default.debug({
 					description: 'Endpoint created.', url: namespacedEndpoint,
@@ -1441,6 +1442,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU',
 		oauthioCDN: 'https://s3.amazonaws.com/kyper-cdn/js/libs/oauthio-web/v0.5.0/oauth.min.js'
 	};
+
 	var instance = null;
 	var envName = 'prod';
 	var level = null;
@@ -1453,7 +1455,6 @@ return /******/ (function(modules) { // webpackBootstrap
 				(0, _merge2.default)(this, defaultConfig);
 				instance = this;
 			}
-			// console.log({description: 'Config object created.', config: merge(this, defaultConfig), func: 'constructor', obj: 'Config'});
 			return instance;
 		}
 
@@ -1462,12 +1463,6 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: function applySettings(settings) {
 				if (settings) {
 					(0, _merge2.default)(this, settings);
-					// each(settings, (key, val) => {
-					// 	console.log('setting key' + key + ' val:' + val);
-					// 	if(val){
-					// 		this[key] = val;
-					// 	}
-					// });
 				}
 			}
 		}, {
@@ -1481,7 +1476,6 @@ return /******/ (function(modules) { // webpackBootstrap
 						return '';
 					}
 				}
-
 				return defaultConfig.envs[this.envName].serverUrl;
 			}
 		}, {
@@ -2625,16 +2619,16 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 					var response = errorRes.response;
 
-					var _error = response && response.body ? response.body : errorRes;
+					var error = response && response.body ? response.body : errorRes;
 					_logger2.default.error({
-						description: 'Error in request.', error: _error,
+						description: 'Error in request.', error: error,
 						file: 'request', func: 'handleResponse'
 					});
-					return reject(_error || errorRes);
+					return reject(error || errorRes);
 				}
 				if (res.error) {
 					_logger2.default.error({
-						description: 'Error in request.', error: error,
+						description: 'Error in request.', error: res.error,
 						file: 'request', func: 'handleResponse'
 					});
 					return reject(res.error);
@@ -2661,13 +2655,14 @@ return /******/ (function(modules) { // webpackBootstrap
 		}
 		return req;
 	}
+
 	/**
 	 * @description Turn array of files into FormData for a server request
 	 * @param {Array} files Array of file objects
 	 */
 	function handleFiles(files) {
 		var filesData = new FormData();
-		files.forEach(function (fileObj, i) {
+		files.forEach(function (fileObj) {
 			if (fileObj.key && fileObj.file) {
 				filesData.append(fileObj.key || 'image', fileObj.file);
 			}
@@ -3822,21 +3817,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	function authWithServer(provider) {
 		initializeOAuth();
 		return (0, _request.get)(_config2.default.serverUrl + '/stateToken').then(function (params) {
-			OAuth.popup(provider, { state: params.token }).done(function (result) {
+			return window.OAuth.popup(provider, { state: params.token }).done(function (result) {
+				_logger2.default.info({
+					description: 'Result from oauth:', result: result, provider: provider, params: params,
+					func: 'authWithServer', obj: 'providerAuth'
+				});
 				return (0, _request.put)(_config2.default.serverUrl + '/auth', { provider: provider, code: result.code, stateToken: params.token });
 			}).fail(function (error) {
 				_logger2.default.error({
 					description: 'error with request', error: error,
 					func: 'authWithServer', obj: 'providerAuth'
 				});
-				return new Promise.reject(error);
+				return Promise.reject(error);
 			});
 		}, function (error) {
 			_logger2.default.error({
 				description: 'error with request', error: error,
 				func: 'authWithServer', obj: 'providerAuth'
 			});
-			return new Promise.reject(error);
+			return Promise.reject(error);
 		});
 	}
 
@@ -3854,7 +3853,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @description Load OAuthio-web Library into body as script element
 	 */
 	function loadOAuthio() {
-		console.log('loading oauthio into script tag:', _config2.default.oauthioCDN);
+		// console.log('loading oauthio into script tag:', config.oauthioCDN);
 		if (typeof window.OAuth !== 'undefined') {
 			return Promise.resolve();
 		}

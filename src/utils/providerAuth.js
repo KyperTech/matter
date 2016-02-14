@@ -20,21 +20,25 @@ if(isBrowser()){
 export function authWithServer(provider) {
 	initializeOAuth();
 	return get(`${config.serverUrl}/stateToken`).then(params => {
-		OAuth.popup(provider, { state: params.token }).done(result => {
+		return window.OAuth.popup(provider, { state: params.token }).done(result => {
+			logger.info({
+				description: 'Result from oauth:', result, provider, params,
+				func: 'authWithServer', obj: 'providerAuth'
+			});
 			return put(`${config.serverUrl}/auth`, { provider, code: result.code, stateToken: params.token });
 		}).fail(error => {
 			logger.error({
 				description: 'error with request', error,
 				func: 'authWithServer', obj: 'providerAuth'
 			});
-			return new Promise.reject(error);
+			return Promise.reject(error);
 		});
 	}, error => {
 		logger.error({
 			description: 'error with request', error,
 			func: 'authWithServer', obj: 'providerAuth'
 		});
-		return new Promise.reject(error);
+		return Promise.reject(error);
 	});
 }
 
@@ -52,7 +56,7 @@ function initializeOAuth() {
  * @description Load OAuthio-web Library into body as script element
  */
 function loadOAuthio() {
-	console.log('loading oauthio into script tag:', config.oauthioCDN);
+	// console.log('loading oauthio into script tag:', config.oauthioCDN);
 	if(typeof window.OAuth !== 'undefined'){
 		return Promise.resolve();
 	}

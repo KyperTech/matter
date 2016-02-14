@@ -66,7 +66,7 @@ describe('Matter', () => {
 		});
 	});
 	describe.skip('Constructor', () => {
-		it('throws error if no app name is given', () => {
+		it('throws error if no project name is given', () => {
 			let error;
 			try {
 				new Matter();

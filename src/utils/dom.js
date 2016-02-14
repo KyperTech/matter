@@ -1,5 +1,4 @@
 import logger from './logger';
-import { has } from 'lodash';
 
 /**
  * @description Checks to see if current context is a browser

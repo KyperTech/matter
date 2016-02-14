@@ -59,7 +59,7 @@ function handleResponse(req) {
 			}
 			if(res.error){
 				logger.error({
-					description: 'Error in request.', error,
+					description: 'Error in request.', error: res.error,
 					file: 'request', func: 'handleResponse'
 				});
 				return reject(res.error);
@@ -86,13 +86,14 @@ function addAuthHeader(req) {
 	}
 	return req;
 }
+
 /**
  * @description Turn array of files into FormData for a server request
  * @param {Array} files Array of file objects
  */
 function handleFiles(files) {
 	let filesData = new FormData();
-	files.forEach((fileObj, i) => {
+	files.forEach(fileObj => {
 		if(fileObj.key && fileObj.file){
 			filesData.append(fileObj.key || 'image', fileObj.file);
 		}
