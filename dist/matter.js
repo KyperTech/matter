@@ -57,14 +57,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 
-	var _has = __webpack_require__(159);
+	var _has = __webpack_require__(160);
 
 	var _has2 = _interopRequireDefault(_has);
 
-	var _every = __webpack_require__(156);
+	var _every = __webpack_require__(157);
 
 	var _every2 = _interopRequireDefault(_every);
 
@@ -72,11 +72,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _isArray2 = _interopRequireDefault(_isArray);
 
-	var _some = __webpack_require__(170);
+	var _some = __webpack_require__(171);
 
 	var _some2 = _interopRequireDefault(_some);
 
-	var _isString = __webpack_require__(8);
+	var _isString = __webpack_require__(9);
 
 	var _isString2 = _interopRequireDefault(_isString);
 
@@ -104,7 +104,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var request = _interopRequireWildcard(_request);
 
-	var _providerAuth = __webpack_require__(69);
+	var _providerAuth = __webpack_require__(70);
 
 	var ProviderAuth = _interopRequireWildcard(_providerAuth);
 
@@ -123,788 +123,750 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var Matter = function () {
-		/** Constructor
-	  * @param {String|Object} project Project name or object containing project name and owner
-	  */
-
-		function Matter(project, opts) {
-			_classCallCheck(this, Matter);
-
-			if (!project) {
-				_logger2.default.error({
-					description: 'Project name required to use Matter.',
-					func: 'constructor', obj: 'Matter'
-				});
-				throw new Error('Project name is required to use Matter');
-			}
-			if ((0, _isObject2.default)(project)) {
-				this.name = project.name;
-				this.owner = project.owner || null;
-			} else {
-				this.name = project;
-			}
-			if (opts) {
-				this.options = opts;
-				// config.applySettings(opts);
-				if (opts.env) _config2.default.envName = opts.env;
-				if (opts.envName) _config2.default.envName = opts.envName;
-				if (opts.logLevel) _config2.default.logLevel = opts.logLevel;
-			}
-			_logger2.default.debug({
-				description: 'Matter object built.', matter: this,
-				func: 'constructor', obj: 'Matter'
-			});
-		}
-
-		/** Get current logged in status
-	  * @return {Boolean}
-	  * @example
-	  * //Check if there is an account currently logged in
-	  * if(matter.isLoggedIn){
-	  *   console.log('There is currently an account logged in.');
-	  * } else {
-	  *   console.warn('There is no account currently logged in.');
-	  * }
-	  */
-
-
-		_createClass(Matter, [{
-			key: 'signup',
-
-
-			/** Signup a new user
-	   * @param {Object} signupData - Object containing data to use while signing up to application.
-	   * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
-	   * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
-	   * @param {String} signupData.password - Password to be used with account (will be encrypted).
-	   * @return {Promise}
-	   * @example
-	   * //Signup a new user
-	   * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'};
-	   * matter.signup(signupData).then(function(signupRes){
-	   *  console.log('New user signed up successfully. New account: ', signupRes.account);
-	   * }, function(err){
-	   *  console.error('Error signing up:', err);
-	   * });
-	   */
-			value: function signup(signupData) {
-				var _this = this;
-
-				_logger2.default.debug({
-					description: 'Signup called.', signupData: signupData,
-					func: 'signup', obj: 'Matter'
-				});
-				if (!signupData || !(0, _isObject2.default)(signupData) && !(0, _isString2.default)(signupData)) {
-					_logger2.default.error({
-						description: 'Signup information is required to signup.',
-						func: 'signup', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Signup data is required to signup.',
-						status: 'NULL_DATA'
-					});
-				}
-				if ((0, _isString2.default)(signupData)) {
-					return this.authUsingProvider(signupData);
-				}
-				//Handle no username or email
-				if (!signupData.username || !signupData.email) {
-					_logger2.default.error({
-						description: 'Email and Username required to signup.',
-						func: 'signup', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Email and Username required to signup.',
-						status: 'EMPTY_DATA'
-					});
-				}
-				if (!signupData.password) {
-					_logger2.default.error({
-						description: 'Password is required to signup.',
-						func: 'signup', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Password is required to signup.',
-						status: 'PASS_REQUIRED'
-					});
-				}
-				return request.post(this.endpoint + '/signup', signupData).then(function (response) {
-					if (response.token) {
-						_this.token.string = response.token;
-					}
-					if (response.user) {
-						_this.currentUser = response.user;
-					}
-					_logger2.default.info({
-						description: 'Signup successful.', user: _this.currentUser,
-						func: 'signup', obj: 'Matter'
-					});
-					return _this.currentUser;
-				})['catch'](function (error) {
-					_logger2.default.error({
-						description: 'Error requesting signup.', error: error,
-						signupData: signupData, func: 'signup', obj: 'Matter'
-					});
-					return Promise.reject(error);
-				});
-			}
-
-			/** Login by username/email
-	   * @param {Object} loginData - Object containing data to use while logging in to application.
-	   * @param {String} loginData.username - Username of user to login as
-	   * @param {String} loginData.email - Email of new user (Optional instead of username)
-	   * @param {String} loginData.password - Password to be used with account (will be encrypted).
-	   * @return {Promise}
-	   * @example
-	   * //Login as 'testuser1'
-	   * var loginData = {username: 'testuser1', password: 'testpassword'};
-	   * matter.login(loginData).then(function(loginRes){
-	   *  console.log('New user logged in succesfully. Account: ', loginRes.user);
-	   * }, function(err){
-	   *  console.error('Error logging in:', err);
-	   * });
+	  /** Constructor
+	   * @param {String|Object} project Project name or object containing project name and owner
 	   */
 
-		}, {
-			key: 'login',
-			value: function login(loginData) {
-				var _this2 = this;
+	  function Matter(project, opts) {
+	    _classCallCheck(this, Matter);
 
-				if (!loginData || !(0, _isObject2.default)(loginData) && !(0, _isString2.default)(loginData)) {
-					_logger2.default.error({
-						description: 'Username/Email and Password are required to login',
-						func: 'login', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Login data is required to login.',
-						status: 'DATA_REQUIRED'
-					});
-				}
-				//Handle provider logins
-				if ((0, _isString2.default)(loginData)) {
-					return this.authUsingProvider(loginData);
-				}
-				//Handle no username or email
-				if (!loginData.username && !loginData.email) {
-					_logger2.default.error({
-						description: 'Email or Username required to login.',
-						func: 'login', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Email or Username required to login.',
-						status: 'ID_REQUIRED'
-					});
-				}
-				//Handle null or invalid password
-				if (!loginData.password || loginData.password === '') {
-					return Promise.reject({
-						message: 'Password is required to login.',
-						status: 'PASS_REQUIRED'
-					});
-				}
-				//Username/Email Login
-				return request.put(this.endpoint + '/login', loginData).then(function (response) {
-					if (response.data && response.data.status && response.data.status == 409) {
-						_logger2.default.error({
-							description: 'User not found.', response: response,
-							func: 'login', obj: 'Matter'
-						});
-						return Promise.reject(response.data);
-					}
-					if (response.token) {
-						_this2.token.string = response.token;
-					}
-					if (response.user) {
-						_this2.currentUser = response.user;
-					}
-					_logger2.default.info({
-						description: 'Successful login.', user: _this2.currentUser,
-						func: 'login', obj: 'Matter'
-					});
-					return _this2.currentUser;
-				})['catch'](function (error) {
-					_logger2.default.error({
-						description: 'Error requesting login.',
-						error: error, func: 'login', obj: 'Matter'
-					});
-					if (error.status == 409 || error.status == 400) {
-						error = error.response.text;
-					}
-					return Promise.reject(error);
-				});
-			}
+	    if (!project) {
+	      _logger2.default.error({
+	        description: 'Project name required to use Matter.',
+	        func: 'constructor', obj: 'Matter'
+	      });
+	      throw new Error('Project name is required to use Matter');
+	    }
+	    if ((0, _isObject2.default)(project)) {
+	      this.name = project.name;
+	      this.owner = project.owner || null;
+	    } else {
+	      this.name = project;
+	    }
+	    if (opts) {
+	      this.options = opts;
+	      _config2.default.applySettings(opts);
+	    }
+	    _logger2.default.debug({
+	      description: 'Matter object built.', matter: this,
+	      func: 'constructor', obj: 'Matter'
+	    });
+	  }
 
-			/** logout
-	   * @description Log out of currently logged in user account
-	   * @return {Promise}
-	   * @example
-	   * //Logout of currently logged in account
-	   * matter.logout().then(function(loginRes){
-	   *  console.log('Logged out successfully');
-	   * }, function(err){
-	   *  console.error('Error logging out:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'logout',
-			value: function logout() {
-				var _this3 = this;
-
-				//TODO: Handle logging out of providers
-				if (!this.isLoggedIn) {
-					_logger2.default.warn({
-						description: 'No logged in account to log out.',
-						func: 'logout', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'No logged in account to log out.',
-						status: 'NULL_ACCOUNT'
-					});
-				}
-				return request.put(this.endpoint + '/logout').then(function (response) {
-					_logger2.default.info({
-						description: 'Logout successful.',
-						response: response, func: 'logout', obj: 'Matter'
-					});
-					_this3.currentUser = null;
-					_this3.token.delete();
-					return response;
-					// return ProviderAuth.logout().then(() => {
-					// 	return response;
-					// }, () => {
-					// 	return response;
-					// });
-				})['catch'](function (error) {
-					_logger2.default.error({
-						description: 'Error requesting log out: ',
-						error: error, func: 'logout', obj: 'Matter'
-					});
-					_this3.storage.removeItem(_config2.default.tokenUserDataName);
-					_this3.token.delete();
-					return Promise.reject(error);
-				});
-			}
-
-			/** Authenticate using external provider
-	   * @param {String} provider - Provider name
-	   * @return {Promise}
-	   * @example
-	   * //Signup using google
-	   * matter.authUsingProvider('google').then(function(signupRes){
-	   *  console.log('New user logged in succesfully. Account: ', signupRes.user);
-	   * }, function(err){
-	   *  console.error('Error logging in:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'authUsingProvider',
-			value: function authUsingProvider(provider) {
-				var _this4 = this;
-
-				if (!provider) {
-					_logger2.default.info({
-						description: 'Provider required to sign up.',
-						func: 'authUsingProvider', obj: 'Matter'
-					});
-					return Promise.reject({ message: 'Provider data is required to signup.' });
-				}
-				return ProviderAuth.authWithServer(provider).then(function (response) {
-					_logger2.default.info({
-						description: 'Provider login successful.',
-						response: response, func: 'authUsingProvider', obj: 'Matter'
-					});
-					if (response && response.token) {
-						_this4.token.string = response.token;
-					}
-					if (response && response.user || response.data) {
-						_this4.currentUser = response.data || response.user;
-					}
-					return _this4.currentUser;
-				}, function (error) {
-					_logger2.default.error({
-						description: 'Provider signup error.', error: error,
-						func: 'authUsingProvider', obj: 'Matter'
-					});
-					return Promise.reject(error);
-				});
-			}
-
-			/** getCurrentUser
-	   * @return {Promise}
-	   * @example
-	   * //Logout of currently logged in account
-	   * matter.getCurrentUser().then(function(currentAccount){
-	   *  console.log('Currently logged in account:', currentAccount);
-	   * }, function(err){
-	   *  console.error('Error logging out:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'getCurrentUser',
-			value: function getCurrentUser() {
-				var _this5 = this;
-
-				if (this.currentUser) {
-					_logger2.default.debug({
-						description: 'Current is already available. Returning user.',
-						func: 'currentUser', obj: 'Matter'
-					});
-					return Promise.resolve(this.currentUser);
-				}
-				if (!this.isLoggedIn) {
-					_logger2.default.debug({
-						description: 'Current user is null.',
-						func: 'currentUser', obj: 'Matter'
-					});
-					return Promise.resolve(null);
-				}
-				return request.get(this.endpoint + '/user').then(function (response) {
-					//TODO: Save user information locally
-					_logger2.default.log({
-						description: 'Current User Request responded.',
-						response: response, func: 'currentUser', obj: 'Matter'
-					});
-					_this5.currentUser = response;
-					return response;
-				})['catch'](function (error) {
-					if (error.status == 401) {
-						_logger2.default.warn({
-							description: 'Called for current user without token.',
-							error: error, func: 'currentUser', obj: 'Matter'
-						});
-						_token2.default.delete();
-						return Promise.resolve(null);
-					}
-					_logger2.default.error({
-						description: 'Error requesting current user.',
-						error: error, func: 'currentUser', obj: 'Matter'
-					});
-					return Promise.reject(error);
-				});
-			}
-
-			/** updateAccount
-	   * @param {Object} updateData - Data to update within profile (only provided data will be modified).
-	   * @return {Promise}
-	   * @example
-	   * //Update current account's profile
-	   * matter.updateAccount().then(function(updatedAccount){
-	   *  console.log('Currently logged in account:', updatedAccount);
-	   * }, function(err){
-	   *  console.error('Error updating profile:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'updateAccount',
-			value: function updateAccount(updateData) {
-				var _this6 = this;
-
-				if (!this.isLoggedIn) {
-					_logger2.default.error({
-						description: 'No current user profile to update.',
-						func: 'updateAccount', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Must be logged in to update account.'
-					});
-				}
-				if (!updateData) {
-					_logger2.default.error({
-						description: 'Data is required to update profile.',
-						func: 'updateAccount', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Data required to update account.',
-						status: 'NULL_DATA'
-					});
-				}
-				//Send update request
-				return request.put(this.endpoint + '/users/' + this.currentUser.username, updateData).then(function (response) {
-					_logger2.default.info({
-						description: 'Update profile request responded.',
-						response: response, func: 'updateAccount', obj: 'Matter'
-					});
-					_this6.currentUser = response;
-					return response;
-				})['catch'](function (error) {
-					_logger2.default.error({
-						description: 'Error requesting current user.',
-						error: error, func: 'updateAccount', obj: 'Matter'
-					});
-					return Promise.reject(error);
-				});
-			}
-
-			/** uploadAvatar
-	   * @description Upload account avatar to Tessellate
-	   * @param {Object} file - File object to upload
-	   * @return {Promise}
-	   * @example
-	   * //Upload image to tessellate
-	   * matter.uploadAvatar(file).then(function(imgUrl){
-	   *  console.log('Currently logged in account:', imgUrl);
-	   * }, function(err){
-	   *  console.error('Error uploading image:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'uploadAvatar',
-			value: function uploadAvatar(file) {
-				if (!this.isLoggedIn) {
-					_logger2.default.error({
-						description: 'Must be logged in to upload an image.',
-						func: 'uploadAvatar', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Must be logged in to upload image.'
-					});
-				}
-				if (!file) {
-					_logger2.default.error({
-						description: 'File is required to upload Avatar.',
-						func: 'uploadAvatar', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Data required to update profile.',
-						status: 'NULL_DATA'
-					});
-				}
-				var reqData = { files: [{ key: 'image', file: file }] };
-				//Send update request
-				return request.put(this.endpoint + '/users/' + this.currentUser.username + '/avatar', reqData);
-			}
-
-			/** changePassword
-	   * @param {String} updateData New password for account.
-	   * @return {Promise}
-	   * @example
-	   * //Update current account's password
-	   * var newPassword = 'asdfasdfasdf';
-	   * matter.changePassword(newPassword).then(function(updatedAccount){
-	   *  console.log('Currently logged in account:', updatedAccount);
-	   * }, function(err){
-	   *  console.error('Error changing password:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'changePassword',
-			value: function changePassword(newPassword) {
-				if (!this.isLoggedIn) {
-					_logger2.default.error({
-						description: 'No current user profile for which to change password.',
-						func: 'changePassword', obj: 'Matter'
-					});
-					return Promise.reject({
-						message: 'Must be logged in to change password.'
-					});
-				}
-				//Send update request
-				return request.put(this.endpoint + '/user/password', newPassword);
-			}
-
-			/** recoverAccount
-	   * @param {String} updateData New password for account.
-	   * @return {Promise}
-	   * @example
-	   * //Recover current users password
-	   * matter.recoverAccount().then(function(updatedAccount){
-	   *  console.log('Currently logged in account:', updatedAccount);
-	   * }, function(err){
-	   *  console.error('Error updating profile:', err);
-	   * });
-	   */
-
-		}, {
-			key: 'recoverAccount',
-			value: function recoverAccount(accountData) {
-				if (!accountData || !(0, _isString2.default)(accountData) && !(0, _isObject2.default)(accountData)) {
-					_logger2.default.error({
-						description: 'Account data is required to recover an account.',
-						func: 'recoverAccount', obj: 'Matter'
-					});
-					return Promise.reject({ message: 'Account data is required to recover an account.' });
-				}
-				var account = {};
-				if ((0, _isString2.default)(accountData)) {
-					account = accountData.indexOf('@') !== -1 ? { email: accountData } : { username: accountData };
-				} else {
-					account = accountData;
-				}
-				_logger2.default.debug({
-					description: 'Requesting recovery of account.', account: account,
-					func: 'recoverAccount', obj: 'Matter'
-				});
-				//Send update request
-				return request.put(this.endpoint + '/user/recover');
-			}
-
-			/** Check that user is in a single group or in all of a list of groups
-	   * @param {Array} checkGroups - List of groups to check for account membership
+	  /** Get current logged in status
 	   * @return {Boolean}
 	   * @example
-	   * //Check for group membership
-	   * var isBoth = ;
-	   * if(matter.isInGroup('admins')){
-	   * console.log('Current account is an admin!');
-	   * } else {
-	   * console.warn('Current account is not an admin.');
-	   * }
-	   */
-
-		}, {
-			key: 'isInGroup',
-			value: function isInGroup(checkGroups) {
-				var _this7 = this;
-
-				if (!this.isLoggedIn) {
-					_logger2.default.error({
-						description: 'No logged in user to check for groups.',
-						func: 'isInGroup', obj: 'Matter'
-					});
-					return false;
-				}
-				if (!checkGroups) {
-					_logger2.default.log({
-						description: 'Invalid group(s).',
-						func: 'isInGroup', obj: 'Matter'
-					});
-					return false;
-				}
-				//Check if user is within groups
-				if ((0, _isString2.default)(checkGroups)) {
-					var _ret = function () {
-						var groupName = checkGroups;
-						//Single role or string list of roles
-						var groupsArray = groupName.split(',');
-						if (groupsArray.length > 1) {
-							//String list of groupts
-							_logger2.default.info({
-								description: 'String list of groups.', list: groupsArray,
-								func: 'isInGroup', obj: 'Matter'
-							});
-							return {
-								v: _this7.isInGroups(groupsArray)
-							};
-						}
-						//Single group
-						var groups = _this7.token.data.groups || [];
-						_logger2.default.log({
-							description: 'Checking if user is in group.',
-							group: groupName, userGroups: _this7.token.data.groups,
-							func: 'isInGroup', obj: 'Matter'
-						});
-						return {
-							v: (0, _some2.default)(groups, function (group) {
-								return groupName == group.name;
-							})
-						};
-					}();
-
-					if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-				}
-				if ((0, _isArray2.default)(checkGroups)) {
-					return this.isInGroups(checkGroups);
-				}
-				return false;
-			}
-
-			/** Check that user is in all of a list of groups
-	   * @param {Array|String} checkGroups - List of groups to check for account membership
-	   * @return {Boolean}
-	   * @example
-	   * //Check for group membership
-	   * var isBoth = matter.isInGroups(['admins', 'users']);
-	   * if(isBoth){
-	   * console.log('Current account is both an admin and a user');
-	   * } else {
-	   * console.warn('Current account is not both an admin and a user')
-	   * }
-	   */
-
-		}, {
-			key: 'isInGroups',
-			value: function isInGroups(checkGroups) {
-				var _this8 = this;
-
-				if (!this.isLoggedIn) {
-					_logger2.default.log({
-						description: 'No logged in user to check.',
-						func: 'isInGroups', obj: 'Matter'
-					});
-					return false;
-				}
-				if (!checkGroups) {
-					_logger2.default.log({
-						description: 'Invalid group(s).',
-						func: 'isInGroup', obj: 'Matter'
-					});
-					return false;
-				}
-				//Check if user is in some of the provided groups
-				if ((0, _isArray2.default)(checkGroups)) {
-					return (0, _every2.default)(checkGroups.map(function (group) {
-						if ((0, _isString2.default)(group)) {
-							//Group is string
-							return _this8.isInGroup(group);
-						}
-						//Group is object
-						if ((0, _has2.default)(group, 'name')) {
-							return _this8.isInGroup(group.name);
-						}
-						_logger2.default.error({
-							description: 'Invalid group object.',
-							group: group, func: 'isInGroups', obj: 'Matter'
-						});
-						return false;
-					}), true);
-				}
-				if ((0, _isString2.default)(checkGroups)) {
-					//TODO: Handle spaces within string list
-					var groupsArray = checkGroups.split(',');
-					if (groupsArray.length > 1) {
-						return this.isInGroups(groupsArray);
-					}
-					return this.isInGroup(groupsArray[0]);
-				}
-				_logger2.default.error({
-					description: 'Invalid groups list.',
-					func: 'isInGroups', obj: 'Matter'
-				});
-				return false;
-			}
-		}, {
-			key: 'isLoggedIn',
-			get: function get() {
-				return this.token.string ? true : false;
-			}
-
-			/** Endpoint generation that handles default/provided settings and environment
-	   * @return {String} endpoint - endpoint for tessellate application
-	   */
-
-		}, {
-			key: 'endpoint',
-			get: function get() {
-				//Handle options
-				if ((0, _has2.default)(this, 'options')) {
-					if (this.options.localServer) {
-						_config2.default.envName = 'local';
-						_logger2.default.log({
-							description: 'LocalServer option was set to true. Now server url is local server.',
-							url: _config2.default.serverUrl, func: 'endpoint', obj: 'Matter'
-						});
-					}
-					if (this.options.env) {
-						_config2.default.envName = this.options.env;
-						_logger2.default.log({
-							description: 'Environment set based on provided environment.',
-							config: _config2.default, func: 'endpoint', obj: 'Matter'
-						});
-					}
-				}
-				//Create an endpoint that is namespaced to the specific project
-				var namespacedEndpoint = this.owner ? _config2.default.serverUrl + '/users/' + this.owner + '/projects/' + this.name : _config2.default.serverUrl + '/projects/' + this.name;
-				//Handle tessellate as name
-				if (this.name == 'tessellate') {
-					//Remove url if host is a tessellate server
-					if (typeof window !== 'undefined' && (0, _has2.default)(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
-						namespacedEndpoint = '';
-						_logger2.default.info({
-							description: 'App is Tessellate and Host is Tessellate Server, serverUrl simplified!',
-							func: 'endpoint', obj: 'Matter'
-						});
-					} else {
-						_logger2.default.info({
-							description: 'App is tessellate, serverUrl set as main tessellate server.',
-							url: _config2.default.serverUrl, func: 'endpoint', obj: 'Matter'
-						});
-						namespacedEndpoint = _config2.default.serverUrl;
-					}
-				}
-				_logger2.default.debug({
-					description: 'Endpoint created.', url: namespacedEndpoint,
-					func: 'endpoint', obj: 'Matter'
-				});
-				return namespacedEndpoint;
-			}
-
-			/** Save current user (handled automatically by default)
-	   * @param {Object} userData - Account data to set for current user
-	   * @example
-	   * //Save account response to current user
-	   * matter.currentUser = {username: 'testuser1', email: 'test@email.com'};
-	   * console.log('New current user set:', matter.currentUser);
-	   */
-
-		}, {
-			key: 'currentUser',
-			set: function set(userData) {
-				_logger2.default.debug({
-					description: 'Current User set.', user: userData,
-					func: 'currentUser', obj: 'Matter'
-				});
-				envStorage.setItem(_config2.default.tokenUserDataName, userData);
-			}
-
-			/** Get currently logged in user or returns null
-	   * @return {Object|null}
-	   * @example
-	   * //Return account if logged in
+	   * //Check if there is an account currently logged in
 	   * if(matter.isLoggedIn){
-	   * console.log('Current user account: ', matter.currentUser);
+	   *   console.log('There is currently an account logged in.')
 	   * } else {
-	   * console.log('No current user. Current user: ', matter.currentUser)
+	   *   console.warn('There is no account currently logged in.')
 	   * }
-	   * matter.currentUser
-	   * console.log('New current user set:', matter.currentUser);
-	   */
-			,
-			get: function get() {
-				if (this.storage.getItem(_config2.default.tokenUserDataName)) {
-					return this.storage.getItem(_config2.default.tokenUserDataName);
-				} else {
-					return null;
-				}
-			}
-
-			/* Utility to handle safley writing to localStorage, sessionStorage, and cookies
-	   * @return {Object}
 	   */
 
-		}, {
-			key: 'storage',
-			get: function get() {
-				return envStorage;
-			}
 
-			/** Utility to handle token writing/deleting/decoding
-	   * @return {Object}
-	   */
+	  _createClass(Matter, [{
+	    key: 'signup',
 
-		}, {
-			key: 'token',
-			get: function get() {
-				return _token2.default;
-			}
 
-			/** Utils placed in base library
-	   * @return {Object}
-	   */
+	    /** Signup a new user
+	     * @param {Object} signupData - Object containing data to use while signing up to application.
+	     * @param {String} signupData.username - Username of new user (error will be returned if username is taken)
+	     * @param {String} signupData.email - Email of new user (error will be returned if email is already used)
+	     * @param {String} signupData.password - Password to be used with account (will be encrypted).
+	     * @return {Promise}
+	     * @example
+	     * //Signup a new user
+	     * var signupData = {username: 'testuser1', email:'test@email.com', password: 'testpassword'}
+	     * matter.signup(signupData).then(function(signupRes){
+	     *  console.log('New user signed up successfully. New account: ', signupRes.account)
+	     * }, function(err){
+	     *  console.error('Error signing up:', err)
+	     * })
+	     */
+	    value: function signup(signupData) {
+	      var _this = this;
 
-		}, {
-			key: 'utils',
-			get: function get() {
-				return { logger: _logger2.default, request: request, storage: envStorage, dom: dom };
-			}
-		}]);
+	      _logger2.default.debug({
+	        description: 'Signup called.', signupData: signupData,
+	        func: 'signup', obj: 'Matter'
+	      });
+	      if (!signupData) {
+	        _logger2.default.error({
+	          description: 'Signup information is required to signup.',
+	          func: 'signup', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Signup data is required to signup.',
+	          status: 'NULL_DATA'
+	        });
+	      }
+	      if ((0, _isString2.default)(signupData)) {
+	        return this.authUsingProvider(signupData);
+	      }
+	      // Handle no username or email
+	      if (!signupData.username || !signupData.email) {
+	        _logger2.default.error({
+	          description: 'Email and Username required to signup.',
+	          func: 'signup', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Email and Username required to signup.',
+	          status: 'EMPTY_DATA'
+	        });
+	      }
+	      if (!signupData.password) {
+	        _logger2.default.error({
+	          description: 'Password is required to signup.',
+	          func: 'signup', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Password is required to signup.',
+	          status: 'PASS_REQUIRED'
+	        });
+	      }
+	      return request.post(this.endpoint + '/signup', signupData).then(function (response) {
+	        if (response.token) {
+	          _this.token.string = response.token;
+	        }
+	        if (response.user) {
+	          _this.currentUser = response.user;
+	        }
+	        _logger2.default.info({
+	          description: 'Signup successful.', user: _this.currentUser,
+	          func: 'signup', obj: 'Matter'
+	        });
+	        return _this.currentUser;
+	      })['catch'](function (error) {
+	        _logger2.default.error({
+	          description: 'Error requesting signup.', error: error,
+	          signupData: signupData, func: 'signup', obj: 'Matter'
+	        });
+	        return Promise.reject(error);
+	      });
+	    }
 
-		return Matter;
+	    /** Login by username/email
+	     * @param {Object} loginData - Object containing data to use while logging in to application.
+	     * @param {String} loginData.username - Username of user to login as
+	     * @param {String} loginData.email - Email of new user (Optional instead of username)
+	     * @param {String} loginData.password - Password to be used with account (will be encrypted).
+	     * @return {Promise}
+	     * @example
+	     * //Login as 'testuser1'
+	     * var loginData = {username: 'testuser1', password: 'testpassword'}
+	     * matter.login(loginData).then(function(loginRes){
+	     *  console.log('New user logged in succesfully. Account: ', loginRes.user)
+	     * }, function(err){
+	     *  console.error('Error logging in:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'login',
+	    value: function login(loginData) {
+	      var _this2 = this;
+
+	      if (!loginData || !(0, _isObject2.default)(loginData) && !(0, _isString2.default)(loginData)) {
+	        _logger2.default.error({
+	          description: 'Username/Email and Password are required to login',
+	          func: 'login', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Login data is required to login.',
+	          status: 'DATA_REQUIRED'
+	        });
+	      }
+	      // Provider login
+	      if ((0, _isString2.default)(loginData)) {
+	        return this.authUsingProvider(loginData);
+	      }
+	      // No username or email
+	      if (!loginData.username && !loginData.email) {
+	        _logger2.default.error({
+	          description: 'Email or Username required to login.',
+	          func: 'login', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Email or Username required to login.',
+	          status: 'ID_REQUIRED'
+	        });
+	      }
+	      // Handle null or invalid password
+	      if (!loginData.password || loginData.password === '') {
+	        return Promise.reject({
+	          message: 'Password is required to login.',
+	          status: 'PASS_REQUIRED'
+	        });
+	      }
+	      // Username/Email Login
+	      return request.put(this.endpoint + '/login', loginData).then(function (response) {
+	        if (response.data && response.data.status && response.data.status === 409) {
+	          _logger2.default.error({
+	            description: 'User not found.', response: response,
+	            func: 'login', obj: 'Matter'
+	          });
+	          return Promise.reject(response.data);
+	        }
+	        if (response.token) {
+	          _this2.token.string = response.token;
+	        }
+	        if (response.user) {
+	          _this2.currentUser = response.user;
+	        }
+	        _logger2.default.info({
+	          description: 'Successful login.', user: _this2.currentUser,
+	          func: 'login', obj: 'Matter'
+	        });
+	        return _this2.currentUser;
+	      })['catch'](function (error) {
+	        _logger2.default.error({
+	          description: 'Error requesting login.',
+	          error: error, func: 'login', obj: 'Matter'
+	        });
+	        if (error.status === 409 || error.status === 400) {
+	          error = error.response.text;
+	        }
+	        return Promise.reject(error);
+	      });
+	    }
+
+	    /** logout
+	     * @description Log out of currently logged in user account
+	     * @return {Promise}
+	     * @example
+	     * //Logout of currently logged in account
+	     * matter.logout().then(function(loginRes){
+	     *  console.log('Logged out successfully')
+	     * }, function(err){
+	     *  console.error('Error logging out:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'logout',
+	    value: function logout() {
+	      var _this3 = this;
+
+	      // TODO: Handle logging out of providers
+	      if (!this.isLoggedIn) {
+	        _logger2.default.warn({
+	          description: 'No logged in account to log out.',
+	          func: 'logout', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'No logged in account to log out.',
+	          status: 'NULL_ACCOUNT'
+	        });
+	      }
+	      return request.put(this.endpoint + '/logout').then(function (response) {
+	        _logger2.default.info({
+	          description: 'Logout successful.',
+	          response: response, func: 'logout', obj: 'Matter'
+	        });
+	        _this3.currentUser = null;
+	        _this3.token.delete();
+	        return response;
+	      })['catch'](function (error) {
+	        _logger2.default.error({
+	          description: 'Error requesting log out: ',
+	          error: error, func: 'logout', obj: 'Matter'
+	        });
+	        _this3.storage.removeItem(_config2.default.tokenUserDataName);
+	        _this3.token.delete();
+	        return Promise.reject(error);
+	      });
+	    }
+
+	    /** Authenticate using external provider
+	     * @param {String} provider - Provider name
+	     * @return {Promise}
+	     * @example
+	     * //Signup using google
+	     * matter.authUsingProvider('google').then(function(signupRes){
+	     *  console.log('New user logged in succesfully. Account: ', signupRes.user)
+	     * }, function(err){
+	     *  console.error('Error logging in:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'authUsingProvider',
+	    value: function authUsingProvider(provider) {
+	      var _this4 = this;
+
+	      if (!provider) {
+	        _logger2.default.info({
+	          description: 'Provider required to sign up.',
+	          func: 'authUsingProvider', obj: 'Matter'
+	        });
+	        return Promise.reject({ message: 'Provider data is required to signup.' });
+	      }
+	      return ProviderAuth.authWithServer(provider).then(function (response) {
+	        _logger2.default.info({
+	          description: 'Provider login successful.',
+	          response: response, func: 'authUsingProvider', obj: 'Matter'
+	        });
+	        if (response && response.token) {
+	          _this4.token.string = response.token;
+	        }
+	        if (response && response.user || response.data) {
+	          _this4.currentUser = response.data || response.user;
+	        }
+	        return _this4.currentUser;
+	      }, function (error) {
+	        _logger2.default.error({
+	          description: 'Provider signup error.', error: error,
+	          func: 'authUsingProvider', obj: 'Matter'
+	        });
+	        return Promise.reject(error);
+	      });
+	    }
+
+	    /** getCurrentUser
+	     * @return {Promise}
+	     * @example
+	     * //Logout of currently logged in account
+	     * matter.getCurrentUser().then(function(currentAccount){
+	     *  console.log('Currently logged in account:', currentAccount)
+	     * }, function(err){
+	     *  console.error('Error logging out:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'getCurrentUser',
+	    value: function getCurrentUser() {
+	      var _this5 = this;
+
+	      if (this.currentUser) {
+	        _logger2.default.debug({
+	          description: 'Current is already available. Returning user.',
+	          func: 'currentUser', obj: 'Matter'
+	        });
+	        return Promise.resolve(this.currentUser);
+	      }
+	      if (!this.isLoggedIn) {
+	        _logger2.default.debug({
+	          description: 'Current user is null.',
+	          func: 'currentUser', obj: 'Matter'
+	        });
+	        return Promise.resolve(null);
+	      }
+	      return request.get(this.endpoint + '/user').then(function (response) {
+	        // TODO: Save user information locally
+	        _logger2.default.log({
+	          description: 'Current User Request responded.',
+	          response: response, func: 'currentUser', obj: 'Matter'
+	        });
+	        _this5.currentUser = response;
+	        return response;
+	      })['catch'](function (error) {
+	        if (error.status === 401) {
+	          _logger2.default.warn({
+	            description: 'Called for current user without token.',
+	            error: error, func: 'currentUser', obj: 'Matter'
+	          });
+	          _token2.default.delete();
+	          return Promise.resolve(null);
+	        }
+	        _logger2.default.error({
+	          description: 'Error requesting current user.',
+	          error: error, func: 'currentUser', obj: 'Matter'
+	        });
+	        return Promise.reject(error);
+	      });
+	    }
+
+	    /** updateAccount
+	     * @param {Object} updateData - Data to update within profile (only provided data will be modified).
+	     * @return {Promise}
+	     * @example
+	     * //Update current account's profile
+	     * matter.updateAccount().then(function(updatedAccount){
+	     *  console.log('Currently logged in account:', updatedAccount)
+	     * }, function(err){
+	     *  console.error('Error updating profile:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'updateAccount',
+	    value: function updateAccount(updateData) {
+	      var _this6 = this;
+
+	      if (!this.isLoggedIn) {
+	        _logger2.default.error({
+	          description: 'No current user profile to update.',
+	          func: 'updateAccount', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Must be logged in to update account.'
+	        });
+	      }
+	      if (!updateData) {
+	        _logger2.default.error({
+	          description: 'Data is required to update profile.',
+	          func: 'updateAccount', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Data required to update account.',
+	          status: 'NULL_DATA'
+	        });
+	      }
+	      // Send update request
+	      return request.put(this.endpoint + '/users/' + this.currentUser.username, updateData).then(function (response) {
+	        _logger2.default.info({
+	          description: 'Update profile request responded.',
+	          response: response, func: 'updateAccount', obj: 'Matter'
+	        });
+	        _this6.currentUser = response;
+	        return response;
+	      })['catch'](function (error) {
+	        _logger2.default.error({
+	          description: 'Error requesting current user.',
+	          error: error, func: 'updateAccount', obj: 'Matter'
+	        });
+	        return Promise.reject(error);
+	      });
+	    }
+
+	    /** uploadAvatar
+	     * @description Upload account avatar to Tessellate
+	     * @param {Object} file - File object to upload
+	     * @return {Promise}
+	     * @example
+	     * //Upload image to tessellate
+	     * matter.uploadAvatar(file).then(function(imgUrl){
+	     *  console.log('Currently logged in account:', imgUrl)
+	     * }, function(err){
+	     *  console.error('Error uploading image:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'uploadAvatar',
+	    value: function uploadAvatar(file) {
+	      if (!this.isLoggedIn) {
+	        _logger2.default.error({
+	          description: 'Must be logged in to upload an image.',
+	          func: 'uploadAvatar', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Must be logged in to upload image.'
+	        });
+	      }
+	      if (!file) {
+	        _logger2.default.error({
+	          description: 'File is required to upload Avatar.',
+	          func: 'uploadAvatar', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Data required to update profile.',
+	          status: 'NULL_DATA'
+	        });
+	      }
+	      var reqData = { files: [{ key: 'image', file: file }] };
+	      // Send update request
+	      return request.put(this.endpoint + '/users/' + this.currentUser.username + '/avatar', reqData);
+	    }
+
+	    /** changePassword
+	     * @param {String} updateData New password for account.
+	     * @return {Promise}
+	     * @example
+	     * //Update current account's password
+	     * var newPassword = 'asdfasdfasdf'
+	     * matter.changePassword(newPassword).then(function(updatedAccount){
+	     *  console.log('Currently logged in account:', updatedAccount)
+	     * }, function(err){
+	     *  console.error('Error changing password:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'changePassword',
+	    value: function changePassword(newPassword) {
+	      if (!this.isLoggedIn) {
+	        _logger2.default.error({
+	          description: 'No current user profile for which to change password.',
+	          func: 'changePassword', obj: 'Matter'
+	        });
+	        return Promise.reject({
+	          message: 'Must be logged in to change password.'
+	        });
+	      }
+	      // Send update request
+	      return request.put(this.endpoint + '/user/password', newPassword);
+	    }
+
+	    /** recoverAccount
+	     * @param {String} updateData New password for account.
+	     * @return {Promise}
+	     * @example
+	     * //Recover current users password
+	     * matter.recoverAccount().then(function(updatedAccount){
+	     *  console.log('Currently logged in account:', updatedAccount)
+	     * }, function(err){
+	     *  console.error('Error updating profile:', err)
+	     * })
+	     */
+
+	  }, {
+	    key: 'recoverAccount',
+	    value: function recoverAccount(accountData) {
+	      if (!accountData) {
+	        _logger2.default.error({
+	          description: 'Account data is required to recover an account.',
+	          func: 'recoverAccount', obj: 'Matter'
+	        });
+	        return Promise.reject({ message: 'Account data is required to recover an account.' });
+	      }
+	      var account = {};
+	      if ((0, _isString2.default)(accountData)) {
+	        account = accountData.indexOf('@') !== -1 ? { email: accountData } : { username: accountData };
+	      } else {
+	        account = accountData;
+	      }
+	      _logger2.default.debug({
+	        description: 'Requesting recovery of account.', account: account,
+	        func: 'recoverAccount', obj: 'Matter'
+	      });
+	      return request.put(this.endpoint + '/user/recover', account);
+	    }
+
+	    /** Check that user is in a single group or in all of a list of groups
+	     * @param {Array} checkGroups - List of groups to check for account membership
+	     * @return {Boolean}
+	     * @example
+	     * //Check for group membership
+	     * var isBoth =
+	     * if(matter.isInGroup('admins')){
+	     * console.log('Current account is an admin!')
+	     * } else {
+	     * console.warn('Current account is not an admin.')
+	     * }
+	     */
+
+	  }, {
+	    key: 'isInGroup',
+	    value: function isInGroup(checkGroups) {
+	      var _this7 = this;
+
+	      if (!this.isLoggedIn) {
+	        _logger2.default.error({
+	          description: 'No logged in user to check for groups.',
+	          func: 'isInGroup', obj: 'Matter'
+	        });
+	        return false;
+	      }
+	      if (!checkGroups) {
+	        _logger2.default.log({
+	          description: 'Invalid group(s).',
+	          func: 'isInGroup', obj: 'Matter'
+	        });
+	        return false;
+	      }
+	      // Check if user is within groups
+	      if ((0, _isString2.default)(checkGroups)) {
+	        var _ret = function () {
+	          var groupName = checkGroups;
+	          // Single role or string list of roles
+	          var groupsArray = groupName.split(',');
+	          if (groupsArray.length > 1) {
+	            // String list of groupts
+	            _logger2.default.info({
+	              description: 'String list of groups.', list: groupsArray,
+	              func: 'isInGroup', obj: 'Matter'
+	            });
+	            return {
+	              v: _this7.isInGroups(groupsArray)
+	            };
+	          }
+	          // Single group
+	          var groups = _this7.token.data.groups || [];
+	          _logger2.default.log({
+	            description: 'Checking if user is in group.',
+	            group: groupName, userGroups: _this7.token.data.groups,
+	            func: 'isInGroup', obj: 'Matter'
+	          });
+	          return {
+	            v: (0, _some2.default)(groups, function (group) {
+	              return groupName === group.name;
+	            })
+	          };
+	        }();
+
+	        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+	      }
+	      if ((0, _isArray2.default)(checkGroups)) {
+	        return this.isInGroups(checkGroups);
+	      }
+	      return false;
+	    }
+
+	    /** Check that user is in all of a list of groups
+	     * @param {Array|String} checkGroups - List of groups to check for account membership
+	     * @return {Boolean}
+	     * @example
+	     * //Check for group membership
+	     * var isBoth = matter.isInGroups(['admins', 'users'])
+	     * if(isBoth){
+	     * console.log('Current account is both an admin and a user')
+	     * } else {
+	     * console.warn('Current account is not both an admin and a user')
+	     * }
+	     */
+
+	  }, {
+	    key: 'isInGroups',
+	    value: function isInGroups(checkGroups) {
+	      var _this8 = this;
+
+	      if (!this.isLoggedIn) {
+	        _logger2.default.log({
+	          description: 'No logged in user to check.',
+	          func: 'isInGroups', obj: 'Matter'
+	        });
+	        return false;
+	      }
+	      if (!checkGroups) {
+	        _logger2.default.log({
+	          description: 'Invalid group(s).',
+	          func: 'isInGroup', obj: 'Matter'
+	        });
+	        return false;
+	      }
+	      // Check if user is in some of the provided groups
+	      if ((0, _isArray2.default)(checkGroups)) {
+	        return (0, _every2.default)(checkGroups.map(function (group) {
+	          if ((0, _isString2.default)(group)) {
+	            // Group is string
+	            return _this8.isInGroup(group);
+	          }
+	          // Group is object
+	          if ((0, _has2.default)(group, 'name')) {
+	            return _this8.isInGroup(group.name);
+	          }
+	          _logger2.default.error({
+	            description: 'Invalid group object.',
+	            group: group, func: 'isInGroups', obj: 'Matter'
+	          });
+	          return false;
+	        }), true);
+	      }
+	      if ((0, _isString2.default)(checkGroups)) {
+	        // TODO: Handle spaces within string list
+	        var groupsArray = checkGroups.split(',');
+	        if (groupsArray.length > 1) {
+	          return this.isInGroups(groupsArray);
+	        }
+	        return this.isInGroup(groupsArray[0]);
+	      }
+	      _logger2.default.error({
+	        description: 'Invalid groups list.',
+	        func: 'isInGroups', obj: 'Matter'
+	      });
+	      return false;
+	    }
+	  }, {
+	    key: 'isLoggedIn',
+	    get: function get() {
+	      return (0, _isString2.default)(this.token.string);
+	    }
+
+	    /** Endpoint generation that handles default/provided settings and environment
+	     * @return {String} endpoint - endpoint for tessellate application
+	     */
+
+	  }, {
+	    key: 'endpoint',
+	    get: function get() {
+	      // Remove url if host is a tessellate server
+	      if (typeof window !== 'undefined' && (0, _has2.default)(window, 'location') && window.location.host.indexOf('tessellate') !== -1) {
+	        _logger2.default.info({
+	          description: 'App is Tessellate and Host is Tessellate Server, serverUrl simplified!',
+	          func: 'endpoint', obj: 'Matter'
+	        });
+	        return '';
+	      }
+	      // Handle tessellate as name
+	      if (this.name !== 'tessellate') {
+	        return this.owner ? _config2.default.serverUrl + '/users/' + this.owner + '/projects/' + this.name : _config2.default.serverUrl + '/projects/' + this.name;
+	      }
+	      return _config2.default.serverUrl;
+	    }
+
+	    /** Save current user (handled automatically by default)
+	     * @param {Object} userData - Account data to set for current user
+	     * @example
+	     * //Save account response to current user
+	     * matter.currentUser = {username: 'testuser1', email: 'test@email.com'}
+	     * console.log('New current user set:', matter.currentUser)
+	     */
+
+	  }, {
+	    key: 'currentUser',
+	    set: function set(userData) {
+	      _logger2.default.debug({
+	        description: 'Current User set.', user: userData,
+	        func: 'currentUser', obj: 'Matter'
+	      });
+	      envStorage.setItem(_config2.default.tokenUserDataName, userData);
+	    }
+
+	    /** Get currently logged in user or returns null
+	     * @return {Object|null}
+	     * @example
+	     * //Return account if logged in
+	     * if(matter.isLoggedIn){
+	     * console.log('Current user account: ', matter.currentUser)
+	     * } else {
+	     * console.log('No current user. Current user: ', matter.currentUser)
+	     * }
+	     * matter.currentUser
+	     * console.log('New current user set:', matter.currentUser)
+	     */
+	    ,
+	    get: function get() {
+	      if (this.storage.getItem(_config2.default.tokenUserDataName)) {
+	        return this.storage.getItem(_config2.default.tokenUserDataName);
+	      }
+	      return null;
+	    }
+
+	    /* Utility to handle safley writing to localStorage, sessionStorage, and cookies
+	     * @return {Object}
+	     */
+
+	  }, {
+	    key: 'storage',
+	    get: function get() {
+	      return envStorage;
+	    }
+
+	    /** Utility to handle token writing/deleting/decoding
+	     * @return {Object}
+	     */
+
+	  }, {
+	    key: 'token',
+	    get: function get() {
+	      return _token2.default;
+	    }
+
+	    /** Utils placed in base library
+	     * @return {Object}
+	     */
+
+	  }, {
+	    key: 'utils',
+	    get: function get() {
+	      return { logger: _logger2.default, request: request, storage: envStorage, dom: dom };
+	    }
+	  }]);
+
+	  return Matter;
 	}();
 
 	exports.default = Matter;
@@ -919,7 +881,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @static
 	 * @memberOf _
-	 * @type Function
+	 * @type {Function}
 	 * @category Lang
 	 * @param {*} value The value to check.
 	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
@@ -984,22 +946,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 
-	var _isString = __webpack_require__(8);
+	var _isString = __webpack_require__(9);
 
 	var _isString2 = _interopRequireDefault(_isString);
 
-	var _keys = __webpack_require__(9);
+	var _keys = __webpack_require__(10);
 
 	var _keys2 = _interopRequireDefault(_keys);
 
-	var _omit = __webpack_require__(168);
+	var _omit = __webpack_require__(169);
 
 	var _omit2 = _interopRequireDefault(_omit);
 
-	var _each = __webpack_require__(155);
+	var _each = __webpack_require__(156);
 
 	var _each2 = _interopRequireDefault(_each);
 
@@ -1014,82 +976,83 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var logger = {
-		log: function log(logData) {
-			var msgArgs = buildMessageArgs(logData);
-			if (_config2.default.logLevel === 'trace') {
-				runConsoleMethod('log', msgArgs);
-			}
-		},
-		debug: function debug(logData) {
-			var msgArgs = buildMessageArgs(logData);
-			if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug') {
-				runConsoleMethod('debug', msgArgs);
-			}
-		},
-		info: function info(logData) {
-			if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug' || _config2.default.logLevel === 'info') {
-				var msgArgs = buildMessageArgs(logData);
-				runConsoleMethod('info', msgArgs);
-			}
-		},
-		warn: function warn(logData) {
-			var msgArgs = buildMessageArgs(logData);
-			if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug' || _config2.default.logLevel === 'info' || _config2.default.logLevel === 'warn') {
-				runConsoleMethod('warn', msgArgs);
-			}
-		},
-		error: function error(logData) {
-			var msgArgs = buildMessageArgs(logData);
-			if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug' || _config2.default.logLevel === 'info' || _config2.default.logLevel === 'warn' || _config2.default.logLevel === 'error' || _config2.default.logLevel === 'fatal') {
-				runConsoleMethod('error', msgArgs);
-			}
-		}
+	  log: function log(logData) {
+	    var msgArgs = buildMessageArgs(logData);
+	    if (_config2.default.logLevel === 'trace') {
+	      runConsoleMethod('log', msgArgs);
+	    }
+	  },
+	  debug: function debug(logData) {
+	    var msgArgs = buildMessageArgs(logData);
+	    if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug') {
+	      runConsoleMethod('debug', msgArgs);
+	    }
+	  },
+	  info: function info(logData) {
+	    if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug' || _config2.default.logLevel === 'info') {
+	      var msgArgs = buildMessageArgs(logData);
+	      runConsoleMethod('info', msgArgs);
+	    }
+	  },
+	  warn: function warn(logData) {
+	    var msgArgs = buildMessageArgs(logData);
+	    if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug' || _config2.default.logLevel === 'info' || _config2.default.logLevel === 'warn') {
+	      runConsoleMethod('warn', msgArgs);
+	    }
+	  },
+	  error: function error(logData) {
+	    var msgArgs = buildMessageArgs(logData);
+	    if (_config2.default.logLevel === 'trace' || _config2.default.logLevel === 'debug' || _config2.default.logLevel === 'info' || _config2.default.logLevel === 'warn' || _config2.default.logLevel === 'error' || _config2.default.logLevel === 'fatal') {
+	      runConsoleMethod('error', msgArgs);
+	    }
+	  }
 	};
 
 	exports.default = logger;
 
 
 	function runConsoleMethod(methodName, methodData) {
-		//Safley run console methods or use console log
-		if (methodName && console[methodName]) {
-			return console[methodName].apply(console, methodData);
-		} else {
-			return console.log.apply(console, methodData);
-		}
+	  // Safley run console methods or use console log
+	  if (methodName && console[methodName]) {
+	    return console[methodName].apply(console, methodData);
+	  } else {
+	    return console.log.apply(console, methodData);
+	  }
 	}
 	function buildMessageArgs(logData) {
-		var msgStr = '';
-		var msgObj = {};
-		//TODO: Attach time stamp
-		//Attach location information to the beginning of message
-		if ((0, _isObject2.default)(logData)) {
-			(function () {
-				if (logData.func) {
-					if (logData.obj) {
-						//Object and function provided
-						msgStr += '[' + logData.obj + '.' + logData.func + '()]\n ';
-					} else if (logData.file) {
-						msgStr += '[' + logData.file + ' > ' + logData.func + '()]\n ';
-					} else {
-						msgStr += '[' + logData.func + '()]\n ';
-					}
-				}
-				var hideList = ['func', 'obj', 'file'];
-				//Print each key and its value other than obj and func
-				(0, _each2.default)((0, _omit2.default)((0, _keys2.default)(logData), hideList), function (key) {
-					if (hideList.indexOf(key) === -1) {
-						if (key == 'description' || key == 'message') {
-							return msgStr += logData[key];
-						}
-						msgObj[key] = logData[key];
-					}
-				});
-				msgStr += '\n';
-			})();
-		} else if ((0, _isString2.default)(logData)) {
-			msgStr = logData;
-		}
-		return [msgStr, msgObj];
+	  var msgStr = '';
+	  var msgObj = {};
+	  // TODO: Attach time stamp
+	  // Attach location information to the beginning of message
+	  if ((0, _isObject2.default)(logData)) {
+	    (function () {
+	      if (logData.func) {
+	        if (logData.obj) {
+	          // Object and function provided
+	          msgStr += '[' + logData.obj + '.' + logData.func + '()]\n ';
+	        } else if (logData.file) {
+	          msgStr += '[' + logData.file + ' > ' + logData.func + '()]\n ';
+	        } else {
+	          msgStr += '[' + logData.func + '()]\n ';
+	        }
+	      }
+	      var hideList = ['func', 'obj', 'file'];
+	      // Print each key and its value other than obj and func
+	      (0, _each2.default)((0, _omit2.default)((0, _keys2.default)(logData), hideList), function (key) {
+	        if (hideList.indexOf(key) === -1) {
+	          if (key === 'description' || key === 'message') {
+	            msgStr += logData[key];
+	            return msgStr;
+	          }
+	          msgObj[key] = logData[key];
+	        }
+	      });
+	      msgStr += '\n';
+	    })();
+	  } else if ((0, _isString2.default)(logData)) {
+	    msgStr = logData;
+	  }
+	  return [msgStr, msgObj];
 	}
 	module.exports = exports['default'];
 
@@ -1097,7 +1060,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(module, global) {var checkGlobal = __webpack_require__(114);
+	/* WEBPACK VAR INJECTION */(function(module, global) {var checkGlobal = __webpack_require__(116);
 
 	/** Used to determine if values are of the language type `Object`. */
 	var objectTypes = {
@@ -1106,10 +1069,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/** Detect free variable `exports`. */
-	var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType) ? exports : null;
+	var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
+	  ? exports
+	  : undefined;
 
 	/** Detect free variable `module`. */
-	var freeModule = (objectTypes[typeof module] && module && !module.nodeType) ? module : null;
+	var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
+	  ? module
+	  : undefined;
 
 	/** Detect free variable `global` from Node.js. */
 	var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
@@ -1129,7 +1096,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * The `this` value is used if it's the global object to avoid Greasemonkey's
 	 * restricted `window` object, otherwise the `window` object is used.
 	 */
-	var root = freeGlobal || ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) || freeSelf || thisGlobal || Function('return this')();
+	var root = freeGlobal ||
+	  ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) ||
+	    freeSelf || thisGlobal || Function('return this')();
 
 	module.exports = root;
 
@@ -1196,7 +1165,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function isKeyable(value) {
 	  var type = typeof value;
 	  return type == 'number' || type == 'boolean' ||
-	    (type == 'string' && value !== '__proto__') || value == null;
+	    (type == 'string' && value != '__proto__') || value == null;
 	}
 
 	module.exports = isKeyable;
@@ -1204,6 +1173,52 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObject = __webpack_require__(2);
+
+	/** `Object#toString` result references. */
+	var funcTag = '[object Function]',
+	    genTag = '[object GeneratorFunction]';
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/**
+	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in Safari 8 which returns 'object' for typed array constructors, and
+	  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+	  var tag = isObject(value) ? objectToString.call(value) : '';
+	  return tag == funcTag || tag == genTag;
+	}
+
+	module.exports = isFunction;
+
+
+/***/ },
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(1),
@@ -1246,13 +1261,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseHas = __webpack_require__(27),
-	    baseKeys = __webpack_require__(98),
+	    baseKeys = __webpack_require__(100),
 	    indexKeys = __webpack_require__(60),
-	    isArrayLike = __webpack_require__(10),
+	    isArrayLike = __webpack_require__(11),
 	    isIndex = __webpack_require__(19),
 	    isPrototype = __webpack_require__(32);
 
@@ -1307,11 +1322,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getLength = __webpack_require__(129),
-	    isFunction = __webpack_require__(11),
+	var getLength = __webpack_require__(131),
+	    isFunction = __webpack_require__(8),
 	    isLength = __webpack_require__(23);
 
 	/**
@@ -1321,7 +1336,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @static
 	 * @memberOf _
-	 * @type Function
 	 * @category Lang
 	 * @param {*} value The value to check.
 	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
@@ -1348,66 +1362,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isObject = __webpack_require__(2);
-
-	/** `Object#toString` result references. */
-	var funcTag = '[object Function]',
-	    genTag = '[object GeneratorFunction]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/**
-	 * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
-	 * of values.
-	 */
-	var objectToString = objectProto.toString;
-
-	/**
-	 * Checks if `value` is classified as a `Function` object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
-	 * @example
-	 *
-	 * _.isFunction(_);
-	 * // => true
-	 *
-	 * _.isFunction(/abc/);
-	 * // => false
-	 */
-	function isFunction(value) {
-	  // The use of `Object#toString` avoids issues with the `typeof` operator
-	  // in Safari 8 which returns 'object' for typed array constructors, and
-	  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
-	  var tag = isObject(value) ? objectToString.call(value) : '';
-	  return tag == funcTag || tag == genTag;
-	}
-
-	module.exports = isFunction;
-
-
-/***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 
-	var _find = __webpack_require__(157);
+	var _find = __webpack_require__(158);
 
 	var _find2 = _interopRequireDefault(_find);
 
-	var _merge = __webpack_require__(167);
+	var _merge = __webpack_require__(168);
 
 	var _merge2 = _interopRequireDefault(_merge);
 
@@ -1418,29 +1386,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var defaultConfig = {
-		envs: {
-			local: {
-				serverUrl: 'http://localhost:4000',
-				logLevel: 'trace'
-			},
-			dev: {
-				serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
-				logLevel: 'debug'
-			},
-			stage: {
-				serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
-				logLevel: 'info'
-			},
-			prod: {
-				serverUrl: 'http://tessellate.elasticbeanstalk.com',
-				logLevel: 'error'
-			}
-		},
-		tokenName: 'tessellate',
-		tokenDataName: 'tessellate-tokenData',
-		tokenUserDataName: 'tessellate-currentUser',
-		oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU',
-		oauthioCDN: 'https://s3.amazonaws.com/kyper-cdn/js/libs/oauthio-web/v0.5.0/oauth.min.js'
+	  envs: {
+	    local: {
+	      serverUrl: 'http://localhost:4000',
+	      logLevel: 'trace'
+	    },
+	    dev: {
+	      serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
+	      logLevel: 'debug'
+	    },
+	    stage: {
+	      serverUrl: 'http://tessellate-stage.elasticbeanstalk.com',
+	      logLevel: 'info'
+	    },
+	    prod: {
+	      serverUrl: 'http://tessellate.elasticbeanstalk.com',
+	      logLevel: 'error'
+	    }
+	  },
+	  tokenName: 'tessellate',
+	  tokenDataName: 'tessellate-tokenData',
+	  tokenUserDataName: 'tessellate-currentUser',
+	  oauthioKey: 'sxwuB9Gci8-4pBH7xjD0V_jooNU',
+	  oauthioCDN: 'https://s3.amazonaws.com/kyper-cdn/js/libs/oauthio-web/v0.5.0/oauth.min.js'
 	};
 
 	var instance = null;
@@ -1448,65 +1416,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	var level = null;
 
 	var Config = function () {
-		function Config() {
-			_classCallCheck(this, Config);
+	  function Config() {
+	    _classCallCheck(this, Config);
 
-			if (!instance) {
-				(0, _merge2.default)(this, defaultConfig);
-				instance = this;
-			}
-			return instance;
-		}
+	    if (!instance) {
+	      (0, _merge2.default)(this, defaultConfig);
+	      instance = this;
+	    }
+	    return instance;
+	  }
 
-		_createClass(Config, [{
-			key: 'applySettings',
-			value: function applySettings(settings) {
-				if (settings) {
-					(0, _merge2.default)(this, settings);
-				}
-			}
-		}, {
-			key: 'serverUrl',
-			get: function get() {
-				if (typeof window !== 'undefined' && window.location && window.location.host && window.location.host !== '') {
-					var matchingEnv = (0, _find2.default)(defaultConfig.envs, function (env) {
-						return env.serverUrl === window.location.host;
-					});
-					if (matchingEnv) {
-						return '';
-					}
-				}
-				return defaultConfig.envs[this.envName].serverUrl;
-			}
-		}, {
-			key: 'logLevel',
-			set: function set(setLevel) {
-				level = setLevel;
-			},
-			get: function get() {
-				if (level) {
-					return level;
-				}
-				return defaultConfig.envs[this.envName].logLevel;
-			}
-		}, {
-			key: 'envName',
-			set: function set(newEnv) {
-				envName = newEnv;
-			},
-			get: function get() {
-				return envName;
-			}
-		}, {
-			key: 'env',
-			get: function get() {
-				if (defaultConfig.envs[this.envName]) {
-					return defaultConfig.envs[this.envName];
-				}
-			}
-		}]);
+	  _createClass(Config, [{
+	    key: 'applySettings',
+	    value: function applySettings(settings) {
+	      if (settings) {
+	        (0, _merge2.default)(this, settings);
+	      }
+	    }
+	  }, {
+	    key: 'serverUrl',
+	    get: function get() {
+	      if (typeof window !== 'undefined' && window.location && window.location.host && window.location.host !== '') {
+	        var matchingEnv = (0, _find2.default)(defaultConfig.envs, function (env) {
+	          return env.serverUrl === window.location.host;
+	        });
+	        if (matchingEnv) {
+	          return '';
+	        }
+	      }
+	      return defaultConfig.envs[this.envName].serverUrl;
+	    }
+	  }, {
+	    key: 'logLevel',
+	    set: function set(setLevel) {
+	      level = setLevel;
+	    },
+	    get: function get() {
+	      if (level) {
+	        return level;
+	      }
+	      return defaultConfig.envs[this.envName].logLevel;
+	    }
+	  }, {
+	    key: 'envName',
+	    set: function set(newEnv) {
+	      envName = newEnv;
+	    },
+	    get: function get() {
+	      return envName;
+	    }
+	  }, {
+	    key: 'env',
+	    get: function get() {
+	      if (defaultConfig.envs[this.envName]) {
+	        return defaultConfig.envs[this.envName];
+	      }
+	    }
+	  }]);
 
-		return Config;
+	  return Config;
 	}();
 
 	var config = new Config();
@@ -1518,16 +1486,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var stackClear = __webpack_require__(147),
-	    stackDelete = __webpack_require__(148),
-	    stackGet = __webpack_require__(149),
-	    stackHas = __webpack_require__(150),
-	    stackSet = __webpack_require__(151);
+	var stackClear = __webpack_require__(149),
+	    stackDelete = __webpack_require__(150),
+	    stackGet = __webpack_require__(151),
+	    stackHas = __webpack_require__(152),
+	    stackSet = __webpack_require__(153);
 
 	/**
 	 * Creates a stack cache object to store key-value pairs.
 	 *
 	 * @private
+	 * @constructor
 	 * @param {Array} [values] The values to cache.
 	 */
 	function Stack(values) {
@@ -1610,8 +1579,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseForOwn = __webpack_require__(49),
-	    createBaseEach = __webpack_require__(124);
+	var baseForOwn = __webpack_require__(50),
+	    createBaseEach = __webpack_require__(126);
 
 	/**
 	 * The base implementation of `_.forEach` without support for iteratee shorthands.
@@ -1630,7 +1599,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isNative = __webpack_require__(163);
+	var isNative = __webpack_require__(164);
 
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -1835,7 +1804,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * // => false
 	 */
 	function isLength(value) {
-	  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	  return typeof value == 'number' &&
+	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
 	}
 
 	module.exports = isLength;
@@ -1948,11 +1918,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseMatches = __webpack_require__(100),
-	    baseMatchesProperty = __webpack_require__(101),
+	var baseMatches = __webpack_require__(102),
+	    baseMatchesProperty = __webpack_require__(103),
 	    identity = __webpack_require__(64),
 	    isArray = __webpack_require__(1),
-	    property = __webpack_require__(169);
+	    property = __webpack_require__(170);
 
 	/**
 	 * The base implementation of `_.iteratee`.
@@ -1984,7 +1954,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObjectWith = __webpack_require__(121);
+	var copyObjectWith = __webpack_require__(123);
 
 	/**
 	 * Copies properties of `source` to `object`.
@@ -2007,7 +1977,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var eq = __webpack_require__(21),
-	    isArrayLike = __webpack_require__(10),
+	    isArrayLike = __webpack_require__(11),
 	    isIndex = __webpack_require__(19),
 	    isObject = __webpack_require__(2);
 
@@ -2068,7 +2038,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 32 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
+
+	var isFunction = __webpack_require__(8);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -2082,7 +2054,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function isPrototype(value) {
 	  var Ctor = value && value.constructor,
-	      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
+	      proto = (isFunction(Ctor) && Ctor.prototype) || objectProto;
 
 	  return value === proto;
 	}
@@ -2094,7 +2066,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(10),
+	var isArrayLike = __webpack_require__(11),
 	    isObjectLike = __webpack_require__(5);
 
 	/**
@@ -2103,7 +2075,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @static
 	 * @memberOf _
-	 * @type Function
 	 * @category Lang
 	 * @param {*} value The value to check.
 	 * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
@@ -2202,7 +2173,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * // => false
 	 */
 	function isTypedArray(value) {
-	  return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[objectToString.call(value)];
+	  return isObjectLike(value) &&
+	    isLength(value.length) && !!typedArrayTags[objectToString.call(value)];
 	}
 
 	module.exports = isTypedArray;
@@ -2212,7 +2184,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseKeysIn = __webpack_require__(99),
+	var baseKeysIn = __webpack_require__(101),
 	    indexKeys = __webpack_require__(60),
 	    isIndex = __webpack_require__(19),
 	    isPrototype = __webpack_require__(32);
@@ -2275,7 +2247,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 	exports.isBrowser = isBrowser;
 	exports.loadCss = loadCss;
@@ -2294,7 +2266,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Boolean}
 	 */
 	function isBrowser() {
-		return typeof window !== 'undefined' && typeof document !== 'undefined';
+	  return typeof window !== 'undefined' && typeof document !== 'undefined';
 	}
 
 	/**
@@ -2302,23 +2274,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {String} src - url src for css to append
 	 */
 	function loadCss(src) {
-		if (!isBrowser()) {
-			_logger2.default.error({
-				description: 'Load CSS only works within browsers.',
-				func: 'loadCss', obj: 'dom'
-			});
-			throw new Error('Document object is required to load assets.');
-		}
-		var css = document.createElement('link');
-		css.rel = 'stylesheet';
-		css.type = 'text/css';
-		css.href = src;
-		document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
-		_logger2.default.debug({
-			description: 'CSS was loaded into document.', element: css,
-			func: 'loadCss', obj: 'dom'
-		});
-		return css; //Return link element
+	  if (!isBrowser()) {
+	    _logger2.default.error({
+	      description: 'Load CSS only works within browsers.',
+	      func: 'loadCss', obj: 'dom'
+	    });
+	    throw new Error('Document object is required to load assets.');
+	  }
+	  var css = document.createElement('link');
+	  css.rel = 'stylesheet';
+	  css.type = 'text/css';
+	  css.href = src;
+	  document.getElementsByTagName('head')[0].insertBefore(css, document.getElementsByTagName('head')[0].firstChild);
+	  _logger2.default.debug({
+	    description: 'CSS was loaded into document.', element: css,
+	    func: 'loadCss', obj: 'dom'
+	  });
+	  // Return link element
+	  return css;
 	}
 
 	/**
@@ -2326,22 +2299,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {String} src - url src for javascript to append
 	 */
 	function loadJs(src) {
-		if (!isBrowser()) {
-			_logger2.default.error({
-				description: 'Document does not exsist to load assets into.',
-				func: 'loadJs', obj: 'dom'
-			});
-			throw new Error('Document object is required to load assets.');
-		}
-		var js = window.document.createElement('script');
-		js.src = src;
-		js.type = 'text/javascript';
-		window.document.getElementsByTagName('head')[0].appendChild(js);
-		_logger2.default.debug({
-			description: 'JS was loaded into document.', element: js,
-			func: 'loadJs', obj: 'dom'
-		});
-		return js; //Return script element
+	  if (!isBrowser()) {
+	    _logger2.default.error({
+	      description: 'Document does not exsist to load assets into.',
+	      func: 'loadJs', obj: 'dom'
+	    });
+	    throw new Error('Document object is required to load assets.');
+	  }
+	  var js = window.document.createElement('script');
+	  js.src = src;
+	  js.type = 'text/javascript';
+	  window.document.getElementsByTagName('head')[0].appendChild(js);
+	  _logger2.default.debug({
+	    description: 'JS was loaded into document.', element: js,
+	    func: 'loadJs', obj: 'dom'
+	  });
+	  // Return script element
+	  return js;
 	}
 
 	/**
@@ -2350,24 +2324,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function asyncLoadJs(src) {
-		if (!isBrowser()) {
-			_logger2.default.error({
-				description: 'Document does not exsist to load assets into.',
-				func: 'asyncLoadJs', obj: 'dom'
-			});
-			throw new Error('Document object is required to load assets.');
-		}
-		var js = window.document.createElement('script');
-		js.src = src;
-		js.type = 'text/javascript';
-		window.document.getElementsByTagName('head')[0].appendChild(js);
-		_logger2.default.log({
-			description: 'JS was loaded into document.', element: js,
-			func: 'asyncLoadJs', obj: 'dom'
-		});
-		return new Promise(function (resolve) {
-			window.setTimeout(resolve, 200);
-		});
+	  if (!isBrowser()) {
+	    _logger2.default.error({
+	      description: 'Document does not exsist to load assets into.',
+	      func: 'asyncLoadJs', obj: 'dom'
+	    });
+	    throw new Error('Document object is required to load assets.');
+	  }
+	  var js = window.document.createElement('script');
+	  js.src = src;
+	  js.type = 'text/javascript';
+	  window.document.getElementsByTagName('head')[0].appendChild(js);
+	  _logger2.default.log({
+	    description: 'JS was loaded into document.', element: js,
+	    func: 'asyncLoadJs', obj: 'dom'
+	  });
+	  return new Promise(function (resolve) {
+	    window.setTimeout(resolve, 200);
+	  });
 	}
 
 	/**
@@ -2376,17 +2350,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function getQueryParam(name) {
-		if (!isBrowser()) {
-			_logger2.default.error({
-				description: 'Browser is required to get query params.',
-				func: 'asyncLoadJs', obj: 'dom'
-			});
-			throw new Error('Query parameters are only available within browsers.');
-		}
-		name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-		var results = regex.exec(location.search);
-		return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+	  if (!isBrowser()) {
+	    _logger2.default.error({
+	      description: 'Browser is required to get query params.',
+	      func: 'asyncLoadJs', obj: 'dom'
+	    });
+	    throw new Error('Query parameters are only available within browsers.');
+	  }
+	  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+	  var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+	  var results = regex.exec(window.location.search);
+	  return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 	}
 
 /***/ },
@@ -2396,7 +2370,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 
 	var _isObject = __webpack_require__(2);
@@ -2423,21 +2397,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function localExists() {
-		var testKey = 'test';
-		if (typeof window != 'undefined' && typeof window.sessionStorage != 'undefined') {
-			try {
-				window.sessionStorage.setItem(testKey, '1');
-				window.sessionStorage.removeItem(testKey);
-				return true;
-			} catch (error) {
-				_logger2.default.error({
-					description: 'Error saving to session storage', error: error,
-					obj: 'storage', func: 'localExists'
-				});
-				return false;
-			}
-		}
-		return false;
+	  var testKey = 'test';
+	  if (typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined') {
+	    try {
+	      window.sessionStorage.setItem(testKey, '1');
+	      window.sessionStorage.removeItem(testKey);
+	      return true;
+	    } catch (error) {
+	      _logger2.default.error({
+	        description: 'Error saving to session storage', error: error,
+	        obj: 'storage', func: 'localExists'
+	      });
+	      return false;
+	    }
+	  }
+	  return false;
 	}
 
 	/**
@@ -2449,14 +2423,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function setItem(itemName, itemValue) {
-		data[itemName] = itemValue;
-		if (localExists()) {
-			//Convert object to string
-			if ((0, _isObject2.default)(itemValue)) {
-				itemValue = JSON.stringify(itemValue);
-			}
-			window.sessionStorage.setItem(itemName, itemValue);
-		}
+	  data[itemName] = itemValue;
+	  if (localExists()) {
+	    // Convert object to string
+	    if ((0, _isObject2.default)(itemValue)) {
+	      itemValue = JSON.stringify(itemValue);
+	    }
+	    window.sessionStorage.setItem(itemName, itemValue);
+	  }
 	}
 
 	/**
@@ -2468,31 +2442,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function getItem(itemName) {
-		if (data[itemName]) {
-			return data[itemName];
-		} else if (localExists()) {
-			var itemStr = window.sessionStorage.getItem(itemName);
-			//Check that str is not null before parsing
-			if (itemStr) {
-				var isObj = false;
-				var itemObj = null;
-				//Try parsing to object
-				try {
-					itemObj = JSON.parse(itemStr);
-					isObj = true;
-				} catch (err) {
-					// logger.log({message: 'String could not be parsed.', error: err, func: 'getItem', obj: 'storage'});
-					//Parsing failed, this must just be a string
-					isObj = false;
-				}
-				if (isObj) {
-					return itemObj;
-				}
-			}
-			return itemStr;
-		} else {
-			return null;
-		}
+	  if (data[itemName]) {
+	    return data[itemName];
+	  } else if (localExists()) {
+	    var itemStr = window.sessionStorage.getItem(itemName);
+	    // Check that str is not null before parsing
+	    if (itemStr) {
+	      var isObj = false;
+	      var itemObj = null;
+	      // Try parsing to object
+	      try {
+	        itemObj = JSON.parse(itemStr);
+	        isObj = true;
+	      } catch (err) {
+	        // Parsing failed, this must just be a string
+	        // logger.log({message: 'String could not be parsed.', error: err, func: 'getItem', obj: 'storage'})
+	        isObj = false;
+	      }
+	      if (isObj) {
+	        return itemObj;
+	      }
+	    }
+	    return itemStr;
+	  } else {
+	    return null;
+	  }
 	}
 
 	/**
@@ -2502,21 +2476,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function removeItem(itemName) {
-		//TODO: Only remove used items
-		if (data[itemName]) {
-			data[itemName] = null;
-		}
-		if (localExists() && getItem(itemName)) {
-			try {
-				//Clear session storage
-				window.sessionStorage.removeItem(itemName);
-			} catch (error) {
-				_logger2.default.warn({
-					description: 'Error removing item from session storage', error: error,
-					obj: 'storage', func: 'removeItem'
-				});
-			}
-		}
+	  // TODO: Only remove used items
+	  if (data[itemName]) {
+	    data[itemName] = null;
+	  }
+	  if (localExists() && getItem(itemName)) {
+	    try {
+	      // Clear session storage
+	      window.sessionStorage.removeItem(itemName);
+	    } catch (error) {
+	      _logger2.default.warn({
+	        description: 'Error removing item from session storage', error: error,
+	        obj: 'storage', func: 'removeItem'
+	      });
+	    }
+	  }
 	}
 
 	/**
@@ -2528,18 +2502,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 */
 	function clear() {
-		//TODO: Only remove used items
-		data = {};
-		if (localExists()) {
-			try {
-				//Clear session storage
-				window.sessionStorage.clear();
-			} catch (err) {
-				_logger2.default.warn({
-					description: 'Session storage could not be cleared.', error: err
-				});
-			}
-		}
+	  // TODO: Only remove used items
+	  data = {};
+	  if (localExists()) {
+	    try {
+	      // Clear session storage
+	      window.sessionStorage.clear();
+	    } catch (error) {
+	      _logger2.default.warn({
+	        description: 'Session storage could not be cleared.', error: error,
+	        obj: 'storage', func: 'removeItem'
+	      });
+	    }
+	  }
 	}
 
 /***/ },
@@ -2549,7 +2524,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 	exports.get = get;
 	exports.post = post;
@@ -2564,96 +2539,96 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _token2 = _interopRequireDefault(_token);
 
-	var _superagent = __webpack_require__(176);
+	var _superagent = __webpack_require__(178);
 
 	var _superagent2 = _interopRequireDefault(_superagent);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function get(endpoint, queryData) {
-		var req = _superagent2.default.get(endpoint);
-		if (queryData) {
-			req.query(queryData);
-		}
-		req = addAuthHeader(req);
-		return handleResponse(req);
+	  var req = _superagent2.default.get(endpoint);
+	  if (queryData) {
+	    req.query(queryData);
+	  }
+	  req = addAuthHeader(req);
+	  return handleResponse(req);
 	}
 
 	function post(endpoint, data) {
-		var imageData = data && data.files ? handleFiles(data) : null;
-		var req = _superagent2.default.post(endpoint);
-		req = addAuthHeader(req);
-		req.send(imageData || data);
-		return handleResponse(req);
+	  var imageData = data && data.files ? handleFiles(data) : null;
+	  var req = _superagent2.default.post(endpoint);
+	  req = addAuthHeader(req);
+	  req.send(imageData || data);
+	  return handleResponse(req);
 	}
 
 	function put(endpoint, data) {
-		var imageData = data && data.files ? handleFiles(data) : null;
-		var req = _superagent2.default.put(endpoint);
-		req = addAuthHeader(req);
-		req.send(imageData || data);
-		return handleResponse(req);
+	  var imageData = data && data.files ? handleFiles(data) : null;
+	  var req = _superagent2.default.put(endpoint);
+	  req = addAuthHeader(req);
+	  req.send(imageData || data);
+	  return handleResponse(req);
 	}
 
 	function del(endpoint, data) {
-		var req = _superagent2.default.del(endpoint, data);
-		req = addAuthHeader(req);
-		return handleResponse(req);
+	  var req = _superagent2.default.del(endpoint, data);
+	  req = addAuthHeader(req);
+	  return handleResponse(req);
 	}
 
 	function handleResponse(req) {
-		return new Promise(function (resolve, reject) {
-			if (typeof req.end !== 'function') {
-				_logger2.default.warn({
-					description: 'req.end is not a function', func: 'handleResponse'
-				});
-				return reject({ message: 'req.end is not a function' });
-			}
-			req.end(function (errorRes, res) {
-				if (errorRes) {
-					if (errorRes.status == 401) {
-						_logger2.default.warn({
-							description: 'Unauthorized. You must be signed into make this request.',
-							func: 'handleResponse'
-						});
-					}
-					var response = errorRes.response;
+	  return new Promise(function (resolve, reject) {
+	    if (typeof req.end !== 'function') {
+	      _logger2.default.warn({
+	        description: 'req.end is not a function', func: 'handleResponse'
+	      });
+	      return reject({ message: 'req.end is not a function' });
+	    }
+	    req.end(function (errorRes, res) {
+	      if (errorRes) {
+	        if (errorRes.status === 401) {
+	          _logger2.default.warn({
+	            description: 'Unauthorized. You must be signed into make this request.',
+	            func: 'handleResponse'
+	          });
+	        }
+	        var response = errorRes.response;
 
-					var error = response && response.body ? response.body : errorRes;
-					_logger2.default.error({
-						description: 'Error in request.', error: error,
-						file: 'request', func: 'handleResponse'
-					});
-					return reject(error || errorRes);
-				}
-				if (res.error) {
-					_logger2.default.error({
-						description: 'Error in request.', error: res.error,
-						file: 'request', func: 'handleResponse'
-					});
-					return reject(res.error);
-				}
-				// logger.debug({
-				// 	message: 'Successful response recieved.', response: res.body,
-				// 	func: 'handleResponse', file: 'request'
-				// });
-				resolve(res.body);
-			});
-		});
+	        var error = response && response.body ? response.body : errorRes;
+	        _logger2.default.error({
+	          description: 'Error in request.', error: error,
+	          file: 'request', func: 'handleResponse'
+	        });
+	        return reject(error || errorRes);
+	      }
+	      if (res.error) {
+	        _logger2.default.error({
+	          description: 'Error in request.', error: res.error,
+	          file: 'request', func: 'handleResponse'
+	        });
+	        return reject(res.error);
+	      }
+	      // logger.debug({
+	      // 	message: 'Successful response recieved.', response: res.body,
+	      // 	func: 'handleResponse', file: 'request'
+	      // })
+	      resolve(res.body);
+	    });
+	  });
 	}
 	/**
 	 * @description Add auth header to request
 	 * @param {Object} request - Request object on which to add auth header
 	 */
 	function addAuthHeader(req) {
-		if (_token2.default.string) {
-			req = req.set('Authorization', 'Bearer ' + _token2.default.string);
-			// logger.debug({
-			// 	message: 'Set auth header', token: token.string,
-			// 	func: 'addAuthHeader', file: 'request'
-			// });
-		}
-		return req;
+	  if (_token2.default.string) {
+	    req = req.set('Authorization', 'Bearer ' + _token2.default.string);
+	    // logger.debug({
+	    // 	message: 'Set auth header', token: token.string,
+	    // 	func: 'addAuthHeader', file: 'request'
+	    // })
+	  }
+	  return req;
 	}
 
 	/**
@@ -2661,13 +2636,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Array} files Array of file objects
 	 */
 	function handleFiles(files) {
-		var filesData = new FormData();
-		files.forEach(function (fileObj) {
-			if (fileObj.key && fileObj.file) {
-				filesData.append(fileObj.key || 'image', fileObj.file);
-			}
-		});
-		return filesData;
+	  var filesData = new window.FormData();
+	  files.forEach(function (fileObj) {
+	    if (fileObj.key && fileObj.file) {
+	      filesData.append(fileObj.key || 'image', fileObj.file);
+	    }
+	  });
+	  return filesData;
 	}
 
 /***/ },
@@ -2677,10 +2652,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 
-	var _isString = __webpack_require__(8);
+	var _isString = __webpack_require__(9);
 
 	var _isString2 = _interopRequireDefault(_isString);
 
@@ -2692,7 +2667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _logger2 = _interopRequireDefault(_logger);
 
-	var _cookies = __webpack_require__(68);
+	var _cookies = __webpack_require__(69);
 
 	var cookiesUtil = _interopRequireWildcard(_cookies);
 
@@ -2700,7 +2675,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var envStorage = _interopRequireWildcard(_envStorage);
 
-	var _jwtDecode = __webpack_require__(71);
+	var _jwtDecode = __webpack_require__(73);
 
 	var _jwtDecode2 = _interopRequireDefault(_jwtDecode);
 
@@ -2710,83 +2685,83 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var token = {
 
-		/** Get string value of token
-	  * @return {String}
-	  * @example
-	  * console.log('String value of current token', token.string);
-	  */
-		get string() {
-			var cookie = cookiesUtil.getCookie(_config2.default.tokenName);
-			if (cookie === '') return null;
-			return cookie;
-		},
+	  /** Get string value of token
+	   * @return {String}
+	   * @example
+	   * console.log('String value of current token', token.string)
+	   */
+	  get string() {
+	    var cookie = cookiesUtil.getCookie(_config2.default.tokenName);
+	    if (cookie === '') return null;
+	    return cookie;
+	  },
 
-		/**
-	  * @description Get decoded data within token (unencrypted data only)
-	  * @return {Object}
-	  * @example
-	  * console.log('Data of current token:', token.data);
-	  */
-		get data() {
-			if (!this.string) return null;
-			if (envStorage.getItem(_config2.default.tokenDataName)) {
-				return envStorage.getItem(_config2.default.tokenDataName);
-			} else {
-				return decodeToken(this.string);
-			}
-		},
+	  /**
+	   * @description Get decoded data within token (unencrypted data only)
+	   * @return {Object}
+	   * @example
+	   * console.log('Data of current token:', token.data)
+	   */
+	  get data() {
+	    if (!this.string) return null;
+	    if (envStorage.getItem(_config2.default.tokenDataName)) {
+	      return envStorage.getItem(_config2.default.tokenDataName);
+	    } else {
+	      return decodeToken(this.string);
+	    }
+	  },
 
-		/**
-	  * @description Set token data
-	  */
-		set data(tokenData) {
-			envStorage.setItem(_config2.default.tokenDataName, tokenData);
-			_logger2.default.debug({
-				description: 'Token data was set to session storage.', tokenData: tokenData,
-				func: 'data', obj: 'token'
-			});
-		},
+	  /**
+	   * @description Set token data
+	   */
+	  set data(tokenData) {
+	    envStorage.setItem(_config2.default.tokenDataName, tokenData);
+	    _logger2.default.debug({
+	      description: 'Token data was set to session storage.', tokenData: tokenData,
+	      func: 'data', obj: 'token'
+	    });
+	  },
 
-		/**
-	  * @description Set token value as a string
-	  */
-		set string(tokenStr) {
-			//Handle object being passed
-			if (!(0, _isString2.default)(tokenStr)) {
-				//Token is included in object
-				_logger2.default.log({
-					description: 'Token data is not string.',
-					tokenStr: tokenStr, func: 'string', obj: 'token'
-				});
-				throw new Error('Token data should be a string');
-			}
-			cookiesUtil.setCookie(_config2.default.tokenName, tokenStr, 7);
-			this.data = decodeToken(tokenStr);
-			_logger2.default.debug({
-				description: 'Token was set to cookies.',
-				func: 'string', obj: 'token'
-			});
-		},
+	  /**
+	   * @description Set token value as a string
+	   */
+	  set string(tokenStr) {
+	    // Handle object being passed
+	    if (!(0, _isString2.default)(tokenStr)) {
+	      // Token is included in object
+	      _logger2.default.log({
+	        description: 'Token data is not string.',
+	        tokenStr: tokenStr, func: 'string', obj: 'token'
+	      });
+	      throw new Error('Token data should be a string');
+	    }
+	    cookiesUtil.setCookie(_config2.default.tokenName, tokenStr, 7);
+	    this.data = decodeToken(tokenStr);
+	    _logger2.default.debug({
+	      description: 'Token was set to cookies.',
+	      func: 'string', obj: 'token'
+	    });
+	  },
 
-		/** Save token data
-	  */
-		save: function save(tokenStr) {
-			this.string = tokenStr;
-		},
+	  /** Save token data
+	   */
+	  save: function save(tokenStr) {
+	    this.string = tokenStr;
+	  },
 
 
-		/** Delete token data
-	  */
-		delete: function _delete() {
-			//Remove string token
-			cookiesUtil.deleteCookie(_config2.default.tokenName);
-			//Remove user data
-			envStorage.removeItem(_config2.default.tokenDataName);
-			_logger2.default.log({
-				description: 'Token was removed.',
-				func: 'delete', obj: 'token'
-			});
-		}
+	  /** Delete token data
+	   */
+	  delete: function _delete() {
+	    // Remove string token
+	    cookiesUtil.deleteCookie(_config2.default.tokenName);
+	    // Remove user data
+	    envStorage.removeItem(_config2.default.tokenDataName);
+	    _logger2.default.log({
+	      description: 'Token was removed.',
+	      func: 'delete', obj: 'token'
+	    });
+	  }
 	};
 
 	exports.default = token;
@@ -2797,16 +2772,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	function decodeToken(tokenStr) {
-		if (!tokenStr || tokenStr === '') return null;
-		try {
-			return (0, _jwtDecode2.default)(tokenStr);
-		} catch (error) {
-			_logger2.default.error({
-				description: 'Error decoding token.',
-				error: error, func: 'decodeToken', file: 'token'
-			});
-			return null;
-		}
+	  if (!tokenStr || tokenStr === '') return null;
+	  try {
+	    return (0, _jwtDecode2.default)(tokenStr);
+	  } catch (error) {
+	    _logger2.default.error({
+	      description: 'Error decoding token.',
+	      error: error, func: 'decodeToken', file: 'token'
+	    });
+	    return null;
+	  }
 	}
 	module.exports = exports['default'];
 
@@ -2814,16 +2789,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mapClear = __webpack_require__(141),
-	    mapDelete = __webpack_require__(142),
-	    mapGet = __webpack_require__(143),
-	    mapHas = __webpack_require__(144),
-	    mapSet = __webpack_require__(145);
+	var mapClear = __webpack_require__(143),
+	    mapDelete = __webpack_require__(144),
+	    mapGet = __webpack_require__(145),
+	    mapHas = __webpack_require__(146),
+	    mapSet = __webpack_require__(147);
 
 	/**
 	 * Creates a map cache object to store key-value pairs.
 	 *
 	 * @private
+	 * @constructor
 	 * @param {Array} [values] The values to cache.
 	 */
 	function MapCache(values) {
@@ -2935,8 +2911,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function assignValue(object, key, value) {
 	  var objValue = object[key];
-	  if ((!eq(objValue, value) ||
-	        (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) ||
+	  if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
 	      (value === undefined && !(key in object))) {
 	    object[key] = value;
 	  }
@@ -3055,8 +3030,29 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(94),
-	    keys = __webpack_require__(9);
+	var isArray = __webpack_require__(1),
+	    stringToPath = __webpack_require__(154);
+
+	/**
+	 * Casts `value` to a path array if it's not one.
+	 *
+	 * @private
+	 * @param {*} value The value to inspect.
+	 * @returns {Array} Returns the cast property path array.
+	 */
+	function baseCastPath(value) {
+	  return isArray(value) ? value : stringToPath(value);
+	}
+
+	module.exports = baseCastPath;
+
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseFor = __webpack_require__(96),
+	    keys = __webpack_require__(10);
 
 	/**
 	 * The base implementation of `_.forOwn` without support for iteratee shorthands.
@@ -3074,10 +3070,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 50 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPath = __webpack_require__(54),
+	var baseCastPath = __webpack_require__(49),
 	    isKey = __webpack_require__(31);
 
 	/**
@@ -3089,7 +3085,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {*} Returns the resolved value.
 	 */
 	function baseGet(object, path) {
-	  path = isKey(path, object) ? [path + ''] : baseToPath(path);
+	  path = isKey(path, object) ? [path + ''] : baseCastPath(path);
 
 	  var index = 0,
 	      length = path.length;
@@ -3104,10 +3100,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 51 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var indexOfNaN = __webpack_require__(135);
+	var indexOfNaN = __webpack_require__(137);
 
 	/**
 	 * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
@@ -3137,10 +3133,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsEqualDeep = __webpack_require__(96),
+	var baseIsEqualDeep = __webpack_require__(98),
 	    isObject = __webpack_require__(2),
 	    isObjectLike = __webpack_require__(5);
 
@@ -3173,7 +3169,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports) {
 
 	/**
@@ -3190,28 +3186,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = baseProperty;
-
-
-/***/ },
-/* 54 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isArray = __webpack_require__(1),
-	    stringToPath = __webpack_require__(152);
-
-	/**
-	 * The base implementation of `_.toPath` which only converts `value` to a
-	 * path if it's not one.
-	 *
-	 * @private
-	 * @param {*} value The value to process.
-	 * @returns {Array} Returns the property path array.
-	 */
-	function baseToPath(value) {
-	  return isArray(value) ? value : stringToPath(value);
-	}
-
-	module.exports = baseToPath;
 
 
 /***/ },
@@ -3270,8 +3244,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
-	    Set = __webpack_require__(76),
-	    WeakMap = __webpack_require__(78);
+	    Set = __webpack_require__(77),
+	    WeakMap = __webpack_require__(79);
 
 	/** `Object#toString` result references. */
 	var mapTag = '[object Map]',
@@ -3334,15 +3308,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPath = __webpack_require__(54),
+	var baseCastPath = __webpack_require__(49),
 	    isArguments = __webpack_require__(22),
 	    isArray = __webpack_require__(1),
 	    isIndex = __webpack_require__(19),
 	    isKey = __webpack_require__(31),
 	    isLength = __webpack_require__(23),
-	    isString = __webpack_require__(8),
-	    last = __webpack_require__(166),
-	    parent = __webpack_require__(146);
+	    isString = __webpack_require__(9),
+	    last = __webpack_require__(167),
+	    parent = __webpack_require__(148);
 
 	/**
 	 * Checks if `path` exists on `object`.
@@ -3359,7 +3333,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  var result = hasFunc(object, path);
 	  if (!result && !isKey(path)) {
-	    path = baseToPath(path);
+	    path = baseCastPath(path);
 	    object = parent(object, path);
 	    if (object != null) {
 	      path = last(path);
@@ -3407,11 +3381,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseTimes = __webpack_require__(108),
+	var baseTimes = __webpack_require__(110),
 	    isArguments = __webpack_require__(22),
 	    isArray = __webpack_require__(1),
 	    isLength = __webpack_require__(23),
-	    isString = __webpack_require__(8);
+	    isString = __webpack_require__(9);
 
 	/**
 	 * Creates an array of index keys for `object` values of arrays,
@@ -3485,7 +3459,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(50);
+	var baseGet = __webpack_require__(51);
 
 	/**
 	 * Gets the value at `path` of `object`. If the resolved value is
@@ -3549,7 +3523,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(81),
+	var apply = __webpack_require__(82),
 	    toInteger = __webpack_require__(66);
 
 	/** Used as the `TypeError` message for "Functions" methods. */
@@ -3616,7 +3590,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toNumber = __webpack_require__(171);
+	var toNumber = __webpack_require__(172);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0,
@@ -3682,354 +3656,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-
-	var _includes = __webpack_require__(161);
-
-	var _includes2 = _interopRequireDefault(_includes);
-
-	exports.getCookie = getCookie;
-	exports.setCookie = setCookie;
-	exports.deleteCookie = deleteCookie;
-
-	var _logger = __webpack_require__(3);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	/**
-	 * @description Gets cookie value by cookie name.
-	 *
-	 * @param {String} cookieName - cookie name
-	 * @returns {String} cookieValue - value for given cookie name
-	 *
-	 */
-	function getCookie(cookieName) {
-		if (typeof window === 'undefined' || typeof document === 'undefined') {
-			return '';
-		}
-		var name = cookieName + '=';
-		var ca = document.cookie.split(';');
-		for (var i = 0; i < ca.length; i++) {
-			var c = ca[i];
-			while (c.charAt(0) == ' ') {
-				c = c.substring(1);
-			}
-			try {
-				if ((0, _includes2.default)(c, name)) {
-					return c.substring(name.length, c.length);
-				}
-			} catch (error) {
-				_logger2.default.warn({
-					description: 'Cookie cannot be loaded.', cookieName: cookieName,
-					error: error, func: 'getCookie', obj: 'cookiesUtil'
-				});
-				return '';
-			}
-		}
-		return '';
-	}
-
-	/**
-	 * @description Sets cookie at domain's root path.
-	 *
-	 * @param {String} cookieName - cookie name
-	 * @param {String} cookieValue - cookie value
-	 * @param {Integer} expDays - expiration day(s)
-	 *
-	 */
-	function setCookie(cookieName, cookieValue, expDays) {
-		var d = new Date();
-		d.setTime(d.getTime() + expDays * 24 * 60 * 60 * 1000);
-		var expires = 'expires=' + d.toUTCString();
-		try {
-			document.cookie = cookieName + '=' + cookieValue + '; Path=/; ' + expires;
-		} catch (e) {
-			_logger2.default.warn({
-				description: 'Cookie cannot be set because browser is not capable.',
-				cookieName: cookieName, func: 'setCookie', obj: 'cookiesUtil'
-			});
-		}
-	}
-
-	/**
-	 * @description Deletes cookie at domain's root path.
-	 * @param {String} cookieName - cookie name
-	 *
-	 */
-	function deleteCookie(cookieName) {
-		if (getCookie(cookieName)) {
-			document.cookie = cookieName + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-			_logger2.default.debug({
-				description: 'Cookie deleted.', cookieName: cookieName, func: 'deleteCookie'
-			});
-		} else {
-			_logger2.default.warn({
-				description: 'Cookie cannot be deleted because it does not exist.',
-				cookieName: cookieName, func: 'deleteCookie', obj: 'cookiesUtil'
-			});
-		}
-	}
-
-/***/ },
-/* 69 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.authWithServer = authWithServer;
-
-	var _request = __webpack_require__(38);
-
-	var _logger = __webpack_require__(3);
-
-	var _logger2 = _interopRequireDefault(_logger);
-
-	var _config = __webpack_require__(12);
-
-	var _config2 = _interopRequireDefault(_config);
-
-	var _dom = __webpack_require__(36);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// import { OAuth, User } from 'oauthio-web'; // window/document undefined error
-	// const OAuthLib = isBrowser ? require('oauthio-web') : undefined; //document undefined error
-
-	if ((0, _dom.isBrowser)()) {
-		loadOAuthio().then(function () {
-			_logger2.default.debug({ description: 'OAuthIo script loaded:' });
-			initializeOAuth();
-		});
-	}
-
-	/**
-	 * @description Signup using a token generated from the server (so server and client are both aware of auth state)
-	 */
-	function authWithServer(provider) {
-		initializeOAuth();
-		return (0, _request.get)(_config2.default.serverUrl + '/stateToken').then(function (params) {
-			return window.OAuth.popup(provider, { state: params.token }).done(function (result) {
-				_logger2.default.info({
-					description: 'Result from oauth:', result: result, provider: provider, params: params,
-					func: 'authWithServer', obj: 'providerAuth'
-				});
-				return (0, _request.put)(_config2.default.serverUrl + '/auth', { provider: provider, code: result.code, stateToken: params.token });
-			}).fail(function (error) {
-				_logger2.default.error({
-					description: 'error with request', error: error,
-					func: 'authWithServer', obj: 'providerAuth'
-				});
-				return Promise.reject(error);
-			});
-		}, function (error) {
-			_logger2.default.error({
-				description: 'error with request', error: error,
-				func: 'authWithServer', obj: 'providerAuth'
-			});
-			return Promise.reject(error);
-		});
-	}
-
-	/**
-	 * @description Run initial setup of OAuth Library
-	 */
-	function initializeOAuth() {
-		if ((0, _dom.isBrowser)() && window.OAuth) {
-			console.log('initializing oauth');
-			window.OAuth.initialize(_config2.default.oauthioKey);
-		}
-	}
-
-	/**
-	 * @description Load OAuthio-web Library into body as script element
-	 */
-	function loadOAuthio() {
-		// console.log('loading oauthio into script tag:', config.oauthioCDN);
-		if (typeof window.OAuth !== 'undefined') {
-			return Promise.resolve();
-		}
-		return (0, _dom.asyncLoadJs)(_config2.default.oauthioCDN).then(function () {
-			if (window.OAuth) {
-				window.OAuth.initialize(_config2.default.oauthioKey);
-			}
-		});
-	}
-
-	/**
-	 * @description Signup with external provider
-	 * @param {String} provider Provider with which to signup through (Google/Github Etc)
-	 */
-	// export async function signup(provider) {
-	// 	try {
-	// 		const res = await OAuth.popup(provider, {cache: true})
-	// 		logger.debug({
-	// 			description: 'Popup response.', res,
-	// 			func: 'signup', obj: 'providerAuth'
-	// 		});
-	// 		const newUser = await User.signup(res);
-	// 		return newUser;
-	// 	} catch(error) {
-	// 		logger.error({
-	// 			description: 'error in oauth request', error
-	// 		});
-	// 		return error;
-	// 	}
-	// }
-
-	/**
-	 * @description Login to external provider
-	 * @param {String} provider Provider with which to log into (Google/Github Etc)
-	 */
-	// export async function login(provider) {
-	// 	try {
-	// 		const res = await OAuth.popup(provider, {cache: true})
-	// 		const newUser = await User.signin(res);
-	// 		console.log('user:', newUser);
-	// 		return newUser;
-	// 	} catch(error) {
-	// 		console.error('error in oauth request', error);
-	// 		return error;
-	// 	}
-	// }
-
-	/**
-	 * @description Logout external provider service (Stormpath/oauthio)
-	 */
-	// export async function logout() {
-	// 	if(!currentlyLoggedIn()) return;
-	// 	try {
-	// 		const user = User.getIdentity();
-	// 		return await user.logout();
-	// 	} catch(error) {
-	// 		console.error('error logging out', error);
-	// 		return error;
-	// 	}
-	// }
-
-	/**
-	 * @description Get currently connected user
-	 */
-	// export function getCurrentUser() {
-	// 	return User.getIdentity();
-	// }
-
-	/**
-	 * @description Local user data from external provider service (Stormpath/oauthio)
-	 */
-	// export async function getUserData(provider) {
-	// 	try {
-	// 		const result = await OAuth.popup(provider, {cache: true});
-	// 		return await result.me();
-	// 	} catch(error) {
-	// 		console.error('error in oauth request', error);
-	// 	}
-	// }
-
-	/**
-	 * @description Update user with external provider service (Stormpath/oauthio)
-	 */
-	// export async function updateUserData(newData) {
-	// 	try {
-	// 		user = User.getIdentity();
-	// 		user.data = newData;
-	// 		return await user.save();
-	// 	} catch(error) {
-	// 		console.error('error updating user data', error);
-	// 	}
-	// }
-
-	/**
-	 * @description Check to see if a user is currently logged in to external provider service (Stormpath/oauthio)
-	 */
-	// export function currentlyLoggedIn() {
-	// 	return User.isLogged();
-	// }
-
-/***/ },
-/* 70 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Base64 = __webpack_require__(73);
-
-	function b64DecodeUnicode(str) {
-	  return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
-	    var code = p.charCodeAt(0).toString(16).toUpperCase();
-	    if (code.length < 2) {
-	      code = '0' + code;
-	    }
-	    return '%' + code;
-	  }));
-	}
-
-	module.exports = function(str) {
-	  var output = str.replace(/-/g, "+").replace(/_/g, "/");
-	  switch (output.length % 4) {
-	    case 0:
-	      break;
-	    case 2:
-	      output += "==";
-	      break;
-	    case 3:
-	      output += "=";
-	      break;
-	    default:
-	      throw "Illegal base64url string!";
-	  }
-
-	  try{
-	    return b64DecodeUnicode(output);
-	  } catch (err) {
-	    return Base64.atob(output);
-	  }
-	};
-
-
-/***/ },
-/* 71 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var base64_url_decode = __webpack_require__(70);
-	var json_parse = __webpack_require__(72);
-
-	module.exports = function (token) {
-	  if (!token) {
-	    throw new Error('Invalid token specified');
-	  }
-	  
-	  return json_parse(base64_url_decode(token.split('.')[1]));
-	};
-
-
-/***/ },
-/* 72 */
-/***/ function(module, exports) {
-
-	module.exports = function (str) {
-	  var parsed;
-	  if (typeof JSON === 'object') {
-	    parsed = JSON.parse(str);
-	  } else {
-	    parsed = eval('(' + str + ')');
-	  }
-	  return parsed;
-	};
-
-
-/***/ },
-/* 73 */
-/***/ function(module, exports, __webpack_require__) {
-
 	;(function () {
 
 	  var
@@ -4088,7 +3714,530 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _includes = __webpack_require__(162);
+
+	var _includes2 = _interopRequireDefault(_includes);
+
+	exports.getCookie = getCookie;
+	exports.setCookie = setCookie;
+	exports.deleteCookie = deleteCookie;
+
+	var _logger = __webpack_require__(3);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/**
+	 * @description Gets cookie value by cookie name.
+	 *
+	 * @param {String} cookieName - cookie name
+	 * @returns {String} cookieValue - value for given cookie name
+	 *
+	 */
+	function getCookie(cookieName) {
+	  if (typeof window === 'undefined' || typeof document === 'undefined') {
+	    return '';
+	  }
+	  var name = cookieName + '=';
+	  var ca = document.cookie.split(';');
+	  for (var i = 0; i < ca.length; i++) {
+	    var c = ca[i];
+	    while (c.charAt(0) === ' ') {
+	      c = c.substring(1);
+	    }
+	    try {
+	      if ((0, _includes2.default)(c, name)) {
+	        return c.substring(name.length, c.length);
+	      }
+	    } catch (error) {
+	      _logger2.default.warn({
+	        description: 'Cookie cannot be loaded.', cookieName: cookieName,
+	        error: error, func: 'getCookie', obj: 'cookiesUtil'
+	      });
+	      return '';
+	    }
+	  }
+	  return '';
+	}
+
+	/**
+	 * @description Sets cookie at domain's root path.
+	 *
+	 * @param {String} cookieName - cookie name
+	 * @param {String} cookieValue - cookie value
+	 * @param {Integer} expDays - expiration day(s)
+	 *
+	 */
+	function setCookie(cookieName, cookieValue, expDays) {
+	  var d = new Date();
+	  d.setTime(d.getTime() + expDays * 24 * 60 * 60 * 1000);
+	  var expires = 'expires=' + d.toUTCString();
+	  try {
+	    document.cookie = cookieName + '=' + cookieValue + '; Path=/; ' + expires;
+	  } catch (e) {
+	    _logger2.default.warn({
+	      description: 'Cookie cannot be set because browser is not capable.',
+	      cookieName: cookieName, func: 'setCookie', obj: 'cookiesUtil'
+	    });
+	  }
+	}
+
+	/**
+	 * @description Deletes cookie at domain's root path.
+	 * @param {String} cookieName - cookie name
+	 *
+	 */
+	function deleteCookie(cookieName) {
+	  if (getCookie(cookieName)) {
+	    document.cookie = cookieName + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+	    _logger2.default.debug({
+	      description: 'Cookie deleted.', cookieName: cookieName, func: 'deleteCookie'
+	    });
+	  } else {
+	    _logger2.default.warn({
+	      description: 'Cookie cannot be deleted because it does not exist.',
+	      cookieName: cookieName, func: 'deleteCookie', obj: 'cookiesUtil'
+	    });
+	  }
+	}
+
+/***/ },
+/* 70 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.authWithServer = authWithServer;
+
+	var _request = __webpack_require__(38);
+
+	var _logger = __webpack_require__(3);
+
+	var _logger2 = _interopRequireDefault(_logger);
+
+	var _config = __webpack_require__(12);
+
+	var _config2 = _interopRequireDefault(_config);
+
+	var _dom = __webpack_require__(36);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	// import { OAuth, User } from 'oauthio-web' // window/document undefined error
+
+	if ((0, _dom.isBrowser)()) {
+	  loadOAuthio().then(function () {
+	    initializeOAuth();
+	  });
+	}
+
+	/**
+	 * @description Signup using a token generated from the server (so server and client are both aware of auth state)
+	 */
+	function authWithServer(provider) {
+	  initializeOAuth();
+	  return (0, _request.get)(_config2.default.serverUrl + '/stateToken').then(function (params) {
+	    return new Promise(function (resolve, reject) {
+	      window.OAuth.popup(provider, { state: params.token }).done(function (result) {
+	        _logger2.default.info({
+	          description: 'Result from oauth:', result: result, provider: provider, params: params,
+	          func: 'authWithServer', obj: 'providerAuth'
+	        });
+	        (0, _request.put)(_config2.default.serverUrl + '/auth', { provider: provider, code: result.code, stateToken: params.token }).then(function (loggedInData) {
+	          _logger2.default.warn({
+	            description: 'logged in info', result: loggedInData,
+	            func: 'authWithServer', obj: 'providerAuth'
+	          });
+	          resolve(loggedInData);
+	        }, function (error) {
+	          reject(error);
+	        });
+	      }).fail(function (error) {
+	        _logger2.default.error({
+	          description: 'error with request', error: error,
+	          func: 'authWithServer', obj: 'providerAuth'
+	        });
+	        return Promise.reject(error);
+	      });
+	    });
+	  }, function (error) {
+	    _logger2.default.error({
+	      description: 'error with request', error: error,
+	      func: 'authWithServer', obj: 'providerAuth'
+	    });
+	    return Promise.reject(error);
+	  });
+	}
+
+	/**
+	 * @description Run initial setup of OAuth Library
+	 */
+	function initializeOAuth() {
+	  if ((0, _dom.isBrowser)() && window.OAuth) {
+	    console.log('initializing oauth');
+	    window.OAuth.initialize(_config2.default.oauthioKey);
+	  }
+	}
+
+	/**
+	 * @description Load OAuthio-web Library into body as script element
+	 */
+	function loadOAuthio() {
+	  // console.log('loading oauthio into script tag:', config.oauthioCDN)
+	  if (typeof window.OAuth !== 'undefined') {
+	    return Promise.resolve();
+	  }
+	  return (0, _dom.asyncLoadJs)(_config2.default.oauthioCDN).then(function () {
+	    if (window.OAuth) {
+	      window.OAuth.initialize(_config2.default.oauthioKey);
+	    }
+	  });
+	}
+
+	/**
+	 * @description Signup with external provider
+	 * @param {String} provider Provider with which to signup through (Google/Github Etc)
+	 */
+	// export async function signup(provider) {
+	// 	try {
+	// 		const res = await OAuth.popup(provider, {cache: true})
+	// 		logger.debug({
+	// 			description: 'Popup response.', res,
+	// 			func: 'signup', obj: 'providerAuth'
+	// 		})
+	// 		const newUser = await User.signup(res)
+	// 		return newUser
+	// 	} catch(error) {
+	// 		logger.error({
+	// 			description: 'error in oauth request', error
+	// 		})
+	// 		return error
+	// 	}
+	// }
+
+	/**
+	 * @description Login to external provider
+	 * @param {String} provider Provider with which to log into (Google/Github Etc)
+	 */
+	// export async function login(provider) {
+	// 	try {
+	// 		const res = await OAuth.popup(provider, {cache: true})
+	// 		const newUser = await User.signin(res)
+	// 		console.log('user:', newUser)
+	// 		return newUser
+	// 	} catch(error) {
+	// 		console.error('error in oauth request', error)
+	// 		return error
+	// 	}
+	// }
+
+	/**
+	 * @description Logout external provider service (Stormpath/oauthio)
+	 */
+	// export async function logout() {
+	// 	if(!currentlyLoggedIn()) return
+	// 	try {
+	// 		const user = User.getIdentity()
+	// 		return await user.logout()
+	// 	} catch(error) {
+	// 		console.error('error logging out', error)
+	// 		return error
+	// 	}
+	// }
+
+	/**
+	 * @description Get currently connected user
+	 */
+	// export function getCurrentUser() {
+	// 	return User.getIdentity()
+	// }
+
+	/**
+	 * @description Local user data from external provider service (Stormpath/oauthio)
+	 */
+	// export async function getUserData(provider) {
+	// 	try {
+	// 		const result = await OAuth.popup(provider, {cache: true})
+	// 		return await result.me()
+	// 	} catch(error) {
+	// 		console.error('error in oauth request', error)
+	// 	}
+	// }
+
+	/**
+	 * @description Update user with external provider service (Stormpath/oauthio)
+	 */
+	// export async function updateUserData(newData) {
+	// 	try {
+	// 		user = User.getIdentity()
+	// 		user.data = newData
+	// 		return await user.save()
+	// 	} catch(error) {
+	// 		console.error('error updating user data', error)
+	// 	}
+	// }
+
+	/**
+	 * @description Check to see if a user is currently logged in to external provider service (Stormpath/oauthio)
+	 */
+	// export function currentlyLoggedIn() {
+	// 	return User.isLogged()
+	// }
+
+/***/ },
+/* 71 */
+/***/ function(module, exports) {
+
+	
+	/**
+	 * Expose `Emitter`.
+	 */
+
+	module.exports = Emitter;
+
+	/**
+	 * Initialize a new `Emitter`.
+	 *
+	 * @api public
+	 */
+
+	function Emitter(obj) {
+	  if (obj) return mixin(obj);
+	};
+
+	/**
+	 * Mixin the emitter properties.
+	 *
+	 * @param {Object} obj
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function mixin(obj) {
+	  for (var key in Emitter.prototype) {
+	    obj[key] = Emitter.prototype[key];
+	  }
+	  return obj;
+	}
+
+	/**
+	 * Listen on the given `event` with `fn`.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.on =
+	Emitter.prototype.addEventListener = function(event, fn){
+	  this._callbacks = this._callbacks || {};
+	  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
+	    .push(fn);
+	  return this;
+	};
+
+	/**
+	 * Adds an `event` listener that will be invoked a single
+	 * time then automatically removed.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.once = function(event, fn){
+	  function on() {
+	    this.off(event, on);
+	    fn.apply(this, arguments);
+	  }
+
+	  on.fn = fn;
+	  this.on(event, on);
+	  return this;
+	};
+
+	/**
+	 * Remove the given callback for `event` or all
+	 * registered callbacks.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.off =
+	Emitter.prototype.removeListener =
+	Emitter.prototype.removeAllListeners =
+	Emitter.prototype.removeEventListener = function(event, fn){
+	  this._callbacks = this._callbacks || {};
+
+	  // all
+	  if (0 == arguments.length) {
+	    this._callbacks = {};
+	    return this;
+	  }
+
+	  // specific event
+	  var callbacks = this._callbacks['$' + event];
+	  if (!callbacks) return this;
+
+	  // remove all handlers
+	  if (1 == arguments.length) {
+	    delete this._callbacks['$' + event];
+	    return this;
+	  }
+
+	  // remove specific handler
+	  var cb;
+	  for (var i = 0; i < callbacks.length; i++) {
+	    cb = callbacks[i];
+	    if (cb === fn || cb.fn === fn) {
+	      callbacks.splice(i, 1);
+	      break;
+	    }
+	  }
+	  return this;
+	};
+
+	/**
+	 * Emit `event` with the given args.
+	 *
+	 * @param {String} event
+	 * @param {Mixed} ...
+	 * @return {Emitter}
+	 */
+
+	Emitter.prototype.emit = function(event){
+	  this._callbacks = this._callbacks || {};
+	  var args = [].slice.call(arguments, 1)
+	    , callbacks = this._callbacks['$' + event];
+
+	  if (callbacks) {
+	    callbacks = callbacks.slice(0);
+	    for (var i = 0, len = callbacks.length; i < len; ++i) {
+	      callbacks[i].apply(this, args);
+	    }
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Return array of callbacks for `event`.
+	 *
+	 * @param {String} event
+	 * @return {Array}
+	 * @api public
+	 */
+
+	Emitter.prototype.listeners = function(event){
+	  this._callbacks = this._callbacks || {};
+	  return this._callbacks['$' + event] || [];
+	};
+
+	/**
+	 * Check if this emitter has `event` handlers.
+	 *
+	 * @param {String} event
+	 * @return {Boolean}
+	 * @api public
+	 */
+
+	Emitter.prototype.hasListeners = function(event){
+	  return !! this.listeners(event).length;
+	};
+
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Base64 = __webpack_require__(68);
+
+	function b64DecodeUnicode(str) {
+	  return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
+	    var code = p.charCodeAt(0).toString(16).toUpperCase();
+	    if (code.length < 2) {
+	      code = '0' + code;
+	    }
+	    return '%' + code;
+	  }));
+	}
+
+	module.exports = function(str) {
+	  var output = str.replace(/-/g, "+").replace(/_/g, "/");
+	  switch (output.length % 4) {
+	    case 0:
+	      break;
+	    case 2:
+	      output += "==";
+	      break;
+	    case 3:
+	      output += "=";
+	      break;
+	    default:
+	      throw "Illegal base64url string!";
+	  }
+
+	  try{
+	    return b64DecodeUnicode(output);
+	  } catch (err) {
+	    return Base64.atob(output);
+	  }
+	};
+
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var base64_url_decode = __webpack_require__(72);
+	var json_parse = __webpack_require__(74);
+
+	module.exports = function (token) {
+	  if (!token) {
+	    throw new Error('Invalid token specified');
+	  }
+	  
+	  return json_parse(base64_url_decode(token.split('.')[1]));
+	};
+
+
+/***/ },
 /* 74 */
+/***/ function(module, exports) {
+
+	module.exports = function (str) {
+	  var parsed;
+	  if (typeof JSON === 'object') {
+	    parsed = JSON.parse(str);
+	  } else {
+	    parsed = eval('(' + str + ')');
+	  }
+	  return parsed;
+	};
+
+
+/***/ },
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var nativeCreate = __webpack_require__(20);
@@ -4100,6 +4249,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Creates an hash object.
 	 *
 	 * @private
+	 * @constructor
 	 * @returns {Object} Returns the new hash object.
 	 */
 	function Hash() {}
@@ -4111,7 +4261,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 75 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var root = __webpack_require__(4);
@@ -4123,7 +4273,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 76 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(17),
@@ -4136,17 +4286,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 77 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var MapCache = __webpack_require__(40),
-	    cachePush = __webpack_require__(113);
+	    cachePush = __webpack_require__(115);
 
 	/**
 	 *
 	 * Creates a set cache object to store unique values.
 	 *
 	 * @private
+	 * @constructor
 	 * @param {Array} [values] The values to cache.
 	 */
 	function SetCache(values) {
@@ -4166,7 +4317,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 78 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(17),
@@ -4179,7 +4330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 79 */
+/* 80 */
 /***/ function(module, exports) {
 
 	/**
@@ -4199,7 +4350,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 80 */
+/* 81 */
 /***/ function(module, exports) {
 
 	/**
@@ -4219,7 +4370,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 81 */
+/* 82 */
 /***/ function(module, exports) {
 
 	/**
@@ -4247,7 +4398,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 82 */
+/* 83 */
 /***/ function(module, exports) {
 
 	/**
@@ -4275,10 +4426,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 83 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(51);
+	var baseIndexOf = __webpack_require__(52);
 
 	/**
 	 * A specialized version of `_.includes` for arrays without support for
@@ -4297,7 +4448,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 84 */
+/* 85 */
 /***/ function(module, exports) {
 
 	/**
@@ -4326,7 +4477,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 85 */
+/* 86 */
 /***/ function(module, exports) {
 
 	/**
@@ -4352,11 +4503,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 86 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(29),
-	    keys = __webpack_require__(9);
+	    keys = __webpack_require__(10);
 
 	/**
 	 * The base implementation of `_.assign` without support for multiple sources
@@ -4375,23 +4526,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 87 */
+/* 88 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var identity = __webpack_require__(64);
+
+	/**
+	 * Casts `value` to `identity` if it's not a function.
+	 *
+	 * @private
+	 * @param {*} value The value to inspect.
+	 * @returns {Array} Returns the array-like object.
+	 */
+	function baseCastFunction(value) {
+	  return typeof value == 'function' ? value : identity;
+	}
+
+	module.exports = baseCastFunction;
+
+
+/***/ },
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(13),
 	    arrayEach = __webpack_require__(25),
 	    assignValue = __webpack_require__(44),
-	    baseAssign = __webpack_require__(86),
-	    baseForOwn = __webpack_require__(49),
-	    cloneBuffer = __webpack_require__(115),
+	    baseAssign = __webpack_require__(87),
+	    baseForOwn = __webpack_require__(50),
+	    cloneBuffer = __webpack_require__(117),
 	    copyArray = __webpack_require__(56),
-	    copySymbols = __webpack_require__(122),
+	    copySymbols = __webpack_require__(124),
 	    getTag = __webpack_require__(57),
-	    initCloneArray = __webpack_require__(136),
-	    initCloneByTag = __webpack_require__(137),
-	    initCloneObject = __webpack_require__(138),
+	    initCloneArray = __webpack_require__(138),
+	    initCloneByTag = __webpack_require__(139),
+	    initCloneObject = __webpack_require__(140),
 	    isArray = __webpack_require__(1),
-	    isBuffer = __webpack_require__(162),
+	    isBuffer = __webpack_require__(163),
 	    isHostObject = __webpack_require__(18),
 	    isObject = __webpack_require__(2);
 
@@ -4485,9 +4656,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return copySymbols(value, baseAssign(result, value));
 	      }
 	    } else {
-	      return cloneableTags[tag]
-	        ? initCloneByTag(value, tag, isDeep)
-	        : (object ? value : {});
+	      if (!cloneableTags[tag]) {
+	        return object ? value : {};
+	      }
+	      result = initCloneByTag(value, tag, isDeep);
 	    }
 	  }
 	  // Check for circular references and return its corresponding clone.
@@ -4509,10 +4681,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 88 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(2);
+
+	/** Built-in value references. */
+	var objectCreate = Object.create;
 
 	/**
 	 * The base implementation of `_.create` without support for assigning
@@ -4522,31 +4697,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} prototype The object to inherit from.
 	 * @returns {Object} Returns the new object.
 	 */
-	var baseCreate = (function() {
-	  function object() {}
-	  return function(prototype) {
-	    if (isObject(prototype)) {
-	      object.prototype = prototype;
-	      var result = new object;
-	      object.prototype = undefined;
-	    }
-	    return result || {};
-	  };
-	}());
+	function baseCreate(proto) {
+	  return isObject(proto) ? objectCreate(proto) : {};
+	}
 
 	module.exports = baseCreate;
 
 
 /***/ },
-/* 89 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var SetCache = __webpack_require__(77),
-	    arrayIncludes = __webpack_require__(83),
-	    arrayIncludesWith = __webpack_require__(84),
+	var SetCache = __webpack_require__(78),
+	    arrayIncludes = __webpack_require__(84),
+	    arrayIncludesWith = __webpack_require__(85),
 	    arrayMap = __webpack_require__(14),
-	    baseUnary = __webpack_require__(110),
-	    cacheHas = __webpack_require__(112);
+	    baseUnary = __webpack_require__(112),
+	    cacheHas = __webpack_require__(114);
 
 	/** Used as the size to enable large array optimizations. */
 	var LARGE_ARRAY_SIZE = 200;
@@ -4610,7 +4777,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 90 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseEach = __webpack_require__(16);
@@ -4636,7 +4803,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 91 */
+/* 93 */
 /***/ function(module, exports) {
 
 	/**
@@ -4666,7 +4833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 92 */
+/* 94 */
 /***/ function(module, exports) {
 
 	/**
@@ -4695,10 +4862,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 93 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayPush = __webpack_require__(85),
+	var arrayPush = __webpack_require__(86),
 	    isArguments = __webpack_require__(22),
 	    isArray = __webpack_require__(1),
 	    isArrayLikeObject = __webpack_require__(33);
@@ -4708,12 +4875,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @private
 	 * @param {Array} array The array to flatten.
-	 * @param {boolean} [isDeep] Specify a deep flatten.
+	 * @param {number} depth The maximum recursion depth.
 	 * @param {boolean} [isStrict] Restrict flattening to arrays-like objects.
 	 * @param {Array} [result=[]] The initial result value.
 	 * @returns {Array} Returns the new flattened array.
 	 */
-	function baseFlatten(array, isDeep, isStrict, result) {
+	function baseFlatten(array, depth, isStrict, result) {
 	  result || (result = []);
 
 	  var index = -1,
@@ -4721,11 +4888,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  while (++index < length) {
 	    var value = array[index];
-	    if (isArrayLikeObject(value) &&
+	    if (depth > 0 && isArrayLikeObject(value) &&
 	        (isStrict || isArray(value) || isArguments(value))) {
-	      if (isDeep) {
+	      if (depth > 1) {
 	        // Recursively flatten arrays (susceptible to call stack limits).
-	        baseFlatten(value, isDeep, isStrict, result);
+	        baseFlatten(value, depth - 1, isStrict, result);
 	      } else {
 	        arrayPush(result, value);
 	      }
@@ -4740,10 +4907,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 94 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createBaseFor = __webpack_require__(125);
+	var createBaseFor = __webpack_require__(127);
 
 	/**
 	 * The base implementation of `baseForIn` and `baseForOwn` which iterates
@@ -4763,7 +4930,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 95 */
+/* 97 */
 /***/ function(module, exports) {
 
 	/**
@@ -4782,13 +4949,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 96 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(13),
-	    equalArrays = __webpack_require__(126),
-	    equalByTag = __webpack_require__(127),
-	    equalObjects = __webpack_require__(128),
+	    equalArrays = __webpack_require__(128),
+	    equalByTag = __webpack_require__(129),
+	    equalObjects = __webpack_require__(130),
 	    getTag = __webpack_require__(57),
 	    isArray = __webpack_require__(1),
 	    isHostObject = __webpack_require__(18),
@@ -4871,11 +5038,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 97 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(13),
-	    baseIsEqual = __webpack_require__(52);
+	    baseIsEqual = __webpack_require__(53);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -4938,7 +5105,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 98 */
+/* 100 */
 /***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -4949,7 +5116,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * property of prototypes or treat sparse arrays as dense.
 	 *
 	 * @private
-	 * @type Function
 	 * @param {Object} object The object to query.
 	 * @returns {Array} Returns the array of property names.
 	 */
@@ -4961,11 +5127,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 99 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Reflect = __webpack_require__(75),
-	    iteratorToArray = __webpack_require__(140);
+	var Reflect = __webpack_require__(76),
+	    iteratorToArray = __webpack_require__(142);
 
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -5003,11 +5169,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 100 */
+/* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsMatch = __webpack_require__(97),
-	    getMatchData = __webpack_require__(130);
+	var baseIsMatch = __webpack_require__(99),
+	    getMatchData = __webpack_require__(132);
 
 	/**
 	 * The base implementation of `_.matches` which doesn't clone `source`.
@@ -5039,12 +5205,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 101 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsEqual = __webpack_require__(52),
+	var baseIsEqual = __webpack_require__(53),
 	    get = __webpack_require__(63),
-	    hasIn = __webpack_require__(160);
+	    hasIn = __webpack_require__(161);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -5071,13 +5237,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 102 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(13),
 	    arrayEach = __webpack_require__(25),
 	    assignMergeValue = __webpack_require__(43),
-	    baseMergeDeep = __webpack_require__(103),
+	    baseMergeDeep = __webpack_require__(105),
 	    isArray = __webpack_require__(1),
 	    isObject = __webpack_require__(2),
 	    isTypedArray = __webpack_require__(34),
@@ -5097,7 +5263,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (object === source) {
 	    return;
 	  }
-	  var props = (isArray(source) || isTypedArray(source)) ? undefined : keysIn(source);
+	  var props = (isArray(source) || isTypedArray(source))
+	    ? undefined
+	    : keysIn(source);
+
 	  arrayEach(props || source, function(srcValue, key) {
 	    if (props) {
 	      key = srcValue;
@@ -5108,7 +5277,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      baseMergeDeep(object, source, key, srcIndex, baseMerge, customizer, stack);
 	    }
 	    else {
-	      var newValue = customizer ? customizer(object[key], srcValue, (key + ''), object, source, stack) : undefined;
+	      var newValue = customizer
+	        ? customizer(object[key], srcValue, (key + ''), object, source, stack)
+	        : undefined;
+
 	      if (newValue === undefined) {
 	        newValue = srcValue;
 	      }
@@ -5121,20 +5293,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 103 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assignMergeValue = __webpack_require__(43),
-	    baseClone = __webpack_require__(87),
+	    baseClone = __webpack_require__(89),
 	    copyArray = __webpack_require__(56),
 	    isArguments = __webpack_require__(22),
 	    isArray = __webpack_require__(1),
 	    isArrayLikeObject = __webpack_require__(33),
-	    isFunction = __webpack_require__(11),
+	    isFunction = __webpack_require__(8),
 	    isObject = __webpack_require__(2),
-	    isPlainObject = __webpack_require__(164),
+	    isPlainObject = __webpack_require__(165),
 	    isTypedArray = __webpack_require__(34),
-	    toPlainObject = __webpack_require__(173);
+	    toPlainObject = __webpack_require__(174);
 
 	/**
 	 * A specialized version of `baseMerge` for arrays and objects which performs
@@ -5159,21 +5331,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    assignMergeValue(object, key, stacked);
 	    return;
 	  }
-	  var newValue = customizer ? customizer(objValue, srcValue, (key + ''), object, source, stack) : undefined,
-	      isCommon = newValue === undefined;
+	  var newValue = customizer
+	    ? customizer(objValue, srcValue, (key + ''), object, source, stack)
+	    : undefined;
+
+	  var isCommon = newValue === undefined;
 
 	  if (isCommon) {
 	    newValue = srcValue;
 	    if (isArray(srcValue) || isTypedArray(srcValue)) {
 	      if (isArray(objValue)) {
-	        newValue = srcIndex ? copyArray(objValue) : objValue;
+	        newValue = objValue;
 	      }
 	      else if (isArrayLikeObject(objValue)) {
 	        newValue = copyArray(objValue);
 	      }
 	      else {
 	        isCommon = false;
-	        newValue = baseClone(srcValue);
+	        newValue = baseClone(srcValue, true);
 	      }
 	    }
 	    else if (isPlainObject(srcValue) || isArguments(srcValue)) {
@@ -5182,10 +5357,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      else if (!isObject(objValue) || (srcIndex && isFunction(objValue))) {
 	        isCommon = false;
-	        newValue = baseClone(srcValue);
+	        newValue = baseClone(srcValue, true);
 	      }
 	      else {
-	        newValue = srcIndex ? baseClone(objValue) : objValue;
+	        newValue = objValue;
 	      }
 	    }
 	    else {
@@ -5205,7 +5380,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 104 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayReduce = __webpack_require__(26);
@@ -5233,10 +5408,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 105 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(50);
+	var baseGet = __webpack_require__(51);
 
 	/**
 	 * A specialized version of `baseProperty` which supports deep paths.
@@ -5255,7 +5430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 106 */
+/* 108 */
 /***/ function(module, exports) {
 
 	/**
@@ -5292,7 +5467,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 107 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseEach = __webpack_require__(16);
@@ -5319,7 +5494,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 108 */
+/* 110 */
 /***/ function(module, exports) {
 
 	/**
@@ -5345,7 +5520,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 109 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayMap = __webpack_require__(14);
@@ -5369,7 +5544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 110 */
+/* 112 */
 /***/ function(module, exports) {
 
 	/**
@@ -5389,7 +5564,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 111 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayMap = __webpack_require__(14);
@@ -5414,7 +5589,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 112 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isKeyable = __webpack_require__(7);
@@ -5445,7 +5620,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 113 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isKeyable = __webpack_require__(7);
@@ -5478,7 +5653,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 114 */
+/* 116 */
 /***/ function(module, exports) {
 
 	/**
@@ -5496,7 +5671,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 115 */
+/* 117 */
 /***/ function(module, exports) {
 
 	/**
@@ -5522,10 +5697,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 116 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addMapEntry = __webpack_require__(79),
+	var addMapEntry = __webpack_require__(80),
 	    arrayReduce = __webpack_require__(26),
 	    mapToArray = __webpack_require__(61);
 
@@ -5545,7 +5720,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 117 */
+/* 119 */
 /***/ function(module, exports) {
 
 	/** Used to match `RegExp` flags from their coerced string values. */
@@ -5570,10 +5745,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 118 */
+/* 120 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addSetEntry = __webpack_require__(80),
+	var addSetEntry = __webpack_require__(81),
 	    arrayReduce = __webpack_require__(26),
 	    setToArray = __webpack_require__(62);
 
@@ -5593,7 +5768,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 119 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(24);
@@ -5617,7 +5792,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 120 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var cloneArrayBuffer = __webpack_require__(55);
@@ -5631,17 +5806,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Object} Returns the cloned typed array.
 	 */
 	function cloneTypedArray(typedArray, isDeep) {
-	  var buffer = typedArray.buffer,
+	  var arrayBuffer = typedArray.buffer,
+	      buffer = isDeep ? cloneArrayBuffer(arrayBuffer) : arrayBuffer,
 	      Ctor = typedArray.constructor;
 
-	  return new Ctor(isDeep ? cloneArrayBuffer(buffer) : buffer, typedArray.byteOffset, typedArray.length);
+	  return new Ctor(buffer, typedArray.byteOffset, typedArray.length);
 	}
 
 	module.exports = cloneTypedArray;
 
 
 /***/ },
-/* 121 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assignValue = __webpack_require__(44);
@@ -5664,8 +5840,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      length = props.length;
 
 	  while (++index < length) {
-	    var key = props[index],
-	        newValue = customizer ? customizer(object[key], source[key], key, object, source) : source[key];
+	    var key = props[index];
+
+	    var newValue = customizer
+	      ? customizer(object[key], source[key], key, object, source)
+	      : source[key];
 
 	    assignValue(object, key, newValue);
 	  }
@@ -5676,11 +5855,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 122 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(29),
-	    getSymbols = __webpack_require__(131);
+	    getSymbols = __webpack_require__(133);
 
 	/**
 	 * Copies own symbol properties of `source` to `object`.
@@ -5698,7 +5877,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 123 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isIterateeCall = __webpack_require__(30),
@@ -5718,7 +5897,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        customizer = length > 1 ? sources[length - 1] : undefined,
 	        guard = length > 2 ? sources[2] : undefined;
 
-	    customizer = typeof customizer == 'function' ? (length--, customizer) : undefined;
+	    customizer = typeof customizer == 'function'
+	      ? (length--, customizer)
+	      : undefined;
+
 	    if (guard && isIterateeCall(sources[0], sources[1], guard)) {
 	      customizer = length < 3 ? undefined : customizer;
 	      length = 1;
@@ -5738,10 +5920,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 124 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(10);
+	var isArrayLike = __webpack_require__(11);
 
 	/**
 	 * Creates a `baseEach` or `baseEachRight` function.
@@ -5776,7 +5958,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 125 */
+/* 127 */
 /***/ function(module, exports) {
 
 	/**
@@ -5807,7 +5989,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 126 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arraySome = __webpack_require__(42);
@@ -5885,7 +6067,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 127 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(24),
@@ -5979,11 +6161,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 128 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseHas = __webpack_require__(27),
-	    keys = __webpack_require__(9);
+	    keys = __webpack_require__(10);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var PARTIAL_COMPARE_FLAG = 2;
@@ -6067,10 +6249,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 129 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(53);
+	var baseProperty = __webpack_require__(54);
 
 	/**
 	 * Gets the "length" property value of `object`.
@@ -6088,11 +6270,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 130 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isStrictComparable = __webpack_require__(139),
-	    toPairs = __webpack_require__(172);
+	var isStrictComparable = __webpack_require__(141),
+	    toPairs = __webpack_require__(173);
 
 	/**
 	 * Gets the property names, values, and compare flags of `object`.
@@ -6115,7 +6297,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 131 */
+/* 133 */
 /***/ function(module, exports) {
 
 	/** Built-in value references. */
@@ -6136,7 +6318,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 132 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var hashHas = __webpack_require__(59);
@@ -6157,7 +6339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 133 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var nativeCreate = __webpack_require__(20);
@@ -6191,7 +6373,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 134 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var nativeCreate = __webpack_require__(20);
@@ -6215,7 +6397,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 135 */
+/* 137 */
 /***/ function(module, exports) {
 
 	/**
@@ -6244,7 +6426,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 136 */
+/* 138 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -6276,15 +6458,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 137 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var cloneArrayBuffer = __webpack_require__(55),
-	    cloneMap = __webpack_require__(116),
-	    cloneRegExp = __webpack_require__(117),
-	    cloneSet = __webpack_require__(118),
-	    cloneSymbol = __webpack_require__(119),
-	    cloneTypedArray = __webpack_require__(120);
+	    cloneMap = __webpack_require__(118),
+	    cloneRegExp = __webpack_require__(119),
+	    cloneSet = __webpack_require__(120),
+	    cloneSymbol = __webpack_require__(121),
+	    cloneTypedArray = __webpack_require__(122);
 
 	/** `Object#toString` result references. */
 	var boolTag = '[object Boolean]',
@@ -6356,12 +6538,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 138 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseCreate = __webpack_require__(88),
-	    isFunction = __webpack_require__(11),
+	var baseCreate = __webpack_require__(90),
+	    isFunction = __webpack_require__(8),
 	    isPrototype = __webpack_require__(32);
+
+	/** Built-in value references. */
+	var getPrototypeOf = Object.getPrototypeOf;
 
 	/**
 	 * Initializes an object clone.
@@ -6371,18 +6556,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Object} Returns the initialized clone.
 	 */
 	function initCloneObject(object) {
-	  if (isPrototype(object)) {
-	    return {};
-	  }
-	  var Ctor = object.constructor;
-	  return baseCreate(isFunction(Ctor) ? Ctor.prototype : undefined);
+	  return (isFunction(object.constructor) && !isPrototype(object))
+	    ? baseCreate(getPrototypeOf(object))
+	    : {};
 	}
 
 	module.exports = initCloneObject;
 
 
 /***/ },
-/* 139 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(2);
@@ -6403,7 +6586,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 140 */
+/* 142 */
 /***/ function(module, exports) {
 
 	/**
@@ -6427,10 +6610,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 141 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Hash = __webpack_require__(74),
+	var Hash = __webpack_require__(75),
 	    Map = __webpack_require__(6);
 
 	/**
@@ -6441,19 +6624,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @memberOf MapCache
 	 */
 	function mapClear() {
-	  this.__data__ = { 'hash': new Hash, 'map': Map ? new Map : [], 'string': new Hash };
+	  this.__data__ = {
+	    'hash': new Hash,
+	    'map': Map ? new Map : [],
+	    'string': new Hash
+	  };
 	}
 
 	module.exports = mapClear;
 
 
 /***/ },
-/* 142 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
 	    assocDelete = __webpack_require__(45),
-	    hashDelete = __webpack_require__(132),
+	    hashDelete = __webpack_require__(134),
 	    isKeyable = __webpack_require__(7);
 
 	/**
@@ -6477,12 +6664,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 143 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
 	    assocGet = __webpack_require__(46),
-	    hashGet = __webpack_require__(133),
+	    hashGet = __webpack_require__(135),
 	    isKeyable = __webpack_require__(7);
 
 	/**
@@ -6506,7 +6693,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 144 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
@@ -6535,12 +6722,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 145 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Map = __webpack_require__(6),
 	    assocSet = __webpack_require__(48),
-	    hashSet = __webpack_require__(134),
+	    hashSet = __webpack_require__(136),
 	    isKeyable = __webpack_require__(7);
 
 	/**
@@ -6569,10 +6756,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 146 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseSlice = __webpack_require__(106),
+	var baseSlice = __webpack_require__(108),
 	    get = __webpack_require__(63);
 
 	/**
@@ -6591,7 +6778,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 147 */
+/* 149 */
 /***/ function(module, exports) {
 
 	/**
@@ -6609,7 +6796,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 148 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assocDelete = __webpack_require__(45);
@@ -6634,7 +6821,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 149 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assocGet = __webpack_require__(46);
@@ -6659,7 +6846,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 150 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var assocHas = __webpack_require__(47);
@@ -6684,7 +6871,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 151 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var MapCache = __webpack_require__(40),
@@ -6726,10 +6913,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 152 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toString = __webpack_require__(174);
+	var toString = __webpack_require__(175);
 
 	/** Used to match property names within property paths. */
 	var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]/g;
@@ -6756,27 +6943,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 153 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var identity = __webpack_require__(64);
-
-	/**
-	 * Converts `value` to a function if it's not one.
-	 *
-	 * @private
-	 * @param {*} value The value to process.
-	 * @returns {Function} Returns the function.
-	 */
-	function toFunction(value) {
-	  return typeof value == 'function' ? value : identity;
-	}
-
-	module.exports = toFunction;
-
-
-/***/ },
-/* 154 */
+/* 155 */
 /***/ function(module, exports) {
 
 	/**
@@ -6805,18 +6972,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 155 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(158);
-
-
-/***/ },
 /* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayEvery = __webpack_require__(82),
-	    baseEvery = __webpack_require__(90),
+	module.exports = __webpack_require__(159);
+
+
+/***/ },
+/* 157 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayEvery = __webpack_require__(83),
+	    baseEvery = __webpack_require__(92),
 	    baseIteratee = __webpack_require__(28),
 	    isArray = __webpack_require__(1),
 	    isIterateeCall = __webpack_require__(30);
@@ -6867,12 +7034,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 157 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseEach = __webpack_require__(16),
-	    baseFind = __webpack_require__(91),
-	    baseFindIndex = __webpack_require__(92),
+	    baseFind = __webpack_require__(93),
+	    baseFindIndex = __webpack_require__(94),
 	    baseIteratee = __webpack_require__(28),
 	    isArray = __webpack_require__(1);
 
@@ -6923,13 +7090,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 158 */
+/* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayEach = __webpack_require__(25),
+	    baseCastFunction = __webpack_require__(88),
 	    baseEach = __webpack_require__(16),
-	    isArray = __webpack_require__(1),
-	    toFunction = __webpack_require__(153);
+	    isArray = __webpack_require__(1);
 
 	/**
 	 * Iterates over elements of `collection` invoking `iteratee` for each element.
@@ -6962,14 +7129,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	function forEach(collection, iteratee) {
 	  return (typeof iteratee == 'function' && isArray(collection))
 	    ? arrayEach(collection, iteratee)
-	    : baseEach(collection, toFunction(iteratee));
+	    : baseEach(collection, baseCastFunction(iteratee));
 	}
 
 	module.exports = forEach;
 
 
 /***/ },
-/* 159 */
+/* 160 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseHas = __webpack_require__(27),
@@ -7009,10 +7176,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 160 */
+/* 161 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHasIn = __webpack_require__(95),
+	var baseHasIn = __webpack_require__(97),
 	    hasPath = __webpack_require__(58);
 
 	/**
@@ -7048,14 +7215,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 161 */
+/* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(51),
-	    isArrayLike = __webpack_require__(10),
-	    isString = __webpack_require__(8),
+	var baseIndexOf = __webpack_require__(52),
+	    isArrayLike = __webpack_require__(11),
+	    isString = __webpack_require__(9),
 	    toInteger = __webpack_require__(66),
-	    values = __webpack_require__(175);
+	    values = __webpack_require__(176);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -7105,10 +7272,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 162 */
+/* 163 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(module) {var constant = __webpack_require__(154),
+	/* WEBPACK VAR INJECTION */(function(module) {var constant = __webpack_require__(155),
 	    root = __webpack_require__(4);
 
 	/** Used to determine if values are of the language type `Object`. */
@@ -7118,13 +7285,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/** Detect free variable `exports`. */
-	var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType) ? exports : null;
+	var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
+	  ? exports
+	  : undefined;
 
 	/** Detect free variable `module`. */
-	var freeModule = (objectTypes[typeof module] && module && !module.nodeType) ? module : null;
+	var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
+	  ? module
+	  : undefined;
 
 	/** Detect the popular CommonJS extension `module.exports`. */
-	var moduleExports = (freeModule && freeModule.exports === freeExports) ? freeExports : null;
+	var moduleExports = (freeModule && freeModule.exports === freeExports)
+	  ? freeExports
+	  : undefined;
 
 	/** Built-in value references. */
 	var Buffer = moduleExports ? root.Buffer : undefined;
@@ -7154,10 +7327,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module)))
 
 /***/ },
-/* 163 */
+/* 164 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isFunction = __webpack_require__(11),
+	var isFunction = __webpack_require__(8),
 	    isHostObject = __webpack_require__(18),
 	    isObjectLike = __webpack_require__(5);
 
@@ -7213,7 +7386,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 164 */
+/* 165 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isHostObject = __webpack_require__(18),
@@ -7268,13 +7441,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * // => true
 	 */
 	function isPlainObject(value) {
-	  if (!isObjectLike(value) || objectToString.call(value) != objectTag || isHostObject(value)) {
+	  if (!isObjectLike(value) ||
+	      objectToString.call(value) != objectTag || isHostObject(value)) {
 	    return false;
 	  }
-	  var proto = objectProto;
-	  if (typeof value.constructor == 'function') {
-	    proto = getPrototypeOf(value);
-	  }
+	  var proto = getPrototypeOf(value);
 	  if (proto === null) {
 	    return true;
 	  }
@@ -7287,7 +7458,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 165 */
+/* 166 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObjectLike = __webpack_require__(5);
@@ -7329,7 +7500,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 166 */
+/* 167 */
 /***/ function(module, exports) {
 
 	/**
@@ -7354,19 +7525,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 167 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseMerge = __webpack_require__(102),
-	    createAssigner = __webpack_require__(123);
+	var baseMerge = __webpack_require__(104),
+	    createAssigner = __webpack_require__(125);
 
 	/**
-	 * Recursively merges own and inherited enumerable properties of source
-	 * objects into the destination object, skipping source properties that resolve
-	 * to `undefined`. Array and plain object properties are merged recursively.
-	 * Other objects and value types are overridden by assignment. Source objects
-	 * are applied from left to right. Subsequent sources overwrite property
-	 * assignments of previous sources.
+	 * Recursively merges own and inherited enumerable properties of source objects
+	 * into the destination object. Source properties that resolve to `undefined`
+	 * are skipped if a destination value exists. Array and plain object properties
+	 * are merged recursively. Other objects and value types are overridden by
+	 * assignment. Source objects are applied from left to right. Subsequent
+	 * sources overwrite property assignments of previous sources.
 	 *
 	 * **Note:** This method mutates `object`.
 	 *
@@ -7397,13 +7568,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 168 */
+/* 169 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayMap = __webpack_require__(14),
-	    baseDifference = __webpack_require__(89),
-	    baseFlatten = __webpack_require__(93),
-	    basePick = __webpack_require__(104),
+	    baseDifference = __webpack_require__(91),
+	    baseFlatten = __webpack_require__(95),
+	    basePick = __webpack_require__(106),
 	    keysIn = __webpack_require__(35),
 	    rest = __webpack_require__(65);
 
@@ -7416,7 +7587,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @category Object
 	 * @param {Object} object The source object.
 	 * @param {...(string|string[])} [props] The property names to omit, specified
-	 *  individually or in arrays..
+	 *  individually or in arrays.
 	 * @returns {Object} Returns the new object.
 	 * @example
 	 *
@@ -7429,7 +7600,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (object == null) {
 	    return {};
 	  }
-	  props = arrayMap(baseFlatten(props), String);
+	  props = arrayMap(baseFlatten(props, 1), String);
 	  return basePick(object, baseDifference(keysIn(object), props));
 	});
 
@@ -7437,11 +7608,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 169 */
+/* 170 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(53),
-	    basePropertyDeep = __webpack_require__(105),
+	var baseProperty = __webpack_require__(54),
+	    basePropertyDeep = __webpack_require__(107),
 	    isKey = __webpack_require__(31);
 
 	/**
@@ -7473,12 +7644,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 170 */
+/* 171 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arraySome = __webpack_require__(42),
 	    baseIteratee = __webpack_require__(28),
-	    baseSome = __webpack_require__(107),
+	    baseSome = __webpack_require__(109),
 	    isArray = __webpack_require__(1),
 	    isIterateeCall = __webpack_require__(30);
 
@@ -7528,10 +7699,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 171 */
+/* 172 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isFunction = __webpack_require__(11),
+	var isFunction = __webpack_require__(8),
 	    isObject = __webpack_require__(2);
 
 	/** Used as references for various `Number` constants. */
@@ -7593,14 +7764,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 172 */
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPairs = __webpack_require__(109),
-	    keys = __webpack_require__(9);
+	var baseToPairs = __webpack_require__(111),
+	    keys = __webpack_require__(10);
 
 	/**
-	 * Creates an array of own enumerable key-value pairs for `object`.
+	 * Creates an array of own enumerable key-value pairs for `object` which
+	 * can be consumed by `_.fromPairs`.
 	 *
 	 * @static
 	 * @memberOf _
@@ -7627,7 +7799,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 173 */
+/* 174 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(29),
@@ -7664,11 +7836,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 174 */
+/* 175 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(24),
-	    isSymbol = __webpack_require__(165);
+	    isSymbol = __webpack_require__(166);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -7716,11 +7888,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 175 */
+/* 176 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseValues = __webpack_require__(111),
-	    keys = __webpack_require__(9);
+	var baseValues = __webpack_require__(113),
+	    keys = __webpack_require__(10);
 
 	/**
 	 * Creates an array of the own enumerable property values of `object`.
@@ -7755,15 +7927,44 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 176 */
+/* 177 */
+/***/ function(module, exports) {
+
+	
+	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 178 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(177);
-	var reduce = __webpack_require__(178);
+	var Emitter = __webpack_require__(71);
+	var reduce = __webpack_require__(177);
 
 	/**
 	 * Root reference for iframes.
@@ -8950,202 +9151,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = request;
 
-
-/***/ },
-/* 177 */
-/***/ function(module, exports) {
-
-	
-	/**
-	 * Expose `Emitter`.
-	 */
-
-	module.exports = Emitter;
-
-	/**
-	 * Initialize a new `Emitter`.
-	 *
-	 * @api public
-	 */
-
-	function Emitter(obj) {
-	  if (obj) return mixin(obj);
-	};
-
-	/**
-	 * Mixin the emitter properties.
-	 *
-	 * @param {Object} obj
-	 * @return {Object}
-	 * @api private
-	 */
-
-	function mixin(obj) {
-	  for (var key in Emitter.prototype) {
-	    obj[key] = Emitter.prototype[key];
-	  }
-	  return obj;
-	}
-
-	/**
-	 * Listen on the given `event` with `fn`.
-	 *
-	 * @param {String} event
-	 * @param {Function} fn
-	 * @return {Emitter}
-	 * @api public
-	 */
-
-	Emitter.prototype.on =
-	Emitter.prototype.addEventListener = function(event, fn){
-	  this._callbacks = this._callbacks || {};
-	  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
-	    .push(fn);
-	  return this;
-	};
-
-	/**
-	 * Adds an `event` listener that will be invoked a single
-	 * time then automatically removed.
-	 *
-	 * @param {String} event
-	 * @param {Function} fn
-	 * @return {Emitter}
-	 * @api public
-	 */
-
-	Emitter.prototype.once = function(event, fn){
-	  function on() {
-	    this.off(event, on);
-	    fn.apply(this, arguments);
-	  }
-
-	  on.fn = fn;
-	  this.on(event, on);
-	  return this;
-	};
-
-	/**
-	 * Remove the given callback for `event` or all
-	 * registered callbacks.
-	 *
-	 * @param {String} event
-	 * @param {Function} fn
-	 * @return {Emitter}
-	 * @api public
-	 */
-
-	Emitter.prototype.off =
-	Emitter.prototype.removeListener =
-	Emitter.prototype.removeAllListeners =
-	Emitter.prototype.removeEventListener = function(event, fn){
-	  this._callbacks = this._callbacks || {};
-
-	  // all
-	  if (0 == arguments.length) {
-	    this._callbacks = {};
-	    return this;
-	  }
-
-	  // specific event
-	  var callbacks = this._callbacks['$' + event];
-	  if (!callbacks) return this;
-
-	  // remove all handlers
-	  if (1 == arguments.length) {
-	    delete this._callbacks['$' + event];
-	    return this;
-	  }
-
-	  // remove specific handler
-	  var cb;
-	  for (var i = 0; i < callbacks.length; i++) {
-	    cb = callbacks[i];
-	    if (cb === fn || cb.fn === fn) {
-	      callbacks.splice(i, 1);
-	      break;
-	    }
-	  }
-	  return this;
-	};
-
-	/**
-	 * Emit `event` with the given args.
-	 *
-	 * @param {String} event
-	 * @param {Mixed} ...
-	 * @return {Emitter}
-	 */
-
-	Emitter.prototype.emit = function(event){
-	  this._callbacks = this._callbacks || {};
-	  var args = [].slice.call(arguments, 1)
-	    , callbacks = this._callbacks['$' + event];
-
-	  if (callbacks) {
-	    callbacks = callbacks.slice(0);
-	    for (var i = 0, len = callbacks.length; i < len; ++i) {
-	      callbacks[i].apply(this, args);
-	    }
-	  }
-
-	  return this;
-	};
-
-	/**
-	 * Return array of callbacks for `event`.
-	 *
-	 * @param {String} event
-	 * @return {Array}
-	 * @api public
-	 */
-
-	Emitter.prototype.listeners = function(event){
-	  this._callbacks = this._callbacks || {};
-	  return this._callbacks['$' + event] || [];
-	};
-
-	/**
-	 * Check if this emitter has `event` handlers.
-	 *
-	 * @param {String} event
-	 * @return {Boolean}
-	 * @api public
-	 */
-
-	Emitter.prototype.hasListeners = function(event){
-	  return !! this.listeners(event).length;
-	};
-
-
-/***/ },
-/* 178 */
-/***/ function(module, exports) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
 
 /***/ }
 /******/ ])
