@@ -1,0 +1,37 @@
+{
+  "name": "kyper-matter",
+  "main":["dist/matter.js"],
+  "description": "Library to provide simple application functionality like authentication and local/session/token storage for Tesselate applications.",
+  "moduleType": [
+    "amd",
+    "globals",
+    "umd",
+    "node"
+  ],
+  "authors": [
+    "Kyper Digital Inc. <kyper.dev@gmail.com>",
+    "Prescott Prue <sprue.dev@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "**/*.md",
+    "node_modules",
+    "bower_components",
+    "test",
+    "package.json",
+    ".DS_Store",
+    "**/.DS_Store",
+    "test",
+    "redirect.html",
+    "index.html",
+    "LICENSE",
+    "examples",
+    "wiki",
+    "config.json"
+  ],
+  "repository":{
+    "type":"git",
+    "url":"git://github.com/KyperTech/matter"
+  }
+}

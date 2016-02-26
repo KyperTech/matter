@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <title>React-Matter Example</title>
+  <script src='node_modules/kyper-matter/dist/matter.js'></script>
+  <script src="node_modules/babel-core/browser.js"></script>
+  <script src="node_modules/react/dist/react-with-addons.js"></script>
+  <script src="node_modules/react/dist/react-dom.js"></script>
+  <script>
+    //Check to make sure file has a host
+    if(window && window.location.host === ""){
+      console.warn("You must this index.html file on a server in order to include external babel scripts. Try running npm install and using gulp.");
+    }
+  </script>
+  <!-- App needs to be served or it will not be allowed to access this file -->
+  <script src="app.js" type="text/babel"></script>
+  <!-- Inline scripts can be used without hosting
+  <script type="text/babel">
+    class ExampleItem {
+    }
+  </script> -->
+</head>
+  <body>
+    <div id="content"></div>
+  </body>
+</html>

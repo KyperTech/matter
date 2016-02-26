@@ -1,0 +1,12 @@
+{
+	"distFolder":"dist",
+	"folders": {
+		"dist": "dist",
+		"dev": "src",
+		"docs": "docs"
+	},
+	"cdn":{
+		"bucket":"kyper-cdn",
+		"prefix":"js/matter"
+	}
+}
