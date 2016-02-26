@@ -22,7 +22,12 @@
     "watch": "npm run watch:umd",
     "dev": "browser-sync start --server --port 5000",
     "prepublish": "npm run clean && npm run build",
-    "upload": "node ./bin/upload"
+    "upload": "node ./bin/upload",
+    "docs:clean": "rimraf _book",
+    "docs:prepare": "gitbook install",
+    "docs:build": "npm run docs:prepare && gitbook build -g kypertech/matter",
+    "docs:watch": "npm run docs:prepare && gitbook serve",
+    "docs:publish": "npm run docs:clean && npm run docs:build && cd _book && git init && git commit --allow-empty -m 'update book' && git checkout -b gh-pages && touch .nojekyll && git add . && git commit -am 'update book' && git push git@github.com:kypertech/matter gh-pages --force"
   },
   "repository": {
     "type": "git",
@@ -64,10 +69,10 @@
     "babel-plugin-add-module-exports": "^0.1.2",
     "babel-plugin-lodash": "^2.0.1",
     "babel-preset-es2015": "^6.5.0",
-    "babel-preset-stage-0": "^6.5.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.2.0",
     "es6-promise": "^3.0.2",
+    "gitbook-cli": "^1.0.1",
     "isparta": "^4.0.0",
     "jsdom": "^8.0.4",
     "legacy-loader": "0.0.2",

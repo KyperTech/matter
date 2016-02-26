@@ -1,4 +1,4 @@
-var matter = new Matter('tessellate', {logLevel: 'trace', envName: 'local'});
+var matter = new Matter('tessellate', {logLevel: 'trace', envName: 'prod'});
 // console.log('matter:', matter);
 //Set logged in status when dom is loaded
 document.addEventListener("DOMContentLoaded", function(event) {

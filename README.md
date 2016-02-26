@@ -16,34 +16,7 @@ Matter is Isomorphic, which means it will work well in both Browser and NodeJS e
 
 ## Quick Start
 
-Using Matter requires having created an application on [Build](http://build.kyper.io), [Tessellate](http://tessellate.kyper.io) or on [your own Tessellate server](https://github.com/KyperTech/tessellate/wiki/Run-Your-Own).
-
-### Browser
-1. Include the Matter library using one of the following:
-
-  #### CDN
-
-  To use the CDN, add the following script tag to your `index.html`:
-
-    ```html
-    <!-- Matter Library Bundle -->
-    <script src="http://cdn.kyper.io/js/matter/latest/matter.js"></script>
-    ```
-  #### Bower
-  Run `bower install --save kyper-matter`
-
-2. Start using Matter by providing the name of the app you created on [Build](http://build.kyper.io) or [Tessellate](http://tessellate.kyper.io):
-  ```javascript
-  //New Matter object with the application name 'exampleApp'
-  var matter = new Matter('exampleApp');
-  ```
-3. Start using Matter:
-```javascript
-//Login to account with username "test" and password "test"
-matter.login({username:"test", password:"test"}).then(function(user){
-    console.log('User logged into exampleApp:', user);
-});
-```
+Using Matter requires having created an application on [devshare](http://devshare.io), [Tessellate](http://tessellate.kyper.io) or on [your own Tessellate server](https://github.com/KyperTech/tessellate/wiki/Run-Your-Own).
 
 ### ES6
   1. Run `npm install --save kyper-matter`
@@ -82,6 +55,33 @@ matter.login({username:"test", password:"test"}).then((user) => {
   });
   ```
 
+### Browser
+  1. Include the Matter library using one of the following:
+
+    #### CDN
+
+    To use the CDN, add the following script tag to your `index.html`:
+
+      ```html
+      <!-- Matter Library Bundle -->
+      <script src="http://cdn.kyper.io/js/matter/latest/matter.js"></script>
+      ```
+    #### Bower
+    Run `bower install --save kyper-matter`
+
+  2. Start using Matter by providing the name of the app you created on [Build](http://build.kyper.io) or [Tessellate](http://tessellate.kyper.io):
+    ```javascript
+    //New Matter object with the application name 'exampleApp'
+    var matter = new Matter('exampleApp');
+    ```
+  3. Start using Matter:
+  ```javascript
+  //Login to account with username "test" and password "test"
+  matter.login({username:"test", password:"test"}).then(function(user){
+      console.log('User logged into exampleApp:', user);
+  });
+  ```
+
 ## Options
 When creating a new matter object, you can provide an options object as the second argument:
 
@@ -100,20 +100,43 @@ Availble options:
 
 ## Docs
 
-### [API Documentation](http://cdn.kyper.io/js/matter/latest/docs/index.html)
-
-### [Examples](https://github.com/KyperTech/matter/tree/master/examples)
+### [API Documentation](https://kypertech.github.com/matter)
 
 ## More Information
-For more details please visit the [Matter Wiki](https://github.com/KyperTech/matter/wiki).
+
+Matter is a javascript library that provides common web application functionality such as user authentication and local/session/token storage. In order to build applications quickly, Matter uses [Tessellate](https://github.com/kypertech/tessellate) to store and manage application data.
+
+## Application Data
+Matter communicates with [Tessellate](http://github.com/KyperTech/tesselate) for users, auth groups, and other application data. This means that you must have an application on Tessellate or on your own Tessellate server in order for you to be able to control the groups.
+
+## Features
+
+* Login/Logout/Signup
+* Authentication Groups
+* Secure Auth State Persistence (jwt token + cookies)
+* Session Management/Storage
+* Authenticated request utility
+* Logger utility
+
+*Diagram Coming Soon*
+
+## Examples
+### Browser/Javascript
+* [Simple](https://github.com/KyperTech/matter/tree/master/examples/browser)
+
+### React
+
+* [Simple](https://github.com/KyperTech/matter/tree/master/examples/React)
+* [React-Router and Redux](https://github.com/KyperTech/webpack-redux-react-matter-starter)
+
+### Angular
+* [Angular 1](https://github.com/KyperTech/matter/tree/master/examples/angular1)
+* [Angular 2](https://github.com/KyperTech/matter/tree/master/examples/Angular2)
+
+
 
 ## Test
 
 Tests are located in test folder and can be run via `gulp test` or `gulp coverage` commands.
 
 `index.html` has been added as a bare bones test page similar to browser example (`/examples/browser/index.html).
-
-## TODO
-* Run tests git pre-push
-* More local storage capabilities
-* Version release gulp task
