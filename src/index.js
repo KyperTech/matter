@@ -2,13 +2,12 @@ import config from './config'
 import logger from './utils/logger'
 import * as dom from './utils/dom'
 import * as request from './utils/request'
+import cruder, { get, put, post } from './utils/cruder'
 import * as ProviderAuth from './utils/providerAuth'
 import token from './utils/token'
 import * as envStorage from './utils/envStorage'
 import {
-  isString, isArray,
-  isObject, has,
-  some, every
+  isString, isObject, has
 } from 'lodash'
 
 export default class Matter {
@@ -124,7 +123,7 @@ export default class Matter {
    * @return {Object}
    */
   get utils () {
-    return { logger, request, storage: envStorage, dom }
+    return { logger, request, cruder, storage: envStorage, dom }
   }
 
   /** Signup a new user
@@ -181,7 +180,7 @@ export default class Matter {
         status: 'PASS_REQUIRED'
       })
     }
-    return request.post(`${this.endpoint}/signup`, signupData).then(response => {
+    return post(`${this.endpoint}/signup`)(signupData).then(response => {
       if (response.token) {
         this.token.string = response.token
       }
@@ -251,20 +250,21 @@ export default class Matter {
       })
     }
     // Username/Email Login
-    return request.put(`${this.endpoint}/login`, loginData)
+    return put(`${this.endpoint}/login`)(loginData)
     .then(response => {
-      if (response.data && response.data.status && response.data.status === 409) {
+      const { data, token, user } = response
+      if (data && data.status && data.status === 409) {
         logger.error({
           description: 'User not found.', response,
           func: 'login', obj: 'Matter'
         })
-        return Promise.reject(response.data)
+        return Promise.reject(data)
       }
-      if (response.token) {
-        this.token.string = response.token
+      if (token) {
+        this.token.string = token
       }
-      if (response.user) {
-        this.currentUser = response.user
+      if (user) {
+        this.currentUser = user
       }
       logger.info({
         description: 'Successful login.', user: this.currentUser,
@@ -306,7 +306,7 @@ export default class Matter {
         status: 'NULL_ACCOUNT'
       })
     }
-    return request.put(`${this.endpoint}/logout`).then(response => {
+    return put(`${this.endpoint}/logout`)().then(response => {
       logger.info({
         description: 'Logout successful.',
         response, func: 'logout', obj: 'Matter'
@@ -376,22 +376,9 @@ export default class Matter {
    * })
    */
   getCurrentUser () {
-    if (this.currentUser) {
-      logger.debug({
-        description: 'Current is already available. Returning user.',
-        func: 'currentUser', obj: 'Matter'
-      })
-      return Promise.resolve(this.currentUser)
-    }
-    if (!this.isLoggedIn) {
-      logger.debug({
-        description: 'Current user is null.',
-        func: 'currentUser', obj: 'Matter'
-      })
-      return Promise.resolve(null)
-    }
-    return request.get(`${this.endpoint}/user`).then(response => {
-      // TODO: Save user information locally
+    if (this.currentUser) return Promise.resolve(this.currentUser)
+    if (!this.isLoggedIn) return Promise.resolve(null)
+    return get(`${this.endpoint}/user`)().then(response => {
       logger.log({
         description: 'Current User Request responded.',
         response, func: 'currentUser', obj: 'Matter'
@@ -427,7 +414,7 @@ export default class Matter {
    * })
    */
   updateAccount (updateData) {
-    if (!this.isLoggedIn) {
+    if (!this.isLoggedIn || !this.currentUser || !this.currentUser.username) {
       logger.error({
         description: 'No current user profile to update.',
         func: 'updateAccount', obj: 'Matter'
@@ -447,7 +434,7 @@ export default class Matter {
       })
     }
     // Send update request
-    return request.put(`${this.endpoint}/users/${this.currentUser.username}`, updateData)
+    return put(`${this.endpoint}/users/${this.currentUser.username}`)(updateData)
     .then(response => {
       logger.info({
         description: 'Update profile request responded.',
@@ -498,7 +485,7 @@ export default class Matter {
     }
     const reqData = { files: [ { key: 'image', file } ] }
     // Send update request
-    return request.put(`${this.endpoint}/users/${this.currentUser.username}/avatar`, reqData)
+    return put(`${this.endpoint}/users/${this.currentUser.username}/avatar`)(reqData)
   }
 
   /** changePassword
@@ -513,7 +500,7 @@ export default class Matter {
    *  console.error('Error changing password:', err)
    * })
    */
-  changePassword (newPassword) {
+  changePassword (oldPassword, newPassword) {
     if (!this.isLoggedIn) {
       logger.error({
         description: 'No current user profile for which to change password.',
@@ -523,8 +510,7 @@ export default class Matter {
         message: 'Must be logged in to change password.'
       })
     }
-    // Send update request
-    return request.put(`${this.endpoint}/user/password`, newPassword)
+    return put(`${this.endpoint}/user/password`)({ newPassword })
   }
 
   /** recoverAccount
@@ -540,11 +526,9 @@ export default class Matter {
    */
   recoverAccount (accountData) {
     if (!accountData) {
-      logger.error({
-        description: 'Account data is required to recover an account.',
-        func: 'recoverAccount', obj: 'Matter'
+      return Promise.reject({
+        message: 'Account data is required to recover an account.'
       })
-      return Promise.reject({message: 'Account data is required to recover an account.'})
     }
     let account = {}
     if (isString(accountData)) {
@@ -556,123 +540,6 @@ export default class Matter {
       description: 'Requesting recovery of account.', account,
       func: 'recoverAccount', obj: 'Matter'
     })
-    return request.put(`${this.endpoint}/user/recover`, account)
-  }
-
-  /** Check that user is in a single group or in all of a list of groups
-   * @param {Array} checkGroups - List of groups to check for account membership
-   * @return {Boolean}
-   * @example
-   * //Check for group membership
-   * var isBoth =
-   * if(matter.isInGroup('admins')){
-   * console.log('Current account is an admin!')
-   * } else {
-   * console.warn('Current account is not an admin.')
-   * }
-   */
-  isInGroup (checkGroups) {
-    if (!this.isLoggedIn) {
-      logger.error({
-        description: 'No logged in user to check for groups.',
-        func: 'isInGroup', obj: 'Matter'
-      })
-      return false
-    }
-    if (!checkGroups) {
-      logger.log({
-        description: 'Invalid group(s).',
-        func: 'isInGroup', obj: 'Matter'
-      })
-      return false
-    }
-    // Check if user is within groups
-    if (isString(checkGroups)) {
-      const groupName = checkGroups
-      // Single role or string list of roles
-      const groupsArray = groupName.split(',')
-      if (groupsArray.length > 1) {
-        // String list of groupts
-        logger.info({
-          description: 'String list of groups.', list: groupsArray,
-          func: 'isInGroup', obj: 'Matter'
-        })
-        return this.isInGroups(groupsArray)
-      }
-      // Single group
-      let groups = this.token.data.groups || []
-      logger.log({
-        description: 'Checking if user is in group.',
-        group: groupName, userGroups: this.token.data.groups,
-        func: 'isInGroup', obj: 'Matter'
-      })
-      return some(groups, (group) => {
-        return groupName === group.name
-      })
-    }
-    if (isArray(checkGroups)) {
-      return this.isInGroups(checkGroups)
-    }
-    return false
-  }
-
-  /** Check that user is in all of a list of groups
-   * @param {Array|String} checkGroups - List of groups to check for account membership
-   * @return {Boolean}
-   * @example
-   * //Check for group membership
-   * var isBoth = matter.isInGroups(['admins', 'users'])
-   * if(isBoth){
-   * console.log('Current account is both an admin and a user')
-   * } else {
-   * console.warn('Current account is not both an admin and a user')
-   * }
-   */
-  isInGroups (checkGroups) {
-    if (!this.isLoggedIn) {
-      logger.log({
-        description: 'No logged in user to check.',
-        func: 'isInGroups', obj: 'Matter'
-      })
-      return false
-    }
-    if (!checkGroups) {
-      logger.log({
-        description: 'Invalid group(s).',
-        func: 'isInGroup', obj: 'Matter'
-      })
-      return false
-    }
-    // Check if user is in some of the provided groups
-    if (isArray(checkGroups)) {
-      return every(checkGroups.map(group => {
-        if (isString(group)) {
-          // Group is string
-          return this.isInGroup(group)
-        }
-        // Group is object
-        if (has(group, 'name')) {
-          return this.isInGroup(group.name)
-        }
-        logger.error({
-          description: 'Invalid group object.',
-          group: group, func: 'isInGroups', obj: 'Matter'
-        })
-        return false
-      }), true)
-    }
-    if (isString(checkGroups)) {
-      // TODO: Handle spaces within string list
-      const groupsArray = checkGroups.split(',')
-      if (groupsArray.length > 1) {
-        return this.isInGroups(groupsArray)
-      }
-      return this.isInGroup(groupsArray[0])
-    }
-    logger.error({
-      description: 'Invalid groups list.',
-      func: 'isInGroups', obj: 'Matter'
-    })
-    return false
+    return put(`${this.endpoint}/user/recover`)(account)
   }
 }

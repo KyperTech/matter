@@ -7,7 +7,7 @@ const buildHeaders = () => {
     'Content-Type': 'application/json'
   }
   if (token.string) {
-    headers.Authorization = `Bearer ${token.string}`
+    headers['Authorization'] = `Bearer ${token.string}`
   }
   return headers
 }
@@ -67,6 +67,8 @@ export const create = url => object => {
 }
 
 export const add = create
+export const post = create
+export const put = update
 
 export default (url, types) => {
   let methods = {

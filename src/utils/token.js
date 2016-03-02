@@ -13,6 +13,10 @@ let token = {
    * console.log('String value of current token', token.string)
    */
   get string () {
+    // Handle static file
+    if (window.location.host === '') {
+      return envStorage.getItem(config.tokenName)
+    }
     const cookie = cookiesUtil.getCookie(config.tokenName)
     if (cookie === '') return null
     return cookie
@@ -57,7 +61,12 @@ let token = {
       })
       throw new Error('Token data should be a string')
     }
-    cookiesUtil.setCookie(config.tokenName, tokenStr, 7)
+    // Handle cookies not working with static file
+    if (window.location.host === '') {
+      envStorage.setItem(config.tokenName, tokenStr)
+    } else {
+      cookiesUtil.setCookie(config.tokenName, tokenStr, 7)
+    }
     this.data = decodeToken(tokenStr)
     logger.debug({
       description: 'Token was set to cookies.',
@@ -75,7 +84,12 @@ let token = {
    */
   delete () {
     // Remove string token
-    cookiesUtil.deleteCookie(config.tokenName)
+    // Handle cookies not working with static file
+    if (window.location.host === '') {
+      envStorage.removeItem(config.tokenName)
+    } else {
+      cookiesUtil.deleteCookie(config.tokenName)
+    }
     // Remove user data
     envStorage.removeItem(config.tokenDataName)
     logger.log({

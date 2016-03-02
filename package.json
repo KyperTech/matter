@@ -57,6 +57,7 @@
   },
   "homepage": "https://github.com/KyperTech/matter",
   "dependencies": {
+    "isomorphic-fetch": "^2.2.1",
     "jwt-decode": "^1.5.1",
     "lodash": "^4.5.1",
     "superagent": "^1.7.2"
@@ -77,6 +78,7 @@
     "jsdom": "^8.1.0",
     "legacy-loader": "0.0.2",
     "mocha": "^2.4.5",
+    "nock": "^7.2.2",
     "rimraf": "^2.5.2",
     "s3-cli": "^0.13.0",
     "sinon": "^1.17.3",
